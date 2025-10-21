@@ -757,20 +757,7 @@ export default function PrinterPage() {
                           }
                           className="w-full max-w-xs mx-auto px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 font-medium text-sm sm:text-base cursor-pointer flex items-center justify-center gap-2 sm:gap-3 shadow-lg"
                         >
-                          <svg
-                            className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-                            />
-                          </svg>
-                          Tukar Point
+                          ⭐ Tukar Point
                         </button>
 
                         <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">
