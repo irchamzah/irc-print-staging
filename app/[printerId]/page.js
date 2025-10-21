@@ -476,7 +476,7 @@ export default function PrinterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -512,34 +512,16 @@ export default function PrinterPage() {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 ">
-        <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
-          {/* File Upload Section */}
-          <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-600 flex-shrink-0"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                />
-              </svg>
-              Upload File
-            </h2>
-
-            <div className="flex items-center justify-center w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 sm:h-40 border-2 border-dashed border-blue-300 rounded-xl cursor-pointer bg-white hover:bg-blue-50 transition-all duration-200">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-4 sm:p-6 lg:p-8">
+            <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+              {/* File Upload Section */}
+              <div className="bg-blue-50 rounded-xl border border-blue-200 p-4 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-10 w-10 sm:h-12 sm:w-12 text-blue-500 mb-2 sm:mb-3"
+                    className="h-5 w-5 sm:h-6 sm:w-6 mr-2 text-blue-600 flex-shrink-0"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -551,274 +533,311 @@ export default function PrinterPage() {
                       d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                     />
                   </svg>
-                  <p className="text-sm sm:text-base text-gray-600 mb-1">
-                    <span className="font-semibold">Klik untuk upload</span>
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-500">
-                    PDF saja (Maks. 10MB)
-                  </p>
-                </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".pdf"
-                  onChange={async (e) => {
-                    const selectedFile = e.target.files[0];
-                    if (selectedFile) {
-                      if (selectedFile.type === "application/pdf") {
-                        const success = await handleFileUpload(selectedFile);
-                        if (!success) {
-                          e.target.value = "";
-                        }
-                      } else {
-                        alert("Hanya file PDF yang diperbolehkan!");
-                        e.target.value = "";
-                      }
-                    }
-                  }}
-                  required
-                />
-              </label>
-            </div>
+                  Upload File
+                </h2>
 
-            {file && (
-              <div className="mt-3 flex items-center justify-center sm:justify-start">
-                <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex items-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4 text-green-600 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span className="text-green-700 text-sm truncate max-w-[200px] sm:max-w-none">
-                    {file.name}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {file && totalPages > 0 && (
-            <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 sm:p-6">
-              <PageSelector
-                totalPages={totalPages}
-                initialSettings={advancedSettings}
-                onSettingsChange={handleSettingsChange}
-                file={file}
-              />
-            </div>
-          )}
-
-          {/* Section Point Reward */}
-          <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4 sm:p-6 lg:p-6">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-5 flex items-center">
-              <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-yellow-600 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
-                />
-              </svg>
-              Point Reward
-            </h3>
-
-            {!userSession ? (
-              <div className="space-y-4 sm:space-y-5">
-                <div>
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-3">
-                    Nomor HP untuk Cek Poin
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="Contoh: 085117038583"
-                      className="flex-1 p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-gray-700 text-sm sm:text-base"
-                    />
-                    <button
-                      type="button"
-                      onClick={checkUserPoints}
-                      disabled={checkingPoints}
-                      className="px-4 sm:px-6 py-3 sm:py-4 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-yellow-400 transition-colors font-medium cursor-pointer text-sm sm:text-base flex items-center justify-center min-w-[120px] sm:min-w-[140px]"
-                    >
-                      {checkingPoints ? (
-                        <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
-                      ) : (
-                        "Check Point"
-                      )}
-                    </button>
-                  </div>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3">
-                    Masukkan nomor HP untuk melihat dan mendapatkan poin
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 sm:space-y-5">
-                {/* User Info Header */}
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm sm:text-base text-gray-600 mb-1">
-                      Nomor HP terdaftar:
-                    </p>
-                    <p className="font-semibold text-gray-800 text-base sm:text-lg break-all">
-                      {userSession.phone}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 sm:gap-3 self-start sm:self-center">
-                    <button
-                      onClick={refreshUserPoints}
-                      disabled={refreshingPoints}
-                      className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:bg-blue-50 transition-colors cursor-pointer flex items-center gap-1 sm:gap-2"
-                      title="Refresh point terbaru"
-                    >
-                      {refreshingPoints ? (
-                        <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-700"></div>
-                      ) : (
-                        <svg
-                          className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                          />
-                        </svg>
-                      )}
-                      <span className=" sm:inline">Refresh</span>
-                    </button>
-                    <button
-                      onClick={logoutUser}
-                      className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors cursor-pointer flex items-center gap-1 sm:gap-2"
-                    >
+                <div className="flex items-center justify-center w-full">
+                  <label className="flex flex-col items-center justify-center w-full h-32 sm:h-40 border-2 border-dashed border-blue-300 rounded-xl cursor-pointer bg-white hover:bg-blue-50 transition-all duration-200">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
                       <svg
-                        className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-10 w-10 sm:h-12 sm:w-12 text-blue-500 mb-2 sm:mb-3"
                         fill="none"
-                        stroke="currentColor"
                         viewBox="0 0 24 24"
+                        stroke="currentColor"
                       >
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                         />
                       </svg>
-                      <span className=" sm:inline">Logout</span>
-                    </button>
-                  </div>
+                      <p className="text-sm sm:text-base text-gray-600 mb-1">
+                        <span className="font-semibold">Klik untuk upload</span>
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        PDF saja (Maks. 10MB)
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept=".pdf"
+                      onChange={async (e) => {
+                        const selectedFile = e.target.files[0];
+                        if (selectedFile) {
+                          if (selectedFile.type === "application/pdf") {
+                            const success = await handleFileUpload(
+                              selectedFile
+                            );
+                            if (!success) {
+                              e.target.value = "";
+                            }
+                          } else {
+                            alert("Hanya file PDF yang diperbolehkan!");
+                            e.target.value = "";
+                          }
+                        }
+                      }}
+                      required
+                    />
+                  </label>
                 </div>
 
-                {/* Points Display Card */}
-                <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-yellow-200 shadow-sm">
-                  <div className="text-center">
-                    <p className="text-sm sm:text-base text-gray-600 mb-2">
-                      Total Point Anda
-                    </p>
-                    <p className="text-2xl sm:text-4xl lg:text-5xl font-bold text-yellow-600 mb-4 sm:mb-6">
-                      {typeof userPoints === "number"
-                        ? userPoints.toFixed(2)
-                        : "0.00"}{" "}
-                      <span className="text-lg sm:text-xl lg:text-2xl text-yellow-500">
-                        Point
-                      </span>
-                    </p>
-
-                    {/* TOMBOL TUKAR POINT */}
-                    <button
-                      onClick={() =>
-                        window.open(
-                          "https://irc-store-one.vercel.app/product",
-                          "_blank"
-                        )
-                      }
-                      className="w-full max-w-xs mx-auto px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 font-medium text-sm sm:text-base cursor-pointer flex items-center justify-center gap-2 sm:gap-3 shadow-lg"
-                    >
-                      ⭐ Tukar Point
-                    </button>
-
-                    <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">
-                      Terakhir update: {new Date().toLocaleTimeString()}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Points Earned Preview */}
-                {advancedSettings.cost > 0 && userSession && (
-                  <div className="bg-green-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-green-200">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4">
-                      <span className="text-sm sm:text-base text-gray-700 text-center sm:text-left">
-                        Point yang akan didapat:
-                      </span>
-                      <span className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 text-center sm:text-right">
-                        +{(advancedSettings.cost / 2000).toFixed(2)} poin
+                {file && (
+                  <div className="mt-3 flex items-center justify-center sm:justify-start">
+                    <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex items-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4 text-green-600 mr-2 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-green-700 text-sm truncate max-w-[200px] sm:max-w-none">
+                        {file.name}
                       </span>
                     </div>
                   </div>
                 )}
               </div>
-            )}
-          </div>
 
-          {advancedSettings.cost > 0 && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4 sm:p-6 lg:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 lg:gap-6">
-                {/* Left Section - Text Info */}
-                <div className="flex-1 text-center sm:text-left">
-                  <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-1 sm:mb-2">
-                    Total Biaya
-                  </h3>
-                  <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
-                    {totalPages} halaman × {advancedSettings.copies} rangkap
-                  </p>
+              {file && totalPages > 0 && (
+                <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 sm:p-6">
+                  <PageSelector
+                    totalPages={totalPages}
+                    initialSettings={advancedSettings}
+                    onSettingsChange={handleSettingsChange}
+                    file={file}
+                  />
                 </div>
-
-                {/* Right Section - Price */}
-                <div className="text-center sm:text-right">
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600 mb-1">
-                    Rp {advancedSettings.cost.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {advancedSettings.cost > 0 && (
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed text-lg"
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                  Memproses...
-                </div>
-              ) : (
-                "💳 Bayar dan Print"
               )}
-            </button>
-          )}
-        </form>
+
+              {/* Section Point Reward */}
+              <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4 sm:p-6 lg:p-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 sm:mb-5 flex items-center">
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-yellow-600 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Point Reward
+                </h3>
+
+                {!userSession ? (
+                  <div className="space-y-4 sm:space-y-5">
+                    <div>
+                      <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-3">
+                        Nomor HP untuk Cek Poin
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <input
+                          type="tel"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder="Contoh: 085117038583"
+                          className="flex-1 p-3 sm:p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 bg-white text-gray-700 text-sm sm:text-base"
+                        />
+                        <button
+                          type="button"
+                          onClick={checkUserPoints}
+                          disabled={checkingPoints}
+                          className="px-4 sm:px-6 py-3 sm:py-4 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 disabled:bg-yellow-400 transition-colors font-medium cursor-pointer text-sm sm:text-base flex items-center justify-center min-w-[120px] sm:min-w-[140px]"
+                        >
+                          {checkingPoints ? (
+                            <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-white"></div>
+                          ) : (
+                            "Check Point"
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3">
+                        Masukkan nomor HP untuk melihat dan mendapatkan poin
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4 sm:space-y-5">
+                    {/* User Info Header */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm sm:text-base text-gray-600 mb-1">
+                          Nomor HP terdaftar:
+                        </p>
+                        <p className="font-semibold text-gray-800 text-base sm:text-lg break-all">
+                          {userSession.phone}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 sm:gap-3 self-start sm:self-center">
+                        <button
+                          onClick={refreshUserPoints}
+                          disabled={refreshingPoints}
+                          className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 disabled:bg-blue-50 transition-colors cursor-pointer flex items-center gap-1 sm:gap-2"
+                          title="Refresh point terbaru"
+                        >
+                          {refreshingPoints ? (
+                            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-blue-700"></div>
+                          ) : (
+                            <svg
+                              className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                          )}
+                          <span className=" sm:inline">Refresh</span>
+                        </button>
+                        <button
+                          onClick={logoutUser}
+                          className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors cursor-pointer flex items-center gap-1 sm:gap-2"
+                        >
+                          <svg
+                            className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                            />
+                          </svg>
+                          <span className=" sm:inline">Logout</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Points Display Card */}
+                    <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 border-2 border-yellow-200 shadow-sm">
+                      <div className="text-center">
+                        <p className="text-sm sm:text-base text-gray-600 mb-2">
+                          Total Point Anda
+                        </p>
+                        <p className="text-2xl sm:text-4xl lg:text-5xl font-bold text-yellow-600 mb-4 sm:mb-6">
+                          {typeof userPoints === "number"
+                            ? userPoints.toFixed(2)
+                            : "0.00"}{" "}
+                          <span className="text-lg sm:text-xl lg:text-2xl text-yellow-500">
+                            Point
+                          </span>
+                        </p>
+
+                        {/* TOMBOL TUKAR POINT */}
+                        <button
+                          onClick={() =>
+                            window.open(
+                              "https://irc-store-one.vercel.app/product",
+                              "_blank"
+                            )
+                          }
+                          className="w-full max-w-xs mx-auto px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 font-medium text-sm sm:text-base cursor-pointer flex items-center justify-center gap-2 sm:gap-3 shadow-lg"
+                        >
+                          <svg
+                            className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                            />
+                          </svg>
+                          Tukar Point
+                        </button>
+
+                        <p className="text-xs sm:text-sm text-gray-500 mt-3 sm:mt-4">
+                          Terakhir update: {new Date().toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Points Earned Preview */}
+                    {advancedSettings.cost > 0 && userSession && (
+                      <div className="bg-green-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-green-200">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4">
+                          <span className="text-sm sm:text-base text-gray-700 text-center sm:text-left">
+                            Point yang akan didapat:
+                          </span>
+                          <span className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600 text-center sm:text-right">
+                            +{(advancedSettings.cost / 2000).toFixed(2)} poin
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {advancedSettings.cost > 0 && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4 sm:p-6 lg:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 lg:gap-6">
+                    {/* Left Section - Text Info */}
+                    <div className="flex-1 text-center sm:text-left">
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800 mb-1 sm:mb-2">
+                        Total Biaya
+                      </h3>
+                      <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
+                        {totalPages} halaman × {advancedSettings.copies} rangkap
+                      </p>
+                    </div>
+
+                    {/* Right Section - Price */}
+                    <div className="text-center sm:text-right">
+                      <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-600 mb-1">
+                        Rp {advancedSettings.cost.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {advancedSettings.cost > 0 && (
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed text-lg"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                      Memproses...
+                    </div>
+                  ) : (
+                    "💳 Bayar dan Print"
+                  )}
+                </button>
+              )}
+            </form>
+          </div>
+        </div>
       </main>
 
       {isLoading && (
