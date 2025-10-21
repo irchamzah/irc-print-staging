@@ -203,8 +203,9 @@ export default function PrinterPage() {
         );
       }
 
+      // Di dalam handleSubmit function, setelah mendapatkan paymentResult:
       setPaymentData({
-        qrCode: paymentResult.qr_code,
+        token: paymentResult.token, // ← Pastikan pakai token
         redirectUrl: paymentResult.redirect_url,
         amount: finalCost,
         orderId: orderId,
@@ -223,6 +224,22 @@ export default function PrinterPage() {
   const handlePaymentSuccess = async () => {
     try {
       setIsLoading(true);
+
+      // ✅ VERIFIKASI: Cek status payment sebelum lanjut
+      console.log("🔍 Verifying payment for order:", currentJobId);
+
+      const statusResponse = await fetch(
+        `/api/payment/status?orderId=${currentJobId}`
+      );
+      const statusResult = await statusResponse.json();
+
+      if (!statusResult.success || statusResult.status !== "settlement") {
+        throw new Error(
+          `Payment belum sukses. Status: ${statusResult.status || "unknown"}`
+        );
+      }
+
+      console.log("✅ Payment verified, proceeding with print...");
 
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
@@ -279,7 +296,14 @@ export default function PrinterPage() {
       }
     } catch (error) {
       console.error("❌ Error after payment:", error);
-      alert("❌ Error setelah payment: " + error.message);
+      // alert("❌ Error setelah payment: " + error.message);
+
+      // Optional: Tampilkan tombol untuk coba lagi
+      // if (error.message.includes("Payment belum sukses")) {
+      //   alert(
+      //     "⚠️ Status payment belum settled. Silakan tunggu beberapa detik dan cek status manual."
+      //   );
+      // }
     } finally {
       setIsLoading(false);
     }
@@ -288,7 +312,7 @@ export default function PrinterPage() {
   const handlePaymentCancelled = () => {
     setShowPaymentModal(false);
     setPaymentData(null);
-    alert("❌ Pembayaran dibatalkan. Silakan coba lagi.");
+    // alert("❌ Pembayaran dibatalkan. Silakan coba lagi.");
   };
 
   const checkUserPoints = async () => {

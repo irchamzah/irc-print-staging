@@ -24,7 +24,6 @@ export async function POST(request) {
       credit_card: {
         secure: true,
       },
-      enabled_payments: ["qris"], // Hanya QRIS
     };
 
     // --- LOGGING #2: Payload ke Midtrans ---
