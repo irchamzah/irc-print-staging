@@ -86,7 +86,6 @@ export default function PrinterPage() {
     }
   };
 
-  // Function untuk refresh pending transactions
   // Function untuk refresh pending transactions dengan sinkronisasi Midtrans
   const refreshPendingTransactions = async () => {
     if (!userSession?.phone) return;
@@ -95,10 +94,15 @@ export default function PrinterPage() {
     try {
       console.log("🔄 Refreshing pending transactions with Midtrans sync...");
 
-      // Panggil endpoint khusus untuk sync dengan Midtrans
+      // Gunakan endpoint sync yang baru
       const response = await fetch(
         `/api/transactions/pending/sync?phoneNumber=${userSession.phone}`
       );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
 
       if (result.success) {
