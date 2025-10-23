@@ -463,6 +463,14 @@ export default function PrinterPage() {
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${currentJobId}`
       );
+
+      // DEBUG: Better error handling
+      if (!statusResponse.ok) {
+        throw new Error(
+          `Payment status check failed: ${statusResponse.status}`
+        );
+      }
+
       const statusResult = await statusResponse.json();
 
       if (!statusResult.success || statusResult.status !== "settlement") {
@@ -478,9 +486,8 @@ export default function PrinterPage() {
         advancedSettings.copies;
       const pointsToAdd = (advancedSettings.cost / 2000).toFixed(2);
 
-      // Tentukan endpoint berdasarkan jenis transaksi
-      const isRestored = paymentData?.isRestored;
-      const endpoint = isRestored ? "/api/print/restored" : "/api/print";
+      // ✅ PERUBAHAN: SELALU GUNAKAN ENDPOINT /api/print
+      const endpoint = "/api/print";
 
       const printPayload = {
         orderId: currentJobId,
@@ -492,19 +499,22 @@ export default function PrinterPage() {
         totalPages: totalPagesToPrint,
         pointsToAdd: pointsToAdd,
         phoneNumber: userSession?.phone,
-        isRestoredTransaction: isRestored,
+        isRestoredTransaction: paymentData?.isRestored || false, // ✅ TAMBAH FLAG INI
       };
 
       let response;
-      if (isRestored) {
-        // Untuk restored transaction, kirim sebagai JSON
+
+      if (paymentData?.isRestored) {
+        // ✅ Untuk restored transaction, kirim sebagai JSON ke endpoint yang sama
+        console.log("🔄 Sending RESTORED transaction as JSON");
         response = await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(printPayload),
         });
       } else {
-        // Untuk normal transaction, kirim sebagai FormData dengan file
+        // ✅ Untuk normal transaction, kirim sebagai FormData
+        console.log("📄 Sending NORMAL transaction as FormData");
         const formData = new FormData();
         formData.append("pdf", file);
         Object.keys(printPayload).forEach((key) => {
@@ -515,6 +525,15 @@ export default function PrinterPage() {
           method: "POST",
           body: formData,
         });
+      }
+
+      // ✅ Better response handling
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Print API error response:", errorText);
+        throw new Error(
+          `Print failed: ${response.status} ${response.statusText}`
+        );
       }
 
       const result = await response.json();
@@ -560,7 +579,6 @@ export default function PrinterPage() {
       setIsLoading(false);
     }
   };
-
   const handlePaymentCancelled = () => {
     setShowPaymentModal(false);
     setPaymentData(null);
