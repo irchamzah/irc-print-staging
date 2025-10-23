@@ -96,11 +96,18 @@ export async function GET(request) {
 
               if (updateResponse.ok) {
                 const updateResult = await updateResponse.json();
+                // Di dalam loop update transaction, tambahkan:
                 if (updateResult.success) {
                   updatedTransactions.push({
                     orderId: transaction.orderId,
                     oldStatus: currentStatus,
                     newStatus: "settlement",
+                    transactionData: {
+                      // Tambahkan data lengkap
+                      ...transaction,
+                      status: "settlement",
+                      midtransStatus: midtransStatus,
+                    },
                   });
                 }
               }

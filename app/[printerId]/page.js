@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { getPDFPageCount, validatePDFFile } from "../../utils/pdfUtils";
 import PaymentModal from "@/components/PaymentModal";
 
+const VPS_API_URL = process.env.VPS_API_URL;
+
 const PageSelector = dynamic(() => import("../../components/PageSelector"), {
   ssr: false,
   loading: () => (
@@ -126,6 +128,35 @@ export default function PrinterPage() {
             alert(
               `✅ ${settledTransactions.length} transaksi berhasil dibayar dan siap diprint!`
             );
+
+            // Auto process settlement transactions
+            for (const settledTx of settledTransactions) {
+              try {
+                // Cari transaction data lengkap
+                const transaction = result.pendingTransactions.find(
+                  (tx) => tx.orderId === settledTx.orderId
+                );
+
+                if (transaction && transaction.status === "settlement") {
+                  console.log(
+                    `🔄 Auto-processing settled transaction: ${transaction.orderId}`
+                  );
+
+                  // Set state untuk processing
+                  setAdvancedSettings(transaction.settings);
+                  setTotalPages(transaction.fileData.pages);
+                  setCurrentJobId(transaction.orderId);
+
+                  // Process print
+                  await processSuccessfulPayment(transaction);
+                }
+              } catch (error) {
+                console.error(
+                  `❌ Error auto-processing ${settledTx.orderId}:`,
+                  error
+                );
+              }
+            }
           }
         }
 
@@ -147,45 +178,86 @@ export default function PrinterPage() {
   const continuePendingTransaction = async (transaction) => {
     try {
       console.log("🔄 Continuing pending transaction:", transaction.orderId);
+      console.log("STATUS TRANSAKSI", transaction.midtransStatus);
+      console.log("ISI TRANSACTION", transaction);
 
-      console.log("STATUS TRANSAKSI", transaction.status);
+      // SYNC KE MIDTRANS TERLEBIH DAHULU
+      console.log("🔍 Syncing with Midtrans for latest status...");
+      const syncResponse = await fetch(
+        `/api/payment/status?orderId=${transaction.orderId}`
+      );
 
-      // Jika status sudah settlement, langsung proses print
-      if (transaction.midtransStatus === "settlement") {
-        console.log("✅ Transaction already paid, proceeding to print...");
+      if (syncResponse.ok) {
+        const syncResult = await syncResponse.json();
 
-        // Set state dari transaction data
-        setAdvancedSettings(transaction.settings);
-        setTotalPages(transaction.fileData.pages);
-        setCurrentJobId(transaction.orderId);
+        if (syncResult.success) {
+          const latestStatus = syncResult.status;
+          console.log(
+            `📊 Latest Midtrans status for ${transaction.orderId}: ${latestStatus}`
+          );
 
-        // Langsung proses print tanpa payment modal
-        await processSuccessfulPayment(transaction);
-        return;
+          // Update transaction dengan status terbaru
+          const updatedTransaction = {
+            ...transaction,
+            midtransStatus: latestStatus,
+            status:
+              latestStatus === "settlement" ? "settlement" : transaction.status,
+          };
+
+          // Jika status sudah settlement, langsung proses print
+          if (latestStatus === "settlement") {
+            console.log("✅ Transaction already paid, proceeding to print...");
+
+            // Update status di VPS
+            await fetch(`${VPS_API_URL}/api/transactions/update-status`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: transaction.orderId,
+                phoneNumber: userSession.phone,
+                status: "settlement",
+                midtransStatus: latestStatus,
+              }),
+            });
+
+            // Set state dari transaction data
+            setAdvancedSettings(updatedTransaction.settings);
+            setTotalPages(updatedTransaction.fileData.pages);
+            setCurrentJobId(updatedTransaction.orderId);
+
+            // Langsung proses print tanpa payment modal
+            await processSuccessfulPayment(updatedTransaction);
+            return;
+          }
+
+          // Untuk transaksi pending, buka payment modal seperti biasa
+          if (!updatedTransaction.fileData?.hasFile) {
+            alert(
+              "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru."
+            );
+            return;
+          }
+
+          setAdvancedSettings(updatedTransaction.settings);
+          setTotalPages(updatedTransaction.fileData.pages);
+          setCurrentJobId(updatedTransaction.orderId);
+
+          setPaymentData({
+            token: updatedTransaction.paymentToken,
+            redirectUrl: updatedTransaction.redirectUrl,
+            amount: updatedTransaction.cost,
+            orderId: updatedTransaction.orderId,
+            isRestored: true,
+          });
+
+          setShowPaymentModal(true);
+          console.log("✅ Transaction restored for continuation");
+        } else {
+          throw new Error(syncResult.error || "Failed to sync with Midtrans");
+        }
+      } else {
+        throw new Error("Failed to check payment status");
       }
-
-      // Untuk transaksi pending, buka payment modal seperti biasa
-      if (!transaction.fileData?.hasFile) {
-        alert(
-          "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru."
-        );
-        return;
-      }
-
-      setAdvancedSettings(transaction.settings);
-      setTotalPages(transaction.fileData.pages);
-      setCurrentJobId(transaction.orderId);
-
-      setPaymentData({
-        token: transaction.paymentToken,
-        redirectUrl: transaction.redirectUrl,
-        amount: transaction.cost,
-        orderId: transaction.orderId,
-        isRestored: true,
-      });
-
-      setShowPaymentModal(true);
-      console.log("✅ Transaction restored for continuation");
     } catch (error) {
       console.error("Error continuing transaction:", error);
       alert("❌ Gagal memulihkan transaksi: " + error.message);
@@ -543,7 +615,7 @@ export default function PrinterPage() {
             pages: totalPages,
             type: file.type,
           },
-          fileContent: fileBase64, // ← INI YANG BARU, FILE DALAM BASE64
+          fileContent: fileBase64,
           settings: advancedSettings,
           cost: finalCost,
           paymentToken: paymentResult.token,
