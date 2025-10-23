@@ -43,10 +43,192 @@ export default function PrinterPage() {
   const [checkingPoints, setCheckingPoints] = useState(false);
   const [refreshingPoints, setRefreshingPoints] = useState(false);
   const [userSession, setUserSession] = useState(null);
+  const [pendingTransactions, setPendingTransactions] = useState([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [refreshingTransactions, setRefreshingTransactions] = useState(false);
 
   useEffect(() => {
     fetchPrinterDetails();
   }, [printerId]);
+
+  // Fetch pending transactions ketika user login
+  useEffect(() => {
+    if (userSession?.phone) {
+      fetchPendingTransactions();
+    } else {
+      setPendingTransactions([]); // Clear jika logout
+    }
+  }, [userSession]);
+
+  // Function untuk fetch pending transactions
+  const fetchPendingTransactions = async () => {
+    if (!userSession?.phone) return;
+
+    setLoadingTransactions(true);
+    try {
+      const response = await fetch(
+        `/api/transactions/pending?phoneNumber=${userSession.phone}`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setPendingTransactions(result.pendingTransactions || []);
+        console.log(
+          `📦 Loaded ${result.pendingTransactions.length} pending transactions`
+        );
+      } else {
+        console.error("Failed to fetch pending transactions:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching pending transactions:", error);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  // Function untuk refresh pending transactions
+  const refreshPendingTransactions = async () => {
+    if (!userSession?.phone) return;
+
+    setRefreshingTransactions(true);
+    try {
+      const response = await fetch(
+        `/api/transactions/pending?phoneNumber=${userSession.phone}`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setPendingTransactions(result.pendingTransactions || []);
+        console.log(
+          `🔄 Refreshed ${result.pendingTransactions.length} pending transactions`
+        );
+      }
+    } catch (error) {
+      console.error("Error refreshing pending transactions:", error);
+    } finally {
+      setRefreshingTransactions(false);
+    }
+  };
+
+  // Function untuk melanjutkan transaksi
+  // Function untuk melanjutkan transaksi
+  const continuePendingTransaction = async (transaction) => {
+    try {
+      console.log("🔄 Continuing pending transaction:", transaction.orderId);
+
+      // Cek apakah file tersimpan di server
+      if (!transaction.fileData?.hasFile) {
+        alert(
+          "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru."
+        );
+        return;
+      }
+
+      // Set state dari transaction data
+      setAdvancedSettings(transaction.settings);
+      setTotalPages(transaction.fileData.pages);
+      setCurrentJobId(transaction.orderId);
+
+      // Untuk continue transaction, kita perlu set file state
+      // Tapi karena file ada di server, kita tidak perlu set file di frontend
+      // File akan diambil dari server saat proses print
+
+      // Set payment data untuk modal
+      setPaymentData({
+        token: transaction.paymentToken,
+        redirectUrl: transaction.redirectUrl,
+        amount: transaction.cost,
+        orderId: transaction.orderId,
+        isRestored: true, // Tandai sebagai restored transaction
+      });
+
+      // Buka modal payment dengan status restored
+      setShowPaymentModal(true);
+
+      console.log("✅ Transaction restored for continuation");
+    } catch (error) {
+      console.error("Error continuing transaction:", error);
+      alert("❌ Gagal memulihkan transaksi: " + error.message);
+    }
+  };
+
+  // Function untuk batalkan transaksi dari list
+  const cancelPendingTransaction = async (transaction) => {
+    if (
+      !window.confirm(
+        `Apakah Anda yakin ingin membatalkan transaksi ${transaction.orderId}?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/transactions/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: transaction.orderId,
+          phoneNumber: userSession.phone,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("✅ Transaction cancelled:", transaction.orderId);
+        alert("❌ Transaksi berhasil dibatalkan");
+
+        // Refresh list
+        await refreshPendingTransactions();
+      } else {
+        throw new Error(result.error || "Gagal membatalkan transaksi");
+      }
+    } catch (error) {
+      console.error("Error cancelling transaction:", error);
+      alert("❌ Gagal membatalkan transaksi: " + error.message);
+    }
+  };
+
+  // FUNCTION UNTUK RESTORE PENDING TRANSACTION
+  const restorePendingTransaction = async (transaction) => {
+    try {
+      console.log("🔄 Restoring pending transaction:", transaction.orderId);
+
+      // Set state dari transaction data
+      setAdvancedSettings(transaction.settings);
+      setTotalPages(transaction.fileData.pages);
+      setCurrentJobId(transaction.orderId);
+
+      // Cek status payment di Midtrans
+      const statusResponse = await fetch(
+        `/api/payment/status?orderId=${transaction.orderId}`
+      );
+      const statusResult = await statusResponse.json();
+
+      if (statusResult.success) {
+        if (statusResult.status === "settlement") {
+          // Payment sudah sukses, lanjutkan ke print
+          alert("✅ Payment sudah berhasil! Melanjutkan proses print...");
+          await processSuccessfulPayment(transaction);
+        } else {
+          // Payment masih pending, buka modal lagi
+          setPaymentData({
+            token: transaction.paymentToken,
+            redirectUrl: transaction.redirect_url,
+            amount: transaction.cost,
+            orderId: transaction.orderId,
+          });
+          setShowPaymentModal(true);
+          alert("🔄 Melanjutkan transaksi yang tertunda...");
+        }
+      }
+    } catch (error) {
+      console.error("Error restoring transaction:", error);
+      alert("❌ Gagal memulihkan transaksi sebelumnya");
+    }
+  };
 
   const fetchPrinterDetails = async () => {
     try {
@@ -183,11 +365,22 @@ export default function PrinterPage() {
         .toString(36)
         .substr(2, 9)}`;
 
+      // BACA FILE SEBAGAI BASE64 UNTUK DISIMPAN
+      const fileBase64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Remove data:application/pdf;base64, prefix
+          const base64 = reader.result.split(",")[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      // 1. Buat payment di Midtrans
       const paymentResponse = await fetch("/api/payment", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: finalCost,
           orderId: orderId,
@@ -203,9 +396,48 @@ export default function PrinterPage() {
         );
       }
 
-      // Di dalam handleSubmit function, setelah mendapatkan paymentResult:
+      // 2. SIMPAN KE DATABASE VPS DENGAN FILE CONTENT (jika user login)
+      if (userSession) {
+        const transactionData = {
+          phoneNumber: userSession.phone,
+          orderId: orderId,
+          printerId: printerId,
+          fileData: {
+            name: file.name,
+            size: file.size,
+            pages: totalPages,
+            type: file.type,
+          },
+          fileContent: fileBase64, // ← INI YANG BARU, FILE DALAM BASE64
+          settings: advancedSettings,
+          cost: finalCost,
+          paymentToken: paymentResult.token,
+          status: "pending",
+          createdAt: new Date().toISOString(),
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 jam
+        };
+
+        const saveResponse = await fetch("/api/transactions/pending", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(transactionData),
+        });
+
+        const saveResult = await saveResponse.json();
+
+        if (!saveResult.success) {
+          console.warn(
+            "⚠️ Gagal menyimpan transaksi ke database, tetapi lanjutkan..."
+          );
+        } else {
+          console.log("✅ Transaksi pending tersimpan di database");
+          console.log(`📁 File saved: ${saveResult.fileSaved ? "Yes" : "No"}`);
+        }
+      }
+
+      // 3. Tampilkan modal payment
       setPaymentData({
-        token: paymentResult.token, // ← Pastikan pakai token
+        token: paymentResult.token,
         redirectUrl: paymentResult.redirect_url,
         amount: finalCost,
         orderId: orderId,
@@ -244,35 +476,62 @@ export default function PrinterPage() {
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
         advancedSettings.copies;
-
       const pointsToAdd = (advancedSettings.cost / 2000).toFixed(2);
 
-      const formData = new FormData();
-      formData.append("pdf", file);
-      formData.append("copies", advancedSettings.copies);
-      formData.append("printerId", printerId);
-      formData.append(
-        "colorPages",
-        JSON.stringify(advancedSettings.colorPages)
-      );
-      formData.append("bwPages", JSON.stringify(advancedSettings.bwPages));
-      formData.append("totalCost", advancedSettings.cost);
-      formData.append("orderId", currentJobId);
-      formData.append("totalPages", totalPagesToPrint);
-      formData.append("pointsToAdd", pointsToAdd);
+      // Tentukan endpoint berdasarkan jenis transaksi
+      const isRestored = paymentData?.isRestored;
+      const endpoint = isRestored ? "/api/print/restored" : "/api/print";
 
-      if (userSession) {
-        formData.append("phoneNumber", userSession.phone);
+      const printPayload = {
+        orderId: currentJobId,
+        printerId: printerId,
+        copies: advancedSettings.copies,
+        colorPages: JSON.stringify(advancedSettings.colorPages),
+        bwPages: JSON.stringify(advancedSettings.bwPages),
+        totalCost: advancedSettings.cost,
+        totalPages: totalPagesToPrint,
+        pointsToAdd: pointsToAdd,
+        phoneNumber: userSession?.phone,
+        isRestoredTransaction: isRestored,
+      };
+
+      let response;
+      if (isRestored) {
+        // Untuk restored transaction, kirim sebagai JSON
+        response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(printPayload),
+        });
+      } else {
+        // Untuk normal transaction, kirim sebagai FormData dengan file
+        const formData = new FormData();
+        formData.append("pdf", file);
+        Object.keys(printPayload).forEach((key) => {
+          formData.append(key, printPayload[key]);
+        });
+
+        response = await fetch(endpoint, {
+          method: "POST",
+          body: formData,
+        });
       }
-
-      const response = await fetch(`/api/print`, {
-        method: "POST",
-        body: formData,
-      });
 
       const result = await response.json();
 
       if (result.success) {
+        // ✅ CLEANUP: Hapus transaksi dari pending setelah success
+        if (userSession) {
+          await fetch("/api/transactions/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: currentJobId,
+              phoneNumber: userSession.phone,
+            }),
+          });
+        }
+
         if (userSession) {
           setTimeout(() => {
             refreshUserPoints();
@@ -296,14 +555,7 @@ export default function PrinterPage() {
       }
     } catch (error) {
       console.error("❌ Error after payment:", error);
-      // alert("❌ Error setelah payment: " + error.message);
-
-      // Optional: Tampilkan tombol untuk coba lagi
-      // if (error.message.includes("Payment belum sukses")) {
-      //   alert(
-      //     "⚠️ Status payment belum settled. Silakan tunggu beberapa detik dan cek status manual."
-      //   );
-      // }
+      alert(`❌ Error setelah pembayaran: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -783,6 +1035,191 @@ export default function PrinterPage() {
                 )}
               </div>
 
+              {/* Section Pending Transactions - Hanya tampil jika user login dan ada pending transactions */}
+              {userSession &&
+                (pendingTransactions.length > 0 || loadingTransactions) && (
+                  <div className="bg-purple-50 rounded-xl border border-purple-200 p-4 sm:p-6 lg:p-6">
+                    <div className="flex items-center justify-between mb-4 sm:mb-5">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800 flex items-center">
+                        <svg
+                          className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-purple-600 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Transaksi Tertunda
+                      </h3>
+
+                      <button
+                        onClick={refreshPendingTransactions}
+                        disabled={refreshingTransactions}
+                        className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:bg-purple-50 transition-colors cursor-pointer flex items-center gap-1 sm:gap-2"
+                        title="Refresh daftar transaksi"
+                      >
+                        {refreshingTransactions ? (
+                          <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-purple-700"></div>
+                        ) : (
+                          <svg
+                            className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                            />
+                          </svg>
+                        )}
+                        <span className="hidden sm:inline">Refresh</span>
+                      </button>
+                    </div>
+
+                    {/* Loading State */}
+                    {loadingTransactions && (
+                      <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                      </div>
+                    )}
+
+                    {/* Transactions List */}
+                    {!loadingTransactions && pendingTransactions.length > 0 && (
+                      <div className="space-y-3">
+                        {pendingTransactions.map((transaction, index) => (
+                          <div
+                            key={transaction.orderId}
+                            className="bg-white rounded-lg border border-purple-100 p-3 sm:p-4 shadow-sm"
+                          >
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                              {/* Transaction Info */}
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-mono text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                                    {transaction.orderId}
+                                  </span>
+                                  <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                                    {transaction.fileData?.pages || 0} halaman
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 font-medium truncate">
+                                  {transaction.fileData?.name || "Unknown File"}
+                                </p>
+                                <p className="text-lg font-bold text-purple-600">
+                                  Rp {transaction.cost?.toLocaleString("id-ID")}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Dibuat:{" "}
+                                  {new Date(
+                                    transaction.createdAt
+                                  ).toLocaleDateString("id-ID")}
+                                </p>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex gap-2 sm:flex-col sm:gap-1">
+                                <button
+                                  onClick={() =>
+                                    continuePendingTransaction(transaction)
+                                  }
+                                  disabled={isLoading}
+                                  className="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:bg-green-300 transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  Lanjutkan
+                                </button>
+
+                                <button
+                                  onClick={() =>
+                                    cancelPendingTransaction(transaction)
+                                  }
+                                  disabled={isLoading}
+                                  className="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 disabled:bg-red-300 transition-colors cursor-pointer flex items-center gap-1"
+                                >
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M6 18L18 6M6 6l12 12"
+                                    />
+                                  </svg>
+                                  Batalkan
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Empty State */}
+                    {!loadingTransactions &&
+                      pendingTransactions.length === 0 && (
+                        <div className="text-center py-6">
+                          <svg
+                            className="w-12 h-12 text-purple-300 mx-auto mb-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <p className="text-purple-600 font-medium">
+                            Tidak ada transaksi tertunda
+                          </p>
+                          <p className="text-purple-500 text-sm mt-1">
+                            Semua transaksi sudah selesai atau dibatalkan
+                          </p>
+                        </div>
+                      )}
+
+                    {/* Help Text */}
+                    <div className="mt-3 pt-3 border-t border-purple-200">
+                      <p className="text-xs text-purple-600">
+                        💡 Transaksi tertunda akan otomatis kadaluarsa setelah 1
+                        jam
+                      </p>
+                    </div>
+                  </div>
+                )}
+
               {advancedSettings.cost > 0 && (
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 p-4 sm:p-6 lg:p-6">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 lg:gap-6">
@@ -849,6 +1286,8 @@ export default function PrinterPage() {
         onSuccess={handlePaymentSuccess}
         paymentData={paymentData}
         isLoading={isLoading}
+        userSession={userSession}
+        isRestoredTransaction={paymentData?.isRestored || false}
       />
     </div>
   );
