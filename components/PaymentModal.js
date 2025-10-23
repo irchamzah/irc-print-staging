@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 
+const MIDTRANS_ENVIRONMENT = process.env.MIDTRANS_ENVIRONMENT;
+
 export default function PaymentModal({
   isOpen,
   onClose,
@@ -99,27 +101,40 @@ export default function PaymentModal({
     setSnapLoaded(false);
     setSnapError(false);
 
+    // Tentukan Snap URL berdasarkan environment
+    const snapUrl =
+      MIDTRANS_ENVIRONMENT === "production"
+        ? "https://app.midtrans.com/snap/snap.js" // Production
+        : "https://app.sandbox.midtrans.com/snap/snap.js"; // Sandbox
+
+    // GUNAKAN CLIENT KEY YANG BENAR - tidak perlu NEXT_PUBLIC prefix
+    const clientKey =
+      MIDTRANS_ENVIRONMENT === "production"
+        ? process.env.MIDTRANS_CLIENT_KEY_PRODUCTION // ← INI YANG BENAR
+        : process.env.MIDTRANS_CLIENT_KEY_SANDBOX; // ← INI YANG BENAR
+
+    console.log(`🔧 Loading Midtrans Snap from: ${snapUrl}`);
+    console.log(`🔧 Environment: ${MIDTRANS_ENVIRONMENT}`);
+    console.log(`🔧 Client Key: ${clientKey ? "✅ Loaded" : "❌ Missing"}`);
+
     // Load Midtrans Snap script
     const script = document.createElement("script");
-    script.src = "https://app.sandbox.midtrans.com/snap/snap.js";
-    script.setAttribute(
-      "data-client-key",
-      process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY
-    );
+    script.src = snapUrl;
+    script.setAttribute("data-client-key", clientKey);
 
     script.onload = () => {
-      console.log("Snap script loaded successfully");
+      console.log("✅ Snap script loaded successfully");
+      console.log(`🔧 Environment: ${MIDTRANS_ENVIRONMENT}`);
       setSnapLoaded(true);
 
       // Auto open Snap hanya jika bukan restored transaction
-      // Untuk restored transaction, biarkan user yang klik manual
       if (!isRestoredTransaction) {
         openSnapPayment();
       }
     };
 
     script.onerror = () => {
-      console.error("Failed to load Snap script");
+      console.error("❌ Failed to load Snap script");
       setSnapError(true);
       setSnapLoaded(false);
     };
@@ -127,7 +142,6 @@ export default function PaymentModal({
     document.body.appendChild(script);
 
     return () => {
-      // Cleanup script
       if (document.body.contains(script)) {
         document.body.removeChild(script);
       }

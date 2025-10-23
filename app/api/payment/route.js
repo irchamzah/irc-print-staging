@@ -8,11 +8,24 @@ export async function POST(request) {
     // --- LOGGING #1: Payload dari Klien ---
     console.log("Payload received from client:", { amount, orderId });
 
+    // Determine environment and keys
+    const isProduction = process.env.MIDTRANS_ENVIRONMENT === "production";
+    const serverKey = isProduction
+      ? process.env.MIDTRANS_SERVER_KEY_PRODUCTION
+      : process.env.MIDTRANS_SERVER_KEY_SANDBOX;
+
+    const clientKey = isProduction
+      ? process.env.MIDTRANS_CLIENT_KEY_PRODUCTION
+      : process.env.MIDTRANS_CLIENT_KEY_SANDBOX;
+
+    console.log(`🔧 Midtrans Environment: ${process.env.MIDTRANS_ENVIRONMENT}`);
+    console.log(`🔧 Is Production: ${isProduction}`);
+
     // Initialize Snap client
     let snap = new midtransClient.Snap({
-      isProduction: process.env.MIDTRANS_ENVIRONMENT === "production",
-      serverKey: process.env.MIDTRANS_SERVER_KEY,
-      clientKey: process.env.MIDTRANS_CLIENT_KEY,
+      isProduction: isProduction,
+      serverKey: serverKey,
+      clientKey: clientKey,
     });
 
     // Create transaction parameters
@@ -40,10 +53,12 @@ export async function POST(request) {
       token: transaction.token,
       redirect_url: transaction.redirect_url,
       qr_code: transaction.qr_code, // QRIS code URL
+      environment: process.env.MIDTRANS_ENVIRONMENT,
     });
   } catch (error) {
     // --- LOGGING #4: Error Detail ---
     console.error("Payment error detail:", error);
+    console.error("Environment:", process.env.MIDTRANS_ENVIRONMENT);
     // --------------------------------
     return NextResponse.json(
       { success: false, error: error.message },
