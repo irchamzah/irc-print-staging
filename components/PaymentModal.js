@@ -1,7 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
 
-const MIDTRANS_ENVIRONMENT = process.env.MIDTRANS_ENVIRONMENT;
+import { useEffect, useState } from "react";
+import getConfig from "next/config";
 
 export default function PaymentModal({
   isOpen,
@@ -15,6 +15,13 @@ export default function PaymentModal({
   const [snapLoaded, setSnapLoaded] = useState(false);
   const [snapError, setSnapError] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  const { publicRuntimeConfig } = getConfig();
+  const midtransEnvironment =
+    publicRuntimeConfig?.midtransEnvironment || "sandbox";
+  const clientKey =
+    publicRuntimeConfig?.midtransClientKeys?.[midtransEnvironment] ||
+    publicRuntimeConfig?.midtransClientKeys?.sandbox;
 
   const openSnapPayment = () => {
     if (!paymentData?.token || !window.snap) {
@@ -101,20 +108,16 @@ export default function PaymentModal({
     setSnapLoaded(false);
     setSnapError(false);
 
+    console.log("ISI MIDTRANS ENVIRONMENT", midtransEnvironment);
+
     // Tentukan Snap URL berdasarkan environment
     const snapUrl =
-      MIDTRANS_ENVIRONMENT === "production"
+      midtransEnvironment === "production"
         ? "https://app.midtrans.com/snap/snap.js" // Production
         : "https://app.sandbox.midtrans.com/snap/snap.js"; // Sandbox
 
-    // GUNAKAN CLIENT KEY YANG BENAR - tidak perlu NEXT_PUBLIC prefix
-    const clientKey =
-      MIDTRANS_ENVIRONMENT === "production"
-        ? process.env.MIDTRANS_CLIENT_KEY_PRODUCTION // ← INI YANG BENAR
-        : process.env.MIDTRANS_CLIENT_KEY_SANDBOX; // ← INI YANG BENAR
-
     console.log(`🔧 Loading Midtrans Snap from: ${snapUrl}`);
-    console.log(`🔧 Environment: ${MIDTRANS_ENVIRONMENT}`);
+    console.log(`🔧 Environment: ${midtransEnvironment}`);
     console.log(`🔧 Client Key: ${clientKey ? "✅ Loaded" : "❌ Missing"}`);
 
     // Load Midtrans Snap script
@@ -124,7 +127,7 @@ export default function PaymentModal({
 
     script.onload = () => {
       console.log("✅ Snap script loaded successfully");
-      console.log(`🔧 Environment: ${MIDTRANS_ENVIRONMENT}`);
+      console.log(`🔧 Environment: ${midtransEnvironment}`);
       setSnapLoaded(true);
 
       // Auto open Snap hanya jika bukan restored transaction
