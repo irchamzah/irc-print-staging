@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const MIDTRANS_ENVIRONMENT = production;
+const MIDTRANS_ENVIRONMENT = "production";
 const MIDTRANS_CLIENT_KEY_SANDBOX = "Mid-client-wPXTxafwqLeUkNQD";
 const MIDTRANS_CLIENT_KEY_PRODUCTION = "Mid-client-S7IFqCPzEbOVyOrF";
 
@@ -115,8 +115,8 @@ export default function PaymentModal({
     // GUNAKAN CLIENT KEY YANG BENAR - tidak perlu NEXT_PUBLIC prefix
     const clientKey =
       MIDTRANS_ENVIRONMENT === "production"
-        ? process.env.MIDTRANS_CLIENT_KEY_PRODUCTION // ← INI YANG BENAR
-        : process.env.MIDTRANS_CLIENT_KEY_SANDBOX; // ← INI YANG BENAR
+        ? MIDTRANS_CLIENT_KEY_PRODUCTION // ← INI YANG BENAR
+        : MIDTRANS_CLIENT_KEY_SANDBOX; // ← INI YANG BENAR
 
     console.log(`🔧 Loading Midtrans Snap from: ${snapUrl}`);
     console.log(`🔧 Environment: ${MIDTRANS_ENVIRONMENT}`);
