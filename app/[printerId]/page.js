@@ -87,21 +87,51 @@ export default function PrinterPage() {
   };
 
   // Function untuk refresh pending transactions
+  // Function untuk refresh pending transactions dengan sinkronisasi Midtrans
   const refreshPendingTransactions = async () => {
     if (!userSession?.phone) return;
 
     setRefreshingTransactions(true);
     try {
+      console.log("🔄 Refreshing pending transactions with Midtrans sync...");
+
+      // Panggil endpoint khusus untuk sync dengan Midtrans
       const response = await fetch(
-        `/api/transactions/pending?phoneNumber=${userSession.phone}`
+        `/api/transactions/pending/sync?phoneNumber=${userSession.phone}`
       );
       const result = await response.json();
 
       if (result.success) {
         setPendingTransactions(result.pendingTransactions || []);
+
+        // Tampilkan notifikasi jika ada perubahan status
+        if (
+          result.updatedTransactions &&
+          result.updatedTransactions.length > 0
+        ) {
+          console.log(
+            `🔄 ${result.updatedTransactions.length} transactions updated from Midtrans`
+          );
+
+          // Tampilkan alert untuk transaksi yang berhasil dibayar
+          const settledTransactions = result.updatedTransactions.filter(
+            (tx) => tx.newStatus === "settlement"
+          );
+
+          if (settledTransactions.length > 0) {
+            alert(
+              `✅ ${settledTransactions.length} transaksi berhasil dibayar dan siap diprint!`
+            );
+          }
+        }
+
         console.log(
-          `🔄 Refreshed ${result.pendingTransactions.length} pending transactions`
+          `🔄 Refreshed ${
+            result.pendingTransactions?.length || 0
+          } pending transactions`
         );
+      } else {
+        console.error("Failed to refresh pending transactions:", result.error);
       }
     } catch (error) {
       console.error("Error refreshing pending transactions:", error);
@@ -110,13 +140,25 @@ export default function PrinterPage() {
     }
   };
 
-  // Function untuk melanjutkan transaksi
-  // Function untuk melanjutkan transaksi
   const continuePendingTransaction = async (transaction) => {
     try {
       console.log("🔄 Continuing pending transaction:", transaction.orderId);
 
-      // Cek apakah file tersimpan di server
+      // Jika status sudah settlement, langsung proses print
+      if (transaction.status === "settlement") {
+        console.log("✅ Transaction already paid, proceeding to print...");
+
+        // Set state dari transaction data
+        setAdvancedSettings(transaction.settings);
+        setTotalPages(transaction.fileData.pages);
+        setCurrentJobId(transaction.orderId);
+
+        // Langsung proses print tanpa payment modal
+        await processSuccessfulPayment(transaction);
+        return;
+      }
+
+      // Untuk transaksi pending, buka payment modal seperti biasa
       if (!transaction.fileData?.hasFile) {
         alert(
           "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru."
@@ -124,27 +166,19 @@ export default function PrinterPage() {
         return;
       }
 
-      // Set state dari transaction data
       setAdvancedSettings(transaction.settings);
       setTotalPages(transaction.fileData.pages);
       setCurrentJobId(transaction.orderId);
 
-      // Untuk continue transaction, kita perlu set file state
-      // Tapi karena file ada di server, kita tidak perlu set file di frontend
-      // File akan diambil dari server saat proses print
-
-      // Set payment data untuk modal
       setPaymentData({
         token: transaction.paymentToken,
         redirectUrl: transaction.redirectUrl,
         amount: transaction.cost,
         orderId: transaction.orderId,
-        isRestored: true, // Tandai sebagai restored transaction
+        isRestored: true,
       });
 
-      // Buka modal payment dengan status restored
       setShowPaymentModal(true);
-
       console.log("✅ Transaction restored for continuation");
     } catch (error) {
       console.error("Error continuing transaction:", error);
@@ -1112,6 +1146,7 @@ export default function PrinterPage() {
                     {/* Transactions List */}
                     {!loadingTransactions && pendingTransactions.length > 0 && (
                       <div className="space-y-3">
+                        {/* // Di dalam map transactions, tambahkan badge status */}
                         {pendingTransactions.map((transaction, index) => (
                           <div
                             key={transaction.orderId}
@@ -1123,6 +1158,21 @@ export default function PrinterPage() {
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="font-mono text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
                                     {transaction.orderId}
+                                  </span>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded ${
+                                      transaction.status === "settlement"
+                                        ? "bg-green-100 text-green-700"
+                                        : transaction.status === "expired"
+                                        ? "bg-red-100 text-red-700"
+                                        : "bg-yellow-100 text-yellow-700"
+                                    }`}
+                                  >
+                                    {transaction.status === "settlement"
+                                      ? "✅ Lunas"
+                                      : transaction.status === "expired"
+                                      ? "❌ Kadaluarsa"
+                                      : "⏳ Menunggu Bayar"}
                                   </span>
                                   <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
                                     {transaction.fileData?.pages || 0} halaman
@@ -1139,62 +1189,113 @@ export default function PrinterPage() {
                                   {new Date(
                                     transaction.createdAt
                                   ).toLocaleDateString("id-ID")}
+                                  {transaction.paidAt && (
+                                    <>
+                                      {" "}
+                                      • Lunas:{" "}
+                                      {new Date(
+                                        transaction.paidAt
+                                      ).toLocaleDateString("id-ID")}
+                                    </>
+                                  )}
                                 </p>
                               </div>
 
-                              {/* Action Buttons */}
+                              {/* Action Buttons - Sesuaikan berdasarkan status */}
                               <div className="flex gap-2 sm:flex-col sm:gap-1">
-                                <button
-                                  onClick={() =>
-                                    continuePendingTransaction(transaction)
-                                  }
-                                  disabled={isLoading}
-                                  className="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:bg-green-300 transition-colors cursor-pointer flex items-center gap-1"
-                                >
-                                  <svg
-                                    className="w-3 h-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                                {transaction.status === "settlement" ? (
+                                  <button
+                                    onClick={() =>
+                                      continuePendingTransaction(transaction)
+                                    }
+                                    disabled={isLoading}
+                                    className="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:bg-green-300 transition-colors cursor-pointer flex items-center gap-1"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                                    />
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                  </svg>
-                                  Lanjutkan
-                                </button>
-
-                                <button
-                                  onClick={() =>
-                                    cancelPendingTransaction(transaction)
-                                  }
-                                  disabled={isLoading}
-                                  className="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 disabled:bg-red-300 transition-colors cursor-pointer flex items-center gap-1"
-                                >
-                                  <svg
-                                    className="w-3 h-3"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                                    <svg
+                                      className="w-3 h-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                    Print Sekarang
+                                  </button>
+                                ) : transaction.status === "pending" ? (
+                                  <>
+                                    <button
+                                      onClick={() =>
+                                        continuePendingTransaction(transaction)
+                                      }
+                                      disabled={isLoading}
+                                      className="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors cursor-pointer flex items-center gap-1"
+                                    >
+                                      <svg
+                                        className="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                        />
+                                      </svg>
+                                      Lanjutkan Bayar
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        cancelPendingTransaction(transaction)
+                                      }
+                                      disabled={isLoading}
+                                      className="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 disabled:bg-red-300 transition-colors cursor-pointer flex items-center gap-1"
+                                    >
+                                      <svg
+                                        className="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={2}
+                                          d="M6 18L18 6M6 6l12 12"
+                                        />
+                                      </svg>
+                                      Batalkan
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() =>
+                                      cancelPendingTransaction(transaction)
+                                    }
+                                    className="px-3 py-2 bg-gray-600 text-white text-xs font-medium rounded-lg hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-1"
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
-                                  Batalkan
-                                </button>
+                                    <svg
+                                      className="w-3 h-3"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                    Hapus
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
