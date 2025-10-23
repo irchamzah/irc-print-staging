@@ -148,8 +148,10 @@ export default function PrinterPage() {
     try {
       console.log("🔄 Continuing pending transaction:", transaction.orderId);
 
+      console.log("STATUS TRANSAKSI", transaction.status);
+
       // Jika status sudah settlement, langsung proses print
-      if (transaction.status === "settlement") {
+      if (transaction.midtransStatus === "settlement") {
         console.log("✅ Transaction already paid, proceeding to print...");
 
         // Set state dari transaction data
@@ -187,6 +189,101 @@ export default function PrinterPage() {
     } catch (error) {
       console.error("Error continuing transaction:", error);
       alert("❌ Gagal memulihkan transaksi: " + error.message);
+    }
+  };
+
+  // Function untuk memproses print setelah payment sukses (untuk restored transactions)
+  const processSuccessfulPayment = async (transaction) => {
+    try {
+      setIsLoading(true);
+      console.log(
+        "🖨️ Processing successful payment for transaction:",
+        transaction.orderId
+      );
+
+      const totalPagesToPrint =
+        (transaction.settings.colorPages.length +
+          transaction.settings.bwPages.length) *
+        transaction.settings.copies;
+      const pointsToAdd = (transaction.cost / 2000).toFixed(2);
+
+      // Siapkan payload untuk print
+      const printPayload = {
+        orderId: transaction.orderId,
+        printerId: printerId,
+        copies: transaction.settings.copies,
+        colorPages: JSON.stringify(transaction.settings.colorPages),
+        bwPages: JSON.stringify(transaction.settings.bwPages),
+        totalCost: transaction.cost,
+        totalPages: totalPagesToPrint,
+        pointsToAdd: pointsToAdd,
+        phoneNumber: userSession?.phone,
+        isRestoredTransaction: true, // Tandai sebagai restored transaction
+      };
+
+      console.log("📤 Sending restored transaction to print API...");
+
+      // Kirim sebagai JSON ke endpoint print
+      const response = await fetch("/api/print", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(printPayload),
+      });
+
+      // Handle response
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Print API error response:", errorText);
+        throw new Error(
+          `Print failed: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Hapus transaksi dari pending setelah success
+        if (userSession) {
+          await fetch("/api/transactions/complete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: transaction.orderId,
+              phoneNumber: userSession.phone,
+            }),
+          });
+        }
+
+        // Refresh user points
+        if (userSession) {
+          setTimeout(() => {
+            refreshUserPoints();
+          }, 3000);
+        }
+
+        alert(
+          `✅ Print job berhasil dikirim!\n` +
+            `📄 ${totalPagesToPrint} halaman akan dicetak.\n` +
+            (userSession
+              ? `🎉 +${pointsToAdd} point telah ditambahkan!\n`
+              : "") +
+            `Job ID: ${result.jobId}\n\nHalaman akan direfresh...`
+        );
+
+        // Refresh transactions list
+        await refreshPendingTransactions();
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        throw new Error(result.error || "Gagal mengirim print job");
+      }
+    } catch (error) {
+      console.error("❌ Error processing successful payment:", error);
+      alert(`❌ Gagal memproses print: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
