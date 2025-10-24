@@ -363,7 +363,7 @@ export default function PaymentModal({
         {/* Action Buttons */}
         <div className="space-y-2">
           {/* Tombol Batalkan Transaksi (untuk user yang login) */}
-          {userSession && (
+          {/* {userSession && (
             <button
               onClick={handleCancelTransaction}
               disabled={isLoading || isCancelling}
@@ -390,10 +390,10 @@ export default function PaymentModal({
                 {isCancelling ? "Membatalkan..." : "Batalkan Transaksi"}
               </span>
             </button>
-          )}
+          )} */}
 
           {/* Tombol Tutup */}
-          <button
+          {/* <button
             onClick={onClose}
             disabled={isLoading || isCancelling}
             className="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 disabled:bg-gray-300 transition-colors font-medium cursor-pointer flex items-center justify-center space-x-2"
@@ -412,7 +412,7 @@ export default function PaymentModal({
               />
             </svg>
             <span>Tutup</span>
-          </button>
+          </button> */}
         </div>
 
         {/* Help Text */}
