@@ -48,6 +48,7 @@ export default function PrinterPage() {
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [refreshingTransactions, setRefreshingTransactions] = useState(false);
+  const [cooldownTimers, setCooldownTimers] = useState({});
 
   useEffect(() => {
     fetchPrinterDetails();
@@ -88,11 +89,23 @@ export default function PrinterPage() {
     }
   };
 
-  // Function untuk refresh pending transactions dengan sinkronisasi Midtrans
   const refreshPendingTransactions = async () => {
     if (!userSession?.phone) return;
 
+    // Cek cooldown untuk refresh
+    if (cooldownTimers["refresh"]) {
+      console.log("⏳ Refresh dalam cooldown, tunggu sebentar...");
+      return;
+    }
+
     setRefreshingTransactions(true);
+
+    // Set cooldown untuk refresh (3 detik)
+    setCooldownTimers((prev) => ({
+      ...prev,
+      ["refresh"]: true,
+    }));
+
     try {
       console.log("🔄 Refreshing pending transactions with Midtrans sync...");
 
@@ -172,14 +185,31 @@ export default function PrinterPage() {
       console.error("Error refreshing pending transactions:", error);
     } finally {
       setRefreshingTransactions(false);
+
+      // Reset cooldown setelah 3 detik
+      setTimeout(() => {
+        setCooldownTimers((prev) => ({
+          ...prev,
+          ["refresh"]: false,
+        }));
+      }, 3000);
     }
   };
 
   const continuePendingTransaction = async (transaction) => {
+    if (cooldownTimers[transaction.orderId]) {
+      console.log("⏳ Tombol dalam cooldown, tunggu sebentar...");
+      return;
+    }
+
     try {
       console.log("🔄 Continuing pending transaction:", transaction.orderId);
-      console.log("STATUS TRANSAKSI", transaction.midtransStatus);
-      console.log("ISI TRANSACTION", transaction);
+
+      // Set cooldown untuk tombol ini (5 detik)
+      setCooldownTimers((prev) => ({
+        ...prev,
+        [transaction.orderId]: true,
+      }));
 
       // SYNC KE MIDTRANS TERLEBIH DAHULU
       console.log("🔍 Syncing with Midtrans for latest status...");
@@ -227,6 +257,14 @@ export default function PrinterPage() {
 
             // Langsung proses print tanpa payment modal
             await processSuccessfulPayment(updatedTransaction);
+
+            // Reset cooldown setelah selesai
+            setTimeout(() => {
+              setCooldownTimers((prev) => ({
+                ...prev,
+                [transaction.orderId]: false,
+              }));
+            }, 3000);
             return;
           }
 
@@ -235,6 +273,11 @@ export default function PrinterPage() {
             alert(
               "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru."
             );
+            // Reset cooldown
+            setCooldownTimers((prev) => ({
+              ...prev,
+              [transaction.orderId]: false,
+            }));
             return;
           }
 
@@ -252,6 +295,14 @@ export default function PrinterPage() {
 
           setShowPaymentModal(true);
           console.log("✅ Transaction restored for continuation");
+
+          // Reset cooldown setelah modal terbuka
+          setTimeout(() => {
+            setCooldownTimers((prev) => ({
+              ...prev,
+              [transaction.orderId]: false,
+            }));
+          }, 3000);
         } else {
           throw new Error(syncResult.error || "Failed to sync with Midtrans");
         }
@@ -261,6 +312,12 @@ export default function PrinterPage() {
     } catch (error) {
       console.error("Error continuing transaction:", error);
       alert("❌ Gagal memulihkan transaksi: " + error.message);
+
+      // Reset cooldown jika error
+      setCooldownTimers((prev) => ({
+        ...prev,
+        [transaction.orderId]: false,
+      }));
     }
   };
 
@@ -1284,11 +1341,13 @@ export default function PrinterPage() {
 
                       <button
                         onClick={refreshPendingTransactions}
-                        disabled={refreshingTransactions}
+                        disabled={
+                          refreshingTransactions || cooldownTimers["refresh"]
+                        }
                         className="px-3 sm:px-4 py-2 text-xs sm:text-sm bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:bg-purple-50 transition-colors cursor-pointer flex items-center gap-1 sm:gap-2"
                         title="Refresh daftar transaksi"
                       >
-                        {refreshingTransactions ? (
+                        {refreshingTransactions || cooldownTimers["refresh"] ? (
                           <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-purple-700"></div>
                         ) : (
                           <svg
@@ -1305,7 +1364,11 @@ export default function PrinterPage() {
                             />
                           </svg>
                         )}
-                        <span className="hidden sm:inline">Refresh</span>
+                        <span className="hidden sm:inline">
+                          {refreshingTransactions || cooldownTimers["refresh"]
+                            ? "Loading..."
+                            : "Refresh"}
+                        </span>
                       </button>
                     </div>
 
@@ -1381,33 +1444,15 @@ export default function PrinterPage() {
                                     onClick={() =>
                                       continuePendingTransaction(transaction)
                                     }
-                                    disabled={isLoading}
+                                    disabled={
+                                      isLoading ||
+                                      cooldownTimers[transaction.orderId]
+                                    }
                                     className="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:bg-green-300 transition-colors cursor-pointer flex items-center gap-1"
                                   >
-                                    <svg
-                                      className="w-3 h-3"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M5 13l4 4L19 7"
-                                      />
-                                    </svg>
-                                    Print Sekarang
-                                  </button>
-                                ) : transaction.status === "pending" ? (
-                                  <>
-                                    <button
-                                      onClick={() =>
-                                        continuePendingTransaction(transaction)
-                                      }
-                                      disabled={isLoading}
-                                      className="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors cursor-pointer flex items-center gap-1"
-                                    >
+                                    {cooldownTimers[transaction.orderId] ? (
+                                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                    ) : (
                                       <svg
                                         className="w-3 h-3"
                                         fill="none"
@@ -1418,10 +1463,46 @@ export default function PrinterPage() {
                                           strokeLinecap="round"
                                           strokeLinejoin="round"
                                           strokeWidth={2}
-                                          d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                          d="M5 13l4 4L19 7"
                                         />
                                       </svg>
-                                      Lanjutkan Bayar
+                                    )}
+                                    {cooldownTimers[transaction.orderId]
+                                      ? "Loading..."
+                                      : "Print Sekarang"}
+                                  </button>
+                                ) : transaction.status === "pending" ? (
+                                  <>
+                                    <button
+                                      onClick={() =>
+                                        continuePendingTransaction(transaction)
+                                      }
+                                      disabled={
+                                        isLoading ||
+                                        cooldownTimers[transaction.orderId]
+                                      }
+                                      className="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors cursor-pointer flex items-center gap-1"
+                                    >
+                                      {cooldownTimers[transaction.orderId] ? (
+                                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                                      ) : (
+                                        <svg
+                                          className="w-3 h-3"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                          />
+                                        </svg>
+                                      )}
+                                      {cooldownTimers[transaction.orderId]
+                                        ? "Loading..."
+                                        : "Lanjutkan Bayar"}
                                     </button>
                                     <button
                                       onClick={() =>
