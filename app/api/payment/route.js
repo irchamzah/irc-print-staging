@@ -3,10 +3,14 @@ import midtransClient from "midtrans-client";
 
 export async function POST(request) {
   try {
-    const { amount, orderId } = await request.json();
+    const { amount, orderId, phoneNumber } = await request.json(); // ← TAMBAH phoneNumber
 
     // --- LOGGING #1: Payload dari Klien ---
-    console.log("Payload received from client:", { amount, orderId });
+    console.log("Payload received from client:", {
+      amount,
+      orderId,
+      phoneNumber,
+    });
 
     // Determine environment and keys
     const isProduction = process.env.MIDTRANS_ENVIRONMENT === "production";
@@ -39,8 +43,27 @@ export async function POST(request) {
       },
     };
 
+    // ✅ TAMBAHKAN CUSTOMER DETAILS JIKA ADA PHONE NUMBER
+    if (phoneNumber) {
+      parameter.customer_details = {
+        first_name: `Customer ${phoneNumber}`,
+        phone: phoneNumber,
+        billing_address: {
+          phone: phoneNumber,
+        },
+        shipping_address: {
+          phone: phoneNumber,
+        },
+      };
+
+      console.log(`📱 Customer phone added to Midtrans: ${phoneNumber}`);
+    }
+
     // --- LOGGING #2: Payload ke Midtrans ---
-    console.log("Payload sent to Midtrans:", JSON.stringify(parameter));
+    console.log(
+      "Payload sent to Midtrans:",
+      JSON.stringify(parameter, null, 2)
+    );
 
     // Create transaction
     const transaction = await snap.createTransaction(parameter);

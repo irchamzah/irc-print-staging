@@ -57,6 +57,7 @@ export default function PrinterPage() {
   // Fetch pending transactions ketika user login
   useEffect(() => {
     if (userSession?.phone) {
+      console.log("DATA USER SESSION", userSession);
       fetchPendingTransactions();
     } else {
       setPendingTransactions([]); // Clear jika logout
@@ -648,7 +649,7 @@ export default function PrinterPage() {
         body: JSON.stringify({
           amount: finalCost,
           orderId: orderId,
-          ...(userSession && { phoneNumber: userSession.phone }),
+          phoneNumber: userSession?.phone || null,
         }),
       });
 
