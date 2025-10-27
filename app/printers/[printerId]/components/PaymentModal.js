@@ -133,12 +133,12 @@ const ModalContent = ({
 
       {isSnapOpen && <SnapOpenState />}
 
-      {!isSnapOpen && (
+      {/* {!isSnapOpen && (
         <CancelButton
           isCancelling={isCancelling}
           onClick={onCancelTransaction}
         />
-      )}
+      )} */}
 
       {isLoading && <LoadingFileState />}
 

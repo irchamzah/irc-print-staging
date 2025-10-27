@@ -6,7 +6,6 @@ export const usePaymentManagement = (
   printerId,
   setAdvancedSettings,
   setTotalPages
-  // refreshUserPoints
 ) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -355,16 +354,16 @@ export const usePaymentManagement = (
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId: transaction.orderId,
-              phoneNumber: userSession.phone, // ✅ Use parameter
+              phoneNumber: userSession.phone,
               status: "settlement",
               midtransStatus: latestStatus,
             }),
           });
 
-          setAdvancedSettings(updatedTransaction.settings); // ✅ Now available
-          setTotalPages(updatedTransaction.fileData.pages); // ✅ Now available
+          setAdvancedSettings(updatedTransaction.settings);
+          setTotalPages(updatedTransaction.fileData.pages);
           setCurrentJobId(updatedTransaction.orderId);
-          await processSuccessfulPayment(updatedTransaction, userSession); // ✅ Pass userSession
+          await processSuccessfulPayment(updatedTransaction, userSession);
 
           setTimeout(() => {
             setCooldownTimers((prev) => ({
@@ -525,7 +524,7 @@ export const usePaymentManagement = (
             `Job ID: ${result.jobId}\n\nHalaman akan direfresh...`
         );
 
-        await refreshPendingTransactions();
+        await refreshAllData();
 
         setTimeout(() => {
           window.location.reload();
