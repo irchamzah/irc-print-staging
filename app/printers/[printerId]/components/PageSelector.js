@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { PRINT_SETTINGS } from "../lib/printConstants";
+import { PRINT_SETTINGS } from "../../../../lib/printConstants";
 
 const PDFPreview = dynamic(() => import("./PDFPreview"), {
   ssr: false,
