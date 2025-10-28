@@ -9,6 +9,7 @@ export const usePrinterPage = () => {
   const params = useParams();
   const printerId = params.printerId;
   const [printer, setPrinter] = useState(null);
+  const [isPrinterOffline, setIsPrinterOffline] = useState(false);
 
   // Initialize all custom hooks
   const userManagement = useUserManagement();
@@ -46,6 +47,19 @@ export const usePrinterPage = () => {
     userManagement.loadUserSession();
   }, []);
 
+  // ✅ EFFECT BARU: Check printer status berdasarkan data printer
+  useEffect(() => {
+    if (printer) {
+      // Cek status langsung dari data printer
+      const isOffline = printer.status === "offline";
+      setIsPrinterOffline(isOffline);
+
+      console.log(
+        `🖨️ Printer Status: ${printer.status} | Offline: ${isOffline}`
+      );
+    }
+  }, [printer]);
+
   // Functions
   const fetchPrinterDetails = async () => {
     try {
@@ -57,6 +71,8 @@ export const usePrinterPage = () => {
       }
     } catch (error) {
       console.error("Error fetching printer:", error);
+      // Jika error fetch, anggap offline untuk safety
+      setIsPrinterOffline(true);
     }
   };
 
@@ -70,6 +86,11 @@ export const usePrinterPage = () => {
 
   // Combined handleSubmit with refresh
   const handleSubmit = async (e) => {
+    if (isPrinterOffline) {
+      alert("❌ Printer sedang offline. Tidak dapat melakukan print saat ini.");
+      return;
+    }
+
     return paymentManagement.handleSubmit(
       e,
       fileManagement.file,
@@ -116,6 +137,7 @@ export const usePrinterPage = () => {
   return {
     // States from all hooks
     printer,
+    isPrinterOffline,
     ...userManagement,
     ...fileManagement,
     ...paymentManagement,

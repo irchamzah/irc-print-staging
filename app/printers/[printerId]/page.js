@@ -41,6 +41,7 @@ export default function PrinterPage() {
     refreshingTransactions,
     cooldownTimers,
     isRefreshing,
+    isPrinterOffline,
 
     // Setters
     setPhoneNumber,
@@ -123,6 +124,7 @@ export default function PrinterPage() {
                 isLoading={isLoading}
                 advancedSettings={advancedSettings}
                 onSubmit={handleSubmit}
+                isPrinterOffline={isPrinterOffline}
               />
             </form>
           </div>
