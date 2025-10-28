@@ -4,6 +4,7 @@ export const TransactionItem = ({
   onCancel,
   isLoading,
   cooldownTimers,
+  isPrinterOffline = false,
 }) => {
   const getStatusBadge = (status) => {
     switch (status) {
@@ -22,48 +23,68 @@ export const TransactionItem = ({
   const statusBadge = getStatusBadge(transaction.status);
 
   return (
-    <div className="bg-white rounded-lg border border-purple-100 p-3 sm:p-4 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-        {/* Transaction Info */}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+    <div className="bg-white rounded-lg border border-purple-100 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        {/* Transaction Info - Left Side */}
+        <div className="flex-1 min-w-0">
+          {/* Header dengan badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="font-mono text-xs bg-purple-100 text-purple-700 px-2 py-1.5 rounded-md border border-purple-200">
               {transaction.orderId}
             </span>
-            <span className={`text-xs px-2 py-1 rounded ${statusBadge.class}`}>
+            <span
+              className={`text-xs px-2.5 py-1.5 rounded-md border ${statusBadge.class}`}
+            >
               {statusBadge.text}
             </span>
-            <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
-              {transaction.fileData?.pages || 0} halaman
+            <span className="text-xs text-purple-600 bg-purple-50 px-2.5 py-1.5 rounded-md border border-purple-200">
+              📄 {transaction.fileData?.pages || 0} halaman
             </span>
           </div>
-          <p className="text-sm text-gray-700 font-medium truncate">
-            {transaction.fileData?.name || "Unknown File"}
-          </p>
-          <p className="text-lg font-bold text-purple-600">
-            Rp {transaction.cost?.toLocaleString("id-ID")}
-          </p>
-          <p className="text-xs text-gray-500">
-            Dibuat:{" "}
-            {new Date(transaction.createdAt).toLocaleDateString("id-ID")}
+
+          {/* File Info */}
+          <div className="space-y-2">
+            <p className="text-sm sm:text-base font-semibold text-gray-800 truncate">
+              {transaction.fileData?.name || "Unknown File"}
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-purple-600">
+              Rp {transaction.cost?.toLocaleString("id-ID")}
+            </p>
+          </div>
+
+          {/* Timestamps */}
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-gray-500">
+            <span>
+              Dibuat:{" "}
+              {new Date(transaction.createdAt).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
+            </span>
+            {transaction.paidAt && <span className="hidden sm:inline">•</span>}
             {transaction.paidAt && (
-              <>
-                {" "}
-                • Lunas:{" "}
-                {new Date(transaction.paidAt).toLocaleDateString("id-ID")}
-              </>
+              <span>
+                Lunas:{" "}
+                {new Date(transaction.paidAt).toLocaleDateString("id-ID", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })}
+              </span>
             )}
-          </p>
+          </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2 sm:flex-col sm:gap-1">
+        {/* Action Buttons - Right Side */}
+        <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[140px]">
           {transaction.status === "settlement" ? (
             <SettlementButton
               transaction={transaction}
               onContinue={onContinue}
               isLoading={isLoading}
               cooldownTimers={cooldownTimers}
+              isPrinterOffline={isPrinterOffline}
             />
           ) : transaction.status === "pending" ? (
             <PendingButtons
@@ -72,6 +93,7 @@ export const TransactionItem = ({
               onCancel={onCancel}
               isLoading={isLoading}
               cooldownTimers={cooldownTimers}
+              isPrinterOffline={isPrinterOffline}
             />
           ) : (
             <CancelButton onCancel={onCancel} transaction={transaction} />
@@ -87,30 +109,44 @@ const SettlementButton = ({
   onContinue,
   isLoading,
   cooldownTimers,
+  isPrinterOffline,
 }) => (
   <button
     onClick={() => onContinue(transaction)}
-    disabled={isLoading || cooldownTimers[transaction.orderId]}
-    className="px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 disabled:bg-green-300 transition-colors cursor-pointer flex items-center gap-1"
+    disabled={
+      isLoading || cooldownTimers[transaction.orderId] || isPrinterOffline
+    }
+    className={`w-full sm:w-auto px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+      isPrinterOffline
+        ? "bg-gray-400 cursor-not-allowed opacity-75"
+        : "bg-green-600 hover:bg-green-700 disabled:bg-green-300 shadow-sm hover:shadow-md"
+    }`}
   >
     {cooldownTimers[transaction.orderId] ? (
-      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+      <>
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        <span>Loading...</span>
+      </>
     ) : (
-      <svg
-        className="w-3 h-3"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 13l4 4L19 7"
-        />
-      </svg>
+      <>
+        <svg
+          className="w-4 h-4 flex-shrink-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+        <span className="whitespace-nowrap">
+          {isPrinterOffline ? "Printer Offline" : "Print Sekarang"}
+        </span>
+      </>
     )}
-    {cooldownTimers[transaction.orderId] ? "Loading..." : "Print Sekarang"}
   </button>
 );
 
@@ -120,41 +156,58 @@ const PendingButtons = ({
   onCancel,
   isLoading,
   cooldownTimers,
+  isPrinterOffline,
 }) => (
-  <>
+  <div className="flex flex-col sm:flex-row lg:flex-col gap-2">
+    {/* Continue Button */}
     <button
       onClick={() => onContinue(transaction)}
-      disabled={isLoading || cooldownTimers[transaction.orderId]}
+      disabled={
+        isLoading || cooldownTimers[transaction.orderId] || isPrinterOffline
+      }
       type="button"
-      className="px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors cursor-pointer flex items-center gap-1"
+      className={`w-full sm:flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+        isPrinterOffline
+          ? "bg-gray-400 cursor-not-allowed opacity-75"
+          : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 shadow-sm hover:shadow-md cursor-pointer"
+      }`}
     >
       {cooldownTimers[transaction.orderId] ? (
-        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+        <>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          <span>Loading...</span>
+        </>
       ) : (
-        <svg
-          className="w-3 h-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-          />
-        </svg>
+        <>
+          <svg
+            className="w-4 h-4 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+            />
+          </svg>
+          <span className="whitespace-nowrap">
+            {isPrinterOffline ? "Printer Offline" : "Lanjutkan Bayar"}
+          </span>
+        </>
       )}
-      {cooldownTimers[transaction.orderId] ? "Loading..." : "Lanjutkan Bayar"}
     </button>
+
+    {/* Cancel Button */}
     <button
       onClick={() => onCancel(transaction)}
       disabled={isLoading}
       type="button"
-      className="px-3 py-2 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 disabled:bg-red-300 transition-colors cursor-pointer flex items-center gap-1"
+      className="w-full sm:flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:bg-red-300 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
     >
       <svg
-        className="w-3 h-3"
+        className="w-4 h-4 flex-shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -166,18 +219,18 @@ const PendingButtons = ({
           d="M6 18L18 6M6 6l12 12"
         />
       </svg>
-      Batalkan
+      <span className="whitespace-nowrap">Batalkan</span>
     </button>
-  </>
+  </div>
 );
 
 const CancelButton = ({ onCancel, transaction }) => (
   <button
     onClick={() => onCancel(transaction)}
-    className="px-3 py-2 bg-gray-600 text-white text-xs font-medium rounded-lg hover:bg-gray-700 transition-colors cursor-pointer flex items-center gap-1"
+    className="w-full px-4 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
   >
     <svg
-      className="w-3 h-3"
+      className="w-4 h-4 flex-shrink-0"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -189,6 +242,6 @@ const CancelButton = ({ onCancel, transaction }) => (
         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
       />
     </svg>
-    Hapus
+    <span className="whitespace-nowrap">Hapus</span>
   </button>
 );

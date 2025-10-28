@@ -196,6 +196,7 @@ export const PointsSection = ({
                   "_blank"
                 )
               }
+              type="button"
               className="w-full max-w-xs mx-auto px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 transform hover:scale-105 font-medium text-sm sm:text-base cursor-pointer flex items-center justify-center gap-2 sm:gap-3 shadow-lg"
             >
               ⭐ Tukar Point

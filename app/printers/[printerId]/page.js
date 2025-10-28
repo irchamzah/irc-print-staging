@@ -113,6 +113,7 @@ export default function PrinterPage() {
                 onContinue={handleContinuePendingTransaction}
                 onCancel={handleCancelPendingTransaction}
                 isLoading={isLoading}
+                isPrinterOffline={isPrinterOffline}
               />
 
               <TotalCostSection
