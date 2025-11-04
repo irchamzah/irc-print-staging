@@ -30,10 +30,10 @@ export const SubmitButton = ({
       {isUserNotLoggedIn && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
           <p className="text-yellow-700 text-sm font-medium">
-            🔐 Harus check point terlebih dahulu
+            🔐 Harus Login terlebih dahulu
           </p>
           <p className="text-yellow-600 text-xs mt-1">
-            Masukkan nomor HP dan klik &quot;Check Point&quot; untuk melanjutkan
+            Masukkan nomor HP dan klik &quot;Login&quot; untuk melanjutkan
             pembayaran
           </p>
         </div>
@@ -62,7 +62,7 @@ export const SubmitButton = ({
         ) : isUserNotLoggedIn ? ( // ✅ TAMBAH CONDITION INI
           <div className="flex items-center justify-center">
             <span className="mr-2">🔐</span>
-            Harus Check Point
+            Harus Login
           </div>
         ) : (
           "💳 Bayar dan Print"

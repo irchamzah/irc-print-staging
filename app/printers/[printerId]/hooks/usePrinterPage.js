@@ -89,7 +89,7 @@ export const usePrinterPage = () => {
     // ✅ TAMBAH VALIDASI USER SESSION
     if (!userManagement.userSession?.phone) {
       alert(
-        "❌ Harus check point terlebih dahulu. Masukkan nomor HP dan klik 'Check Point'."
+        "❌ Harus Login terlebih dahulu. Masukkan nomor HP dan klik 'Login'."
       );
       return;
     }
