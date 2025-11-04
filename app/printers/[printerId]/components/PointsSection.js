@@ -65,7 +65,7 @@ export const PointsSection = ({
         <div className="space-y-4 sm:space-y-5">
           <div>
             <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-3">
-              Nomor HP untuk Cek Poin
+              Nomor HP untuk Check Point
             </label>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <input
@@ -89,7 +89,7 @@ export const PointsSection = ({
               </button>
             </div>
             <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3">
-              Masukkan nomor HP untuk melihat dan mendapatkan poin
+              Masukkan nomor HP untuk melihat dan mendapatkan point
             </p>
           </div>
         </div>

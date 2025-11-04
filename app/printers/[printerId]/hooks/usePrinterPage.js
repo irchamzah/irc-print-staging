@@ -86,6 +86,14 @@ export const usePrinterPage = () => {
 
   // Combined handleSubmit with refresh
   const handleSubmit = async (e) => {
+    // ✅ TAMBAH VALIDASI USER SESSION
+    if (!userManagement.userSession?.phone) {
+      alert(
+        "❌ Harus check point terlebih dahulu. Masukkan nomor HP dan klik 'Check Point'."
+      );
+      return;
+    }
+
     if (isPrinterOffline) {
       alert("❌ Printer sedang offline. Tidak dapat melakukan print saat ini.");
       return;
