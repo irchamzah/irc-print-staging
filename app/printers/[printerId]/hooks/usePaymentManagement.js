@@ -151,30 +151,14 @@ export const usePaymentManagement = (
 
       // JANGAN THROW ERROR JIKA STATUS BUKAN SETTLEMENT - USER MUNGKIN HANYA CLOSE MODAL
       if (!statusResult.success || statusResult.status !== "settlement") {
-        console.log("🔒 User closed payment modal or payment not completed:", {
-          status: statusResult.status,
-          orderId: currentJobId,
-        });
-
-        // Hanya tampilkan info, bukan error
-        if (statusResult.status === "pending") {
-          console.log("⏳ Payment still pending, user might complete later");
-        } else if (statusResult.status === "expire") {
-          console.log("❌ Payment expired naturally");
-        } else {
-          console.log("🔕 Payment modal closed by user");
-        }
-
         setIsLoading(false);
         return; // Keluar tanpa error
       }
 
-      console.log("✅ Payment verified, proceeding with print...");
-
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
         advancedSettings.copies;
-      const pointsToAdd = (advancedSettings.cost / 2000).toFixed(2);
+      const pointsToAdd = (advancedSettings.cost / 4000).toFixed(2);
 
       const printPayload = {
         orderId: currentJobId,
@@ -266,7 +250,7 @@ export const usePaymentManagement = (
       ) {
         alert(`❌ Error setelah pembayaran: ${error.message}`);
       } else {
-        console.log("🔕 Non-critical payment flow:", error.message);
+        alert(`❌ Error setelah pembayaran: ${error.message}`);
       }
     } finally {
       setIsLoading(false);
@@ -305,15 +289,11 @@ export const usePaymentManagement = (
   const continuePendingTransaction = async (transaction, userSession) => {
     // ✅ Add userSession parameter
     if (cooldownTimers[transaction.orderId]) {
-      console.log("⏳ Tombol dalam cooldown, tunggu sebentar...");
       return;
     }
 
     try {
       setCooldownTimers((prev) => ({ ...prev, [transaction.orderId]: true }));
-
-      // Sync with Midtrans
-      console.log(`🔍 Checking payment status for: ${transaction.orderId}`);
 
       const syncResponse = await fetch(
         `/api/payment/status?orderId=${transaction.orderId}`,
@@ -323,8 +303,6 @@ export const usePaymentManagement = (
           signal: AbortSignal.timeout(10000),
         }
       );
-
-      console.log("📡 [FRONTEND] Sync response status:", syncResponse.status);
 
       if (!syncResponse.ok) {
         const errorText = await syncResponse.text();
@@ -348,8 +326,6 @@ export const usePaymentManagement = (
         };
 
         if (latestStatus === "settlement") {
-          console.log("✅ Transaction already paid, proceeding to print...");
-
           await fetch(`${VPS_API_URL}/api/transactions/update-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -445,7 +421,6 @@ export const usePaymentManagement = (
       const result = await response.json();
 
       if (result.success) {
-        console.log("✅ Transaction cancelled:", transaction.orderId);
         alert("❌ Transaksi berhasil dibatalkan");
 
         // ✅ Refresh transactions dengan memanggil fetchPendingTransactions
@@ -464,16 +439,12 @@ export const usePaymentManagement = (
     // ✅ Add userSession parameter
     try {
       setIsLoading(true);
-      console.log(
-        "🖨️ Processing successful payment for transaction:",
-        transaction.orderId
-      );
 
       const totalPagesToPrint =
         (transaction.settings.colorPages.length +
           transaction.settings.bwPages.length) *
         transaction.settings.copies;
-      const pointsToAdd = (transaction.cost / 2000).toFixed(2);
+      const pointsToAdd = (transaction.cost / 4000).toFixed(2);
 
       const printPayload = {
         orderId: transaction.orderId,

@@ -57,10 +57,6 @@ export const usePrinterPage = () => {
       // Cek status langsung dari data printer
       const isOffline = printer.status === "offline";
       setIsPrinterOffline(isOffline);
-
-      console.log(
-        `🖨️ Printer Status: ${printer.status} | Offline: ${isOffline}`
-      );
     }
   }, [printer]);
 
@@ -128,10 +124,6 @@ export const usePrinterPage = () => {
     // Cek apakah kertas cukup
     const isInsufficient = totalNeeded > availablePaperCount;
     setIsPaperInsufficient(isInsufficient);
-
-    console.log(
-      `📊 Paper Check: Need ${totalNeeded} pages, Available ${availablePaperCount} pages, Insufficient: ${isInsufficient}`
-    );
   };
 
   // Combined handleFileUpload with isLoading
