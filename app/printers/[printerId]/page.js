@@ -10,7 +10,7 @@ import { SubmitButton } from "./components/SubmitButton";
 import { LoadingSpinner, FullPageLoader } from "./components/LoadingSpinner";
 import dynamic from "next/dynamic";
 import PaymentModal from "@/app/printers/[printerId]/components/PaymentModal";
-// HAPUS: import { useFileManagement } from "./hooks/useFileManagement"; // ❌ TIDAK PERLU
+import { useEffect } from "react";
 
 const PageSelector = dynamic(
   () => import("@/app/printers/[printerId]/components/PageSelector"),
@@ -21,7 +21,7 @@ const PageSelector = dynamic(
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     ),
-  }
+  },
 );
 
 export default function PrinterPage() {
@@ -47,13 +47,11 @@ export default function PrinterPage() {
     isPaperInsufficient,
     availablePaper,
     totalPagesNeeded,
-
-    // Setters
-    setPhoneNumber,
+    prices,
 
     // Functions
     handleFileUpload,
-    handleSettingsChange, // ✅ Ini sudah termasuk dari fileManagement
+    handleSettingsChange,
     handleSubmit,
     handlePaymentSuccess,
     handlePaymentCancelled,
@@ -68,6 +66,17 @@ export default function PrinterPage() {
 
   if (!printer) {
     return <LoadingSpinner />;
+  }
+
+  if (!prices) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Memuat data harga...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -89,8 +98,9 @@ export default function PrinterPage() {
                   <PageSelector
                     totalPages={totalPages}
                     initialSettings={advancedSettings}
-                    onSettingsChange={handleSettingsChange} // ✅ Gunakan yang dari usePrinterPage
+                    onSettingsChange={handleSettingsChange}
                     file={file}
+                    prices={prices}
                   />
                 </div>
               )}
@@ -125,6 +135,7 @@ export default function PrinterPage() {
               <TotalCostSection
                 advancedSettings={advancedSettings}
                 totalPages={totalPages}
+                prices={prices}
               />
 
               <SubmitButton

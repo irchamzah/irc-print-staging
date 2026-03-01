@@ -18,6 +18,7 @@ const PageSelector = ({
   onSettingsChange,
   initialSettings,
   file,
+  prices,
 }) => {
   const {
     pagesToShow,
@@ -36,22 +37,22 @@ const PageSelector = ({
     deselectAllPages,
     allPagesSelected,
     somePagesSelected,
-    selectedPages, // ✅ TAMBAH INI untuk tampilkan jumlah
-  } = usePageSelection(totalPages, initialSettings, onSettingsChange);
+    selectedPages,
+  } = usePageSelection(totalPages, initialSettings, onSettingsChange, prices);
 
   if (totalPages === 0) return null;
 
   return (
     <div className="space-y-6">
       {/* Header Section */}
-      <div className="text-center sm:text-left">
+      {/* <div className="text-center sm:text-left">
         <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
           Atur Jenis Print per Halaman
         </h3>
         <p className="text-gray-600 text-sm">
           Pilih tiap halaman akan dicetak warna atau hitam-putih
         </p>
-      </div>
+      </div> */}
 
       {/* Bulk Actions - Versi Minimalis */}
       <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
@@ -59,7 +60,7 @@ const PageSelector = ({
           {/* Bagian Kiri: Label & Tombol */}
           <div className="space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
             <span className="text-sm font-medium text-gray-700 block sm:inline">
-              Pilih Halaman:
+              Pilih halaman yang akan di print:
             </span>
 
             <div className="flex gap-2">
@@ -154,7 +155,7 @@ const PageSelector = ({
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
         {pagesToShow.map(
           (
-            { page, type, selected } // ✅ TAMBAH selected di sini
+            { page, type, selected }, // ✅ TAMBAH selected di sini
           ) => (
             <PageCard
               key={page}
@@ -167,7 +168,7 @@ const PageSelector = ({
               onSelectionChange={handlePageSelection}
               onRenderError={handleRenderError}
             />
-          )
+          ),
         )}
       </div>
 

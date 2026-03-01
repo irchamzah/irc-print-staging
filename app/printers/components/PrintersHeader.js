@@ -6,9 +6,9 @@ export default function PrintersHeader({ userLocation }) {
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
             🖨️ Printer Terdekat
           </h1>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          {/* <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Temukan printer terdekat untuk mencetak dokumen Anda
-          </p>
+          </p> */}
 
           {/* Location Status */}
           <div className="mt-4 flex items-center justify-center">
