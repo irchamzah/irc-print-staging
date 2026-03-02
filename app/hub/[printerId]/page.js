@@ -175,7 +175,7 @@ export default function PartnerHubPage() {
 
         <PrintJobsTable
           jobs={filteredJobs}
-          refills={paperRefills}
+          refills={filteredRefills}
           onViewRefill={handleViewRefill}
           formatRupiah={formatRupiah}
           formatDate={formatDate}

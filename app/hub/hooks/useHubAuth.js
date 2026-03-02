@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export const useHubAuth = () => {
   const [user, setUser] = useState(null);
@@ -25,6 +25,8 @@ export const useHubAuth = () => {
   const login = async (phone, password) => {
     setLoading(true);
     setError(null);
+
+    console.log("API URL:", API_URL);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {

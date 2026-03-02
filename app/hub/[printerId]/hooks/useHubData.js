@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useHubAuth } from "../../hooks/useHubAuth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export const useHubData = (printerId) => {
   const { token } = useHubAuth();

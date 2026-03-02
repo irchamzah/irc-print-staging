@@ -66,35 +66,35 @@ export default function HubPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500 mb-1">Total Printer</p>
-          <p className="text-2xl font-bold text-gray-800">
+          <span className="text-2xl font-bold text-gray-800">
             {loadingPrinters ? (
               <div className="animate-pulse h-8 w-16 bg-gray-200 rounded"></div>
             ) : (
               printers.length
             )}
-          </p>
+          </span>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500 mb-1">Printer Online</p>
-          <p className="text-2xl font-bold text-green-600">
+          <span className="text-2xl font-bold text-green-600">
             {loadingPrinters ? (
               <div className="animate-pulse h-8 w-16 bg-gray-200 rounded"></div>
             ) : (
               onlineCount
             )}
-          </p>
+          </span>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-xs text-gray-500 mb-1">Total Kertas</p>
-          <p className="text-2xl font-bold text-blue-600">
+          <span className="text-2xl font-bold text-blue-600">
             {loadingPrinters ? (
               <div className="animate-pulse h-8 w-16 bg-gray-200 rounded"></div>
             ) : (
               formatNumber(totalPaper)
             )}
-          </p>
+          </span>
         </div>
       </div>
 
