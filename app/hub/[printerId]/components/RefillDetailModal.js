@@ -1,3 +1,4 @@
+// app/hub/[printerId]/components/RefillDetailModal.js
 "use client";
 
 export const RefillDetailModal = ({
@@ -5,8 +6,10 @@ export const RefillDetailModal = ({
   refill,
   jobs,
   onClose,
+  onMarkAsPaid,
   formatRupiah,
   formatDate,
+  userRole,
 }) => {
   if (!isOpen || !refill) return null;
 
@@ -82,12 +85,12 @@ export const RefillDetailModal = ({
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Profit Anda:</span>
+              <span className="text-sm text-gray-600">Profit Partner:</span>
               <span className="text-lg font-bold text-green-600">
                 {formatRupiah(refill.partnerProfit)}
               </span>
             </div>
-            <div className="mt-3 pt-3 border-t border-blue-200">
+            <div className="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
               <span
                 className={`text-sm px-3 py-1 rounded-full ${
                   refill.status === "paid"
@@ -99,6 +102,16 @@ export const RefillDetailModal = ({
                   ? "✓ Sudah Dibayar"
                   : "⏳ Menunggu Pembayaran"}
               </span>
+
+              {/* Tombol Bayar untuk Admin */}
+              {userRole === "super_admin" && refill.status !== "paid" && (
+                <button
+                  onClick={() => onMarkAsPaid(refill.refillId)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                >
+                  Tandai Dibayar
+                </button>
+              )}
             </div>
           </div>
 
@@ -117,7 +130,7 @@ export const RefillDetailModal = ({
                   <div>
                     <p className="font-medium text-gray-800">{job.fileName}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {job.phoneNumber}
+                      {job.phoneNumber || "No phone"}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {formatDate(job.createdAt)}
@@ -128,8 +141,7 @@ export const RefillDetailModal = ({
                       {formatRupiah(job.totalCost)}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                      Profit:{" "}
-                      {formatRupiah((job.totalCost * refill.profitShare) / 100)}
+                      Profit: {formatRupiah(job.partnerProfit || 0)}
                     </p>
                   </div>
                 </div>

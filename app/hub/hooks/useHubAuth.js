@@ -1,143 +1,121 @@
+// app/hub/hooks/useHubAuth.js
 "use client";
 import { useState, useEffect } from "react";
 
-// Data dummy users
-const dummyUsers = [
-  {
-    id: "user-001",
-    name: "Super Admin",
-    phone: "085111222333",
-    role: "super_admin",
-    password: "admin123", // Untuk demo saja
-    accessPrinters: [
-      "irc-print-perum-green-garden-jember",
-      "irc-print-kaliurang",
-      "irc-print-malang",
-    ], // Semua printer
-  },
-  {
-    id: "user-002",
-    name: "Budi Partner",
-    phone: "085111222444",
-    role: "partner",
-    password: "partner123",
-    accessPrinters: ["irc-print-perum-green-garden-jember"], // Hanya 1 printer
-  },
-  {
-    id: "user-003",
-    name: "Siti Partner",
-    phone: "085111222555",
-    role: "partner",
-    password: "partner123",
-    accessPrinters: ["irc-print-kaliurang"], // Hanya 1 printer
-  },
-];
-
-// Data dummy printers
-const dummyPrinters = [
-  {
-    printerId: "irc-print-perum-green-garden-jember",
-    name: "Irc Print - Perum Green Garden - Jember",
-    location: {
-      address: "Tegalgede, Sumbersari, Jember",
-      city: "Jember",
-    },
-    status: "online",
-    paperStatus: {
-      paperCount: 61,
-    },
-    statistics: {
-      totalJobs: 109,
-      totalPagesPrinted: 123,
-    },
-    lastActive: "2026-03-01T14:30:00.000Z",
-  },
-  {
-    printerId: "irc-print-kaliurang",
-    name: "Irc Print - Kaliurang - Malang",
-    location: {
-      address: "Kaliurang, Malang",
-      city: "Malang",
-    },
-    status: "online",
-    paperStatus: {
-      paperCount: 85,
-    },
-    statistics: {
-      totalJobs: 67,
-      totalPagesPrinted: 89,
-    },
-    lastActive: "2026-03-01T13:15:00.000Z",
-  },
-  {
-    printerId: "irc-print-malang",
-    name: "Irc Print - Malang Kota",
-    location: {
-      address: "Jl. Merdeka No. 45, Malang",
-      city: "Malang",
-    },
-    status: "offline",
-    paperStatus: {
-      paperCount: 120,
-    },
-    statistics: {
-      totalJobs: 203,
-      totalPagesPrinted: 345,
-    },
-    lastActive: "2026-02-28T10:20:00.000Z",
-  },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export const useHubAuth = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [token, setToken] = useState(null);
 
   // Cek session saat initial load
   useEffect(() => {
+    const savedToken = localStorage.getItem("hubToken");
     const savedUser = localStorage.getItem("hubUser");
-    if (savedUser) {
+
+    if (savedToken && savedUser) {
+      setToken(savedToken);
       setUser(JSON.parse(savedUser));
     }
   }, []);
 
   // Login function
-  const login = (phone, password) => {
+  const login = async (phone, password) => {
     setLoading(true);
     setError(null);
 
-    // Simulasi API call
-    setTimeout(() => {
-      const foundUser = dummyUsers.find(
-        (u) => u.phone === phone && u.password === password,
-      );
+    try {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone, password }),
+      });
 
-      if (foundUser) {
-        // Hapus password sebelum disimpan
-        const { password, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword);
-        localStorage.setItem("hubUser", JSON.stringify(userWithoutPassword));
+      const result = await response.json();
+
+      if (result.success) {
+        const { user, token, accessiblePrinters } = result.data;
+
+        setUser(user);
+        setToken(token);
+
+        // Simpan ke localStorage
+        localStorage.setItem("hubToken", token);
+        localStorage.setItem("hubUser", JSON.stringify(user));
+        localStorage.setItem(
+          "accessiblePrinters",
+          JSON.stringify(accessiblePrinters),
+        );
+
         setLoading(false);
+        return { success: true, user };
       } else {
-        setError("Nomor HP atau password salah");
+        setError(result.error || "Login failed");
         setLoading(false);
+        return { success: false, error: result.error };
       }
-    }, 1000);
+    } catch (error) {
+      console.error("❌ Login error:", error);
+      setError("Network error. Please try again.");
+      setLoading(false);
+      return { success: false, error: "Network error" };
+    }
   };
 
   // Logout function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("hubUser");
+  const logout = async () => {
+    try {
+      if (token) {
+        await fetch(`${API_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      // Hapus dari localStorage
+      setUser(null);
+      setToken(null);
+      localStorage.removeItem("hubToken");
+      localStorage.removeItem("hubUser");
+      localStorage.removeItem("accessiblePrinters");
+    }
   };
 
-  // Get accessible printers berdasarkan user
-  const getAccessiblePrinters = () => {
-    if (!user) return [];
+  // Get accessible printers from API
+  const getAccessiblePrinters = async () => {
+    if (!user || !token) return [];
 
-    return dummyPrinters.filter((printer) =>
-      user.accessPrinters.includes(printer.printerId),
-    );
+    try {
+      const response = await fetch(
+        `${API_URL}/api/users/${user.userId}/printers`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const result = await response.json();
+
+      if (result.success) {
+        return result.data;
+      } else {
+        console.error("Failed to fetch printers:", result.error);
+        return [];
+      }
+    } catch (error) {
+      console.error("Error fetching printers:", error);
+      return [];
+    }
   };
 
   // Format tanggal
@@ -145,6 +123,7 @@ export const useHubAuth = () => {
     return new Date(dateString).toLocaleDateString("id-ID", {
       day: "numeric",
       month: "short",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -157,6 +136,7 @@ export const useHubAuth = () => {
 
   return {
     user,
+    token,
     loading,
     error,
     login,
