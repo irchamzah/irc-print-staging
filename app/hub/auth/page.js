@@ -20,16 +20,13 @@ export default function HubLoginPage() {
     setError("");
 
     try {
-      const response = await fetch(
-        `${process.env.VPS_API_URL}/api/hub/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ phone, password }),
+      const response = await fetch(`/api/hub/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ phone, password }),
+      });
 
       const data = await response.json();
 
