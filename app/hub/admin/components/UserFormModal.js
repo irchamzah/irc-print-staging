@@ -13,7 +13,7 @@ export const UserFormModal = ({
   const [formData, setFormData] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
-    role: user?.role || "partner",
+    role: user?.role || "",
     password: "",
     accessPrinters: user?.accessPrinters || [],
   });
@@ -23,7 +23,7 @@ export const UserFormModal = ({
       setFormData({
         name: user.name || "",
         phone: user.phone || "",
-        role: user.role || "partner",
+        role: user.role || "",
         password: "",
         accessPrinters: user.accessPrinters || [],
       });
@@ -32,7 +32,7 @@ export const UserFormModal = ({
       setFormData({
         name: "",
         phone: "",
-        role: "partner",
+        role: "",
         password: "",
         accessPrinters: [],
       });
@@ -153,6 +153,7 @@ export const UserFormModal = ({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
+                <option value="user">User</option>
                 <option value="partner">Partner</option>
                 <option value="super_admin">Super Admin</option>
               </select>

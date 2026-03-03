@@ -65,54 +65,6 @@ export const PaperStatusCard = ({
         </div>
 
         <div className="flex flex-col sm:items-end gap-2">
-          {/* Info kapasitas */}
-          {/* {isNearMax && (
-            <div className="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200 mb-2">
-              <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-                <span className="text-sm">
-                  Kapasitas hampir penuh! Sisa {remainingToMax} lembar lagi
-                </span>
-              </div>
-            </div>
-          )} */}
-
-          {/* Info tidak bisa isi ulang */}
-          {!canRefill && !isNearMax && (
-            <div className="text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200 mb-2">
-              <div className="flex items-center gap-2">
-                <svg
-                  className="w-4 h-4 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm">
-                  Tidak cukup ruang untuk isi {REFILL_AMOUNT} lembar
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Tombol Isi Ulang */}
           <button
             onClick={onRefill}
