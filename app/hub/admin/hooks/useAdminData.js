@@ -1,9 +1,8 @@
-// app/hub/admin/hooks/useAdminData.js
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
-const API_URL = process.env.VPS_API_URL;
+// Tidak perlu API_URL karena kita pakai internal API
 
 export const useAdminData = () => {
   const { token, user } = useHubAuth();
@@ -30,69 +29,78 @@ export const useAdminData = () => {
     setLoading(true);
     setError(null);
 
-    console.log("API_URL:", API_URL); // ✅ Debugging API_URL
-
     try {
-      // Fetch users
-      const usersRes = await fetch(`${API_URL}/api/hub/admin/users`, {
+      console.log("🔍 Fetching admin data from internal API...");
+
+      // Fetch users via internal API
+      const usersRes = await fetch(`/api/hub/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!usersRes.ok) {
-        throw new Error(`HTTP error! status: ${usersRes.status}`);
+        throw new Error(`Users API error! status: ${usersRes.status}`);
       }
 
       const usersData = await usersRes.json();
-      if (usersData.success) setUsers(usersData.data);
+      if (usersData.success) {
+        setUsers(usersData.data);
+      } else {
+        console.warn("Users data error:", usersData.error);
+      }
 
-      // Fetch printers
-      const printersRes = await fetch(`${API_URL}/api/hub/admin/printers`, {
+      // Fetch printers via internal API
+      const printersRes = await fetch(`/api/hub/admin/printers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!printersRes.ok) {
-        throw new Error(`HTTP error! status: ${printersRes.status}`);
+        throw new Error(`Printers API error! status: ${printersRes.status}`);
       }
 
       const printersData = await printersRes.json();
-      if (printersData.success) setPrinters(printersData.data);
+      if (printersData.success) {
+        setPrinters(printersData.data);
+      }
 
-      // Fetch refills
-      const refillsRes = await fetch(
-        `${API_URL}/api/hub/admin/paper-refills?limit=100`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      // Fetch refills via internal API
+      const refillsRes = await fetch(`/api/hub/admin/paper-refills?limit=100`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!refillsRes.ok) {
-        throw new Error(`HTTP error! status: ${refillsRes.status}`);
+        throw new Error(`Refills API error! status: ${refillsRes.status}`);
       }
 
       const refillsData = await refillsRes.json();
-      if (refillsData.success) setRefills(refillsData.data);
+      if (refillsData.success) {
+        setRefills(refillsData.data);
+      }
 
-      // Fetch refill stats
+      // Fetch refill stats via internal API
       const statsRes = await fetch(
-        `${API_URL}/api/hub/admin/paper-refills/stats/summary`,
+        `/api/hub/admin/paper-refills/stats/summary`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
 
       if (!statsRes.ok) {
-        throw new Error(`HTTP error! status: ${statsRes.status}`);
+        throw new Error(`Stats API error! status: ${statsRes.status}`);
       }
 
       const statsData = await statsRes.json();
-      if (statsData.success) setRefillStats(statsData.data);
+      if (statsData.success) {
+        setRefillStats(statsData.data);
+      }
+
+      console.log("✅ All admin data fetched successfully");
     } catch (error) {
-      console.error("Error fetching admin data:", error);
+      console.error("❌ Error fetching admin data:", error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
-  }, [token, isSuperAdmin]); // ✅ Dependencies yang stabil
+  }, [token, isSuperAdmin]);
 
   // ✅ useEffect dengan dependencies yang benar
   useEffect(() => {
@@ -104,15 +112,14 @@ export const useAdminData = () => {
 
     // Cleanup function
     return () => {
-      // Reset ref when component unmounts
       fetchedRef.current = false;
     };
-  }, [isSuperAdmin, token, fetchAllData]); // ✅ Dependencies lengkap
+  }, [isSuperAdmin, token, fetchAllData]);
 
-  // User CRUD
+  // User CRUD - semua via internal API
   const createUser = async (userData) => {
     try {
-      const response = await fetch(`${API_URL}/api/hub/admin/users`, {
+      const response = await fetch(`/api/hub/admin/users`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -122,7 +129,10 @@ export const useAdminData = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
@@ -138,7 +148,7 @@ export const useAdminData = () => {
 
   const updateUser = async (userId, userData) => {
     try {
-      const response = await fetch(`${API_URL}/api/hub/admin/users/${userId}`, {
+      const response = await fetch(`/api/hub/admin/users/${userId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -148,7 +158,10 @@ export const useAdminData = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
@@ -164,13 +177,16 @@ export const useAdminData = () => {
 
   const deleteUser = async (userId) => {
     try {
-      const response = await fetch(`${API_URL}/api/hub/admin/users/${userId}`, {
+      const response = await fetch(`/api/hub/admin/users/${userId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
@@ -184,10 +200,10 @@ export const useAdminData = () => {
     }
   };
 
-  // Printer CRUD
+  // Printer CRUD - semua via internal API
   const createPrinter = async (printerData) => {
     try {
-      const response = await fetch(`${API_URL}/api/hub/admin/printers`, {
+      const response = await fetch(`/api/hub/admin/printers`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -197,7 +213,10 @@ export const useAdminData = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
@@ -213,20 +232,20 @@ export const useAdminData = () => {
 
   const updatePrinter = async (printerId, printerData) => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/hub/admin/printers/${printerId}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(printerData),
+      const response = await fetch(`/api/hub/admin/printers/${printerId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(printerData),
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
@@ -242,16 +261,16 @@ export const useAdminData = () => {
 
   const deletePrinter = async (printerId) => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/hub/admin/printers/${printerId}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const response = await fetch(`/api/hub/admin/printers/${printerId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
@@ -265,11 +284,11 @@ export const useAdminData = () => {
     }
   };
 
-  // Refill operations
+  // Refill operations - via internal API
   const markRefillAsPaid = async (refillId, data = {}) => {
     try {
       const response = await fetch(
-        `${API_URL}/api/hub/admin/paper-refills/${refillId}/pay`,
+        `/api/hub/admin/paper-refills/${refillId}/pay`,
         {
           method: "POST",
           headers: {
@@ -281,7 +300,10 @@ export const useAdminData = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status} - ${errorText}`,
+        );
       }
 
       const result = await response.json();

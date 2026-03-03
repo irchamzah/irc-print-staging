@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL || "http://103.150.90.67:3002";
+const VPS_API_URL = process.env.VPS_API_URL;
 
 // GET /api/hub/admin/printers/[printerId] - Get single printer
 export async function GET(request, { params }) {
