@@ -143,7 +143,7 @@ export const DateRangeFilter = ({
 
       {/* Custom Date Range Input */}
       {showCustom && (
-        <div className="mt-4 pt-4 border-t border-gray-200 text-black">
+        <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row items-end gap-4">
             <div className="flex-1">
               <label className="block text-xs text-gray-500 mb-1">

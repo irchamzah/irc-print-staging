@@ -56,7 +56,7 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
       {/* Footer */}
       <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
         <span className="text-xs text-gray-400">
-          Terakhir aktif: {formatDate(printer.lastActive)}
+          Terakhir aktif: {formatDate(printer.lastSeen)}
         </span>
         <svg
           className="w-4 h-4 text-gray-400"

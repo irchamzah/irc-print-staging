@@ -8,13 +8,26 @@ export const PaperStatusCard = ({
   showSuccess,
   formatDate,
 }) => {
+  // Constants
+  const MAX_PAPER = 100;
+  const REFILL_AMOUNT = 80;
+  const isNearMax = paperCount > 20; // Jika sisa >20, tidak bisa isi ulang karena akan melebihi 100
+  const remainingToMax = MAX_PAPER - paperCount;
+  const canRefill = !isNearMax && remainingToMax >= REFILL_AMOUNT;
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+          <div
+            className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              isNearMax ? "bg-yellow-100" : "bg-green-100"
+            }`}
+          >
             <svg
-              className="w-6 h-6 text-green-600"
+              className={`w-6 h-6 ${
+                isNearMax ? "text-yellow-600" : "text-green-600"
+              }`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -29,18 +42,93 @@ export const PaperStatusCard = ({
           </div>
           <div>
             <p className="text-sm text-gray-500">Sisa Kertas</p>
-            <p className="text-3xl font-bold text-gray-800">{paperCount}</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-3xl font-bold text-gray-800">
+              {paperCount} / {MAX_PAPER}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${
+                    isNearMax ? "bg-yellow-500" : "bg-green-500"
+                  }`}
+                  style={{ width: `${(paperCount / MAX_PAPER) * 100}%` }}
+                />
+              </div>
+              <span className="text-xs text-gray-500">
+                {Math.round((paperCount / MAX_PAPER) * 100)}%
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
               Terakhir diisi: {formatDate(lastRefill)}
             </p>
           </div>
         </div>
 
         <div className="flex flex-col sm:items-end gap-2">
+          {/* Info kapasitas */}
+          {/* {isNearMax && (
+            <div className="text-sm text-yellow-600 bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200 mb-2">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
+                </svg>
+                <span className="text-sm">
+                  Kapasitas hampir penuh! Sisa {remainingToMax} lembar lagi
+                </span>
+              </div>
+            </div>
+          )} */}
+
+          {/* Info tidak bisa isi ulang */}
+          {!canRefill && !isNearMax && (
+            <div className="text-sm text-orange-600 bg-orange-50 px-3 py-2 rounded-lg border border-orange-200 mb-2">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-4 h-4 flex-shrink-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-sm">
+                  Tidak cukup ruang untuk isi {REFILL_AMOUNT} lembar
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Tombol Isi Ulang */}
           <button
             onClick={onRefill}
-            disabled={loading}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 min-w-[200px]"
+            disabled={loading || !canRefill}
+            className={`px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 min-w-[200px] transition-all ${
+              canRefill
+                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+            title={
+              !canRefill
+                ? isNearMax
+                  ? "Kapasitas hampir penuh"
+                  : `Tidak cukup ruang (butuh ${REFILL_AMOUNT - remainingToMax} lembar lagi)`
+                : "Isi ulang kertas"
+            }
           >
             {loading ? (
               <>
@@ -62,11 +150,19 @@ export const PaperStatusCard = ({
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                <span>Isi Ulang Kertas (+80)</span>
+                <span>Isi Ulang Kertas (+{REFILL_AMOUNT})</span>
               </>
             )}
           </button>
 
+          {/* Info sisa kapasitas */}
+          {canRefill && (
+            <p className="text-xs text-gray-500 text-center sm:text-right">
+              Sisa kapasitas: {remainingToMax} lembar
+            </p>
+          )}
+
+          {/* Success message */}
           {showSuccess && (
             <div className="text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded-lg border border-green-200">
               ✅ Kertas berhasil ditambahkan!

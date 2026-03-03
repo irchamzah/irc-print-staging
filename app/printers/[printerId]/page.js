@@ -10,7 +10,6 @@ import { SubmitButton } from "./components/SubmitButton";
 import { LoadingSpinner, FullPageLoader } from "./components/LoadingSpinner";
 import dynamic from "next/dynamic";
 import PaymentModal from "@/app/printers/[printerId]/components/PaymentModal";
-import { useEffect } from "react";
 import BottomBar from "@/app/components/BottomBar";
 import TopBar from "@/app/components/TopBar";
 

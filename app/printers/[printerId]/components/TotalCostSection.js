@@ -33,7 +33,7 @@ export const TotalCostSection = ({ advancedSettings, totalPages, prices }) => {
   const sheetsNeeded = nextTier ? nextTier.minSheets - totalSheets : 0;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 text-black">
+    <div className="bg-white rounded-xl border border-gray-200 p-4">
       {/* Total */}
       <div className="flex justify-between items-center mb-4">
         <div>

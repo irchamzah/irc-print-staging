@@ -69,7 +69,7 @@ export const PointsSection = ({
                 value={localPhoneNumber}
                 onChange={handleLocalPhoneChange}
                 placeholder="085117038583"
-                className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-sm"
+                className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-sm"
               />
               <button
                 type="button"

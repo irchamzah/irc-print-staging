@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { useHubAuth } from "../../../auth/hooks/useHubAuth";
 
-// Tidak perlu API_URL karena kita pakai internal API
-
 export const useHubData = (printerId) => {
   const { token, user } = useHubAuth();
 
@@ -31,7 +29,7 @@ export const useHubData = (printerId) => {
     try {
       console.log("🔍 Fetching printer details from internal API...");
 
-      // ✅ Fetch printer details via internal API
+      // Fetch printer details via internal API
       const printerRes = await fetch(`/api/hub/printers/${printerId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,7 +49,7 @@ export const useHubData = (printerId) => {
         throw new Error(printerData.error || "Failed to fetch printer");
       }
 
-      // ✅ Fetch refills via internal API
+      // Fetch refills via internal API
       console.log("🔍 Fetching refills via internal API...");
       const refillsRes = await fetch(
         `/api/hub/printers/${printerId}/refills?limit=100`,
@@ -75,11 +73,9 @@ export const useHubData = (printerId) => {
         console.warn("Refills data not in expected format:", refillsData);
       }
 
-      // ✅ Fetch print jobs via internal API (kita perlu buat endpoint ini juga)
+      // Fetch print jobs via internal API
       console.log("🔍 Fetching print jobs via internal API...");
 
-      // Kita perlu buat endpoint /api/hub/print-jobs nanti
-      // Untuk sementara, kita bisa pakek existing endpoint tapi via internal API
       const jobsRes = await fetch(
         `/api/hub/printers/${printerId}/jobs?limit=100`,
         {
@@ -91,7 +87,6 @@ export const useHubData = (printerId) => {
       );
 
       if (!jobsRes.ok) {
-        // Jika endpoint belum ada, fallback ke print jobs kosong
         console.warn("Jobs endpoint not available yet");
         setPrintJobs([]);
       } else {
@@ -112,9 +107,16 @@ export const useHubData = (printerId) => {
 
   const handleRefillPaper = async () => {
     try {
+      // Validasi di frontend dulu
+      if (printer?.paperStatus?.paperCount > 20) {
+        return {
+          success: false,
+          error: "Kapasitas hampir penuh. Tidak bisa menambah kertas.",
+        };
+      }
+
       console.log("🔍 Creating refill via internal API...");
 
-      // ✅ Create refill via internal API
       const response = await fetch(`/api/hub/printers/${printerId}/refills`, {
         method: "POST",
         headers: {
@@ -138,6 +140,49 @@ export const useHubData = (printerId) => {
       }
     } catch (error) {
       console.error("Error refilling paper:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // ✅ TAMBAHKAN FUNGSI INI - Mark refill as paid (hanya untuk super admin)
+  const markRefillAsPaid = async (refillId) => {
+    // Cek apakah user adalah super admin
+    if (user?.role !== "super_admin") {
+      return {
+        success: false,
+        error: "Hanya super admin yang dapat menandai pembayaran",
+      };
+    }
+
+    try {
+      console.log("🔍 Marking refill as paid via internal API...");
+
+      const response = await fetch(
+        `/api/hub/admin/paper-refills/${refillId}/pay`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({}),
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        await fetchAllData(); // Refresh data setelah update
+        return { success: true };
+      } else {
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      console.error("Error marking refill as paid:", error);
       return { success: false, error: error.message };
     }
   };
@@ -277,6 +322,7 @@ export const useHubData = (printerId) => {
     formatDate,
     formatShortDate,
     handleRefillPaper,
+    markRefillAsPaid, // ✅ TAMBAHKAN INI
     getJobsByRefill,
     refreshData: fetchAllData,
   };

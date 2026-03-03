@@ -2,6 +2,7 @@
 "use client";
 import Link from "next/link";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
+import { FaHome } from "react-icons/fa";
 
 export const HubLayout = ({ children }) => {
   const { user, isSuperAdmin, logout } = useHubAuth();
@@ -72,6 +73,7 @@ export const HubLayout = ({ children }) => {
                   href="/"
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
+                  <FaHome />
                   <span className="hidden sm:inline">Halaman User</span>
                 </Link>
               )}
