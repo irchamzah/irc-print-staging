@@ -1,9 +1,8 @@
-// app/hub/printers/[printerId]/hooks/useHubData.js
 "use client";
 import { useState, useEffect } from "react";
 import { useHubAuth } from "../../../auth/hooks/useHubAuth";
 
-const API_URL = process.env.VPS_API_URL;
+// Tidak perlu API_URL karena kita pakai internal API
 
 export const useHubData = (printerId) => {
   const { token, user } = useHubAuth();
@@ -30,18 +29,15 @@ export const useHubData = (printerId) => {
     setError(null);
 
     try {
-      console.log("🔍 Fetching printer details...");
+      console.log("🔍 Fetching printer details from internal API...");
 
-      // Fetch printer details
-      const printerRes = await fetch(
-        `${API_URL}/api/hub/printers/${printerId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+      // ✅ Fetch printer details via internal API
+      const printerRes = await fetch(`/api/hub/printers/${printerId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (!printerRes.ok) {
         throw new Error(`Failed to fetch printer: ${printerRes.status}`);
@@ -55,10 +51,10 @@ export const useHubData = (printerId) => {
         throw new Error(printerData.error || "Failed to fetch printer");
       }
 
-      // Fetch refills
-      console.log("🔍 Fetching refills...");
+      // ✅ Fetch refills via internal API
+      console.log("🔍 Fetching refills via internal API...");
       const refillsRes = await fetch(
-        `${API_URL}/api/hub/printers/${printerId}/refills?limit=100`,
+        `/api/hub/printers/${printerId}/refills?limit=100`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -75,28 +71,34 @@ export const useHubData = (printerId) => {
 
       if (refillsData.success) {
         setPaperRefills(refillsData.data);
+      } else {
+        console.warn("Refills data not in expected format:", refillsData);
       }
 
-      // Fetch print jobs from existing API
-      console.log("🔍 Fetching print jobs...");
-      const jobsRes = await fetch(`${API_URL}/api/print/jobs`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      // ✅ Fetch print jobs via internal API (kita perlu buat endpoint ini juga)
+      console.log("🔍 Fetching print jobs via internal API...");
+
+      // Kita perlu buat endpoint /api/hub/print-jobs nanti
+      // Untuk sementara, kita bisa pakek existing endpoint tapi via internal API
+      const jobsRes = await fetch(
+        `/api/hub/printers/${printerId}/jobs?limit=100`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (!jobsRes.ok) {
-        throw new Error(`Failed to fetch jobs: ${jobsRes.status}`);
-      }
-
-      const jobsData = await jobsRes.json();
-
-      if (jobsData.success) {
-        const printerJobs = jobsData.jobs.filter(
-          (job) => job.printerId === printerId,
-        );
-        setPrintJobs(printerJobs);
+        // Jika endpoint belum ada, fallback ke print jobs kosong
+        console.warn("Jobs endpoint not available yet");
+        setPrintJobs([]);
+      } else {
+        const jobsData = await jobsRes.json();
+        if (jobsData.success) {
+          setPrintJobs(jobsData.data);
+        }
       }
 
       console.log("✅ All data fetched successfully");
@@ -110,17 +112,17 @@ export const useHubData = (printerId) => {
 
   const handleRefillPaper = async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/hub/printers/${printerId}/refills`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sheetsAdded: 80 }),
+      console.log("🔍 Creating refill via internal API...");
+
+      // ✅ Create refill via internal API
+      const response = await fetch(`/api/hub/printers/${printerId}/refills`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({ sheetsAdded: 80 }),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
