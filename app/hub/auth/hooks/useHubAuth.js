@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
+const API_URL = process.env.VPS_API_URL;
 
 export const useHubAuth = () => {
   const router = useRouter();
@@ -29,7 +29,7 @@ export const useHubAuth = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/api/hub/auth/login`, {
+      const response = await fetch("/api/hub/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export const useHubAuth = () => {
   const logout = async () => {
     try {
       if (token) {
-        await fetch(`${API_URL}/api/hub/auth/logout`, {
+        await fetch(`/api/hub/auth/logout`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

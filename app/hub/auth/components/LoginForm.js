@@ -1,28 +1,72 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export const LoginForm = ({ onLogin, loading, error }) => {
+  const router = useRouter();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [localError, setLocalError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (phone && password) {
-      onLogin(phone, password);
+    if (!phone || !password) return;
+
+    setLocalLoading(true);
+    setLocalError("");
+
+    try {
+      const response = await fetch("/api/hub/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone, password }),
+      });
+
+      console.log("🔍 Response status:", response.status); // Untuk debug
+
+      const data = await response.json();
+      console.log("📦 Response data:", data); // Untuk debug
+
+      if (data.success) {
+        // Simpan token dan user data
+        localStorage.setItem("hubToken", data.data.token);
+        localStorage.setItem("hubUser", JSON.stringify(data.data.user));
+        localStorage.setItem(
+          "accessiblePrinters",
+          JSON.stringify(data.data.accessiblePrinters),
+        );
+
+        // Redirect ke hub dashboard
+        router.push("/hub");
+      } else {
+        setLocalError(data.error || "Login gagal");
+      }
+    } catch (err) {
+      console.error("❌ Login error:", err);
+      setLocalError("Terjadi kesalahan. Silakan coba lagi.");
+    } finally {
+      setLocalLoading(false);
     }
   };
 
   // Data dummy untuk memudahkan testing
   const fillDemoAccount = (role) => {
-    if (role === "admin") {
-      setPhone("085111222333");
-      setPassword("admin123");
+    if (role === "super_admin") {
+      setPhone("083134752738");
+      setPassword("083134752738");
     } else {
       setPhone("085111222444");
       setPassword("partner123");
     }
   };
+
+  // Gabungkan loading state dari props dengan local loading
+  const isLoading = loading || localLoading;
+  const errorMessage = error || localError;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4 text-black">
@@ -81,6 +125,7 @@ export const LoginForm = ({ onLogin, loading, error }) => {
                   placeholder="085111222333"
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -113,11 +158,13 @@ export const LoginForm = ({ onLogin, loading, error }) => {
                   placeholder="••••••••"
                   className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  disabled={isLoading}
                 >
                   {showPassword ? (
                     <svg
@@ -159,19 +206,19 @@ export const LoginForm = ({ onLogin, loading, error }) => {
             </div>
 
             {/* Error Message */}
-            {error && (
+            {errorMessage && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-sm text-red-600">{error}</p>
+                <p className="text-sm text-red-600">{errorMessage}</p>
               </div>
             )}
 
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
             >
-              {loading ? (
+              {isLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                   <span>Memproses...</span>
@@ -205,13 +252,15 @@ export const LoginForm = ({ onLogin, loading, error }) => {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => fillDemoAccount("admin")}
-                className="text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200"
+                className="text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                disabled={isLoading}
               >
                 Super Admin
               </button>
               <button
                 onClick={() => fillDemoAccount("partner")}
-                className="text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200"
+                className="text-xs bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+                disabled={isLoading}
               >
                 Partner
               </button>

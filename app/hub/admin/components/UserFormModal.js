@@ -7,6 +7,8 @@ export const UserFormModal = ({
   onSubmit,
   user,
   printers,
+  error,
+  processing,
 }) => {
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -86,6 +88,11 @@ export const UserFormModal = ({
           onSubmit={handleSubmit}
           className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]"
         >
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
           <div className="space-y-4">
             {/* Nama */}
             <div>
@@ -195,9 +202,19 @@ export const UserFormModal = ({
           </button>
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+            disabled={processing}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {user ? "Update" : "Simpan"}
+            {processing ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Memproses...</span>
+              </div>
+            ) : user ? (
+              "Update"
+            ) : (
+              "Simpan"
+            )}
           </button>
         </div>
       </div>

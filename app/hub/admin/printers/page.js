@@ -1,71 +1,49 @@
-// app/hub/admin/printers/page.js
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
+import { useAdminPrinters } from "../hooks/useAdminPrinters";
 import { AdminLayout } from "../components/AdminLayout";
 import { PrintersTable } from "../components/PrintersTable";
 import { PrinterFormModal } from "../components/PrinterFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 
-// Data dummy printers
-const dummyPrinters = [
-  {
-    printerId: "printer-001",
-    name: "Irc Print - Perum Green Garden",
-    location: { city: "Jember", address: "Tegalgede, Sumbersari" },
-    status: "online",
-    paperStatus: { paperCount: 61 },
-    statistics: { totalJobs: 109, totalPagesPrinted: 123 },
-    pricing: { color: 1500, bw: 500 },
-    profitSettings: { defaultShare: 20, partnerShare: 30, paperPackSize: 80 },
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    printerId: "printer-002",
-    name: "Irc Print - Kaliurang",
-    location: { city: "Malang", address: "Kaliurang" },
-    status: "online",
-    paperStatus: { paperCount: 85 },
-    statistics: { totalJobs: 67, totalPagesPrinted: 89 },
-    pricing: { color: 1500, bw: 500 },
-    profitSettings: { defaultShare: 20, partnerShare: 30, paperPackSize: 80 },
-    createdAt: "2026-01-02T00:00:00.000Z",
-  },
-  {
-    printerId: "printer-003",
-    name: "Irc Print - Malang Kota",
-    location: { city: "Malang", address: "Jl. Merdeka No. 45" },
-    status: "offline",
-    paperStatus: { paperCount: 120 },
-    statistics: { totalJobs: 203, totalPagesPrinted: 345 },
-    pricing: { color: 1500, bw: 500 },
-    profitSettings: { defaultShare: 20, partnerShare: 30, paperPackSize: 80 },
-    createdAt: "2026-01-03T00:00:00.000Z",
-  },
-];
-
 export default function AdminPrintersPage() {
-  const { user } = useHubAuth();
-  const [printers, setPrinters] = useState(dummyPrinters);
+  const router = useRouter();
+  const { user, isSuperAdmin } = useHubAuth();
+  const {
+    printers,
+    loading,
+    error,
+    processing,
+    createPrinter,
+    updatePrinter,
+    deletePrinter,
+    refreshPrinters,
+    formatDate,
+  } = useAdminPrinters();
+
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedPrinter, setSelectedPrinter] = useState(null);
+  const [modalError, setModalError] = useState(null);
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // Redirect if not super admin
+  useEffect(() => {
+    if (user && !isSuperAdmin()) {
+      router.push("/hub");
+    }
+  }, [user, isSuperAdmin, router]);
 
   const handleCreate = () => {
     setSelectedPrinter(null);
+    setModalError(null);
     setShowModal(true);
   };
 
   const handleEdit = (printer) => {
     setSelectedPrinter(printer);
+    setModalError(null);
     setShowModal(true);
   };
 
@@ -74,32 +52,33 @@ export default function AdminPrintersPage() {
     setShowDeleteModal(true);
   };
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = async (formData) => {
+    setModalError(null);
+
+    let result;
     if (selectedPrinter) {
-      // Update
-      setPrinters(
-        printers.map((p) =>
-          p.printerId === selectedPrinter.printerId ? { ...p, ...formData } : p,
-        ),
-      );
+      result = await updatePrinter(selectedPrinter.printerId, formData);
     } else {
-      // Create
-      const newPrinter = {
-        ...formData,
-        printerId: `printer-${Date.now()}`,
-        statistics: { totalJobs: 0, totalPagesPrinted: 0 },
-        createdAt: new Date().toISOString(),
-      };
-      setPrinters([...printers, newPrinter]);
+      result = await createPrinter(formData);
     }
-    setShowModal(false);
+
+    if (result.success) {
+      setShowModal(false);
+    } else {
+      setModalError(result.error || "Gagal menyimpan data");
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    setPrinters(
-      printers.filter((p) => p.printerId !== selectedPrinter?.printerId),
-    );
-    setShowDeleteModal(false);
+  const handleDeleteConfirm = async () => {
+    if (!selectedPrinter) return;
+
+    const result = await deletePrinter(selectedPrinter.printerId);
+
+    if (result.success) {
+      setShowDeleteModal(false);
+    } else {
+      alert("Gagal menghapus printer: " + (result.error || "Unknown error"));
+    }
   };
 
   const tabs = [
@@ -111,6 +90,52 @@ export default function AdminPrintersPage() {
       href: "/hub/admin/paper-refills",
     },
   ];
+
+  // Loading state
+  if (loading) {
+    return (
+      <AdminLayout tabs={tabs} activeTab="printers">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <AdminLayout tabs={tabs} activeTab="printers">
+        <div className="bg-white rounded-xl border border-red-200 p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            Gagal Memuat Data
+          </h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={refreshPrinters}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout tabs={tabs} activeTab="printers">
@@ -127,6 +152,8 @@ export default function AdminPrintersPage() {
         onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
         printer={selectedPrinter}
+        error={modalError}
+        processing={processing}
       />
 
       <DeleteConfirmModal
@@ -134,6 +161,7 @@ export default function AdminPrintersPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
         itemName={selectedPrinter?.name}
+        processing={processing}
       />
     </AdminLayout>
   );

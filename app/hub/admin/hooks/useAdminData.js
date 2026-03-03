@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
-const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
+const API_URL = process.env.VPS_API_URL;
 
 export const useAdminData = () => {
   const { token, user } = useHubAuth();

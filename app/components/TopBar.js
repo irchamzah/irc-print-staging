@@ -8,6 +8,7 @@ export default function TopBar() {
   const pathname = usePathname();
 
   const menuItems = [
+    { name: "Hub", href: "/hub", icon: "💻" },
     { name: "Beranda", href: "/", icon: "🏠" },
     { name: "Printers", href: "/printers", icon: "🖨️" },
     { name: "Tentang Kami", href: "/about", icon: "👥" },

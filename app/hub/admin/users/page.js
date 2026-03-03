@@ -1,81 +1,50 @@
-// app/hub/admin/users/page.js
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
+import { useAdminUsers } from "../hooks/useAdminUsers";
 import { AdminLayout } from "../components/AdminLayout";
 import { UsersTable } from "../components/UsersTable";
 import { UserFormModal } from "../components/UserFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 
-// Data dummy users
-const dummyUsers = [
-  {
-    userId: "user-001",
-    name: "Super Admin",
-    phone: "085111222333",
-    role: "super_admin",
-    accessPrinters: [],
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    userId: "user-002",
-    name: "Budi Partner",
-    phone: "085111222444",
-    role: "partner",
-    accessPrinters: ["printer-001"],
-    createdAt: "2026-01-02T00:00:00.000Z",
-  },
-  {
-    userId: "user-003",
-    name: "Siti Partner",
-    phone: "085111222555",
-    role: "partner",
-    accessPrinters: ["printer-002"],
-    createdAt: "2026-01-03T00:00:00.000Z",
-  },
-];
-
-// Data dummy printers (untuk dropdown akses)
-const dummyPrinters = [
-  {
-    printerId: "printer-001",
-    name: "Irc Print - Green Garden",
-    location: { city: "Jember" },
-  },
-  {
-    printerId: "printer-002",
-    name: "Irc Print - Kaliurang",
-    location: { city: "Malang" },
-  },
-  {
-    printerId: "printer-003",
-    name: "Irc Print - Malang Kota",
-    location: { city: "Malang" },
-  },
-];
-
 export default function AdminUsersPage() {
-  const { user } = useHubAuth();
-  const [users, setUsers] = useState(dummyUsers);
+  const router = useRouter();
+  const { user, isSuperAdmin } = useHubAuth();
+  const {
+    users,
+    printers,
+    loading,
+    error,
+    processing,
+    createUser,
+    updateUser,
+    deleteUser,
+    refreshUsers,
+    formatDate,
+  } = useAdminUsers();
+
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [modalError, setModalError] = useState(null);
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // Redirect if not super admin
+  useEffect(() => {
+    if (user && !isSuperAdmin()) {
+      router.push("/hub");
+    }
+  }, [user, isSuperAdmin, router]);
 
   const handleCreate = () => {
     setSelectedUser(null);
+    setModalError(null);
     setShowModal(true);
   };
 
   const handleEdit = (user) => {
     setSelectedUser(user);
+    setModalError(null);
     setShowModal(true);
   };
 
@@ -84,29 +53,33 @@ export default function AdminUsersPage() {
     setShowDeleteModal(true);
   };
 
-  const handleSubmit = (formData) => {
+  const handleSubmit = async (formData) => {
+    setModalError(null);
+
+    let result;
     if (selectedUser) {
-      // Update
-      setUsers(
-        users.map((u) =>
-          u.userId === selectedUser.userId ? { ...u, ...formData } : u,
-        ),
-      );
+      result = await updateUser(selectedUser.userId, formData);
     } else {
-      // Create
-      const newUser = {
-        ...formData,
-        userId: `user-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-      };
-      setUsers([...users, newUser]);
+      result = await createUser(formData);
     }
-    setShowModal(false);
+
+    if (result.success) {
+      setShowModal(false);
+    } else {
+      setModalError(result.error || "Gagal menyimpan data");
+    }
   };
 
-  const handleDeleteConfirm = () => {
-    setUsers(users.filter((u) => u.userId !== selectedUser?.userId));
-    setShowDeleteModal(false);
+  const handleDeleteConfirm = async () => {
+    if (!selectedUser) return;
+
+    const result = await deleteUser(selectedUser.userId);
+
+    if (result.success) {
+      setShowDeleteModal(false);
+    } else {
+      alert("Gagal menghapus user: " + (result.error || "Unknown error"));
+    }
   };
 
   const tabs = [
@@ -118,6 +91,52 @@ export default function AdminUsersPage() {
       href: "/hub/admin/paper-refills",
     },
   ];
+
+  // Loading state
+  if (loading) {
+    return (
+      <AdminLayout tabs={tabs} activeTab="users">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <AdminLayout tabs={tabs} activeTab="users">
+        <div className="bg-white rounded-xl border border-red-200 p-8 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-red-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+              />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            Gagal Memuat Data
+          </h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={refreshUsers}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout tabs={tabs} activeTab="users">
@@ -134,7 +153,9 @@ export default function AdminUsersPage() {
         onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
         user={selectedUser}
-        printers={dummyPrinters}
+        printers={printers}
+        error={modalError}
+        processing={processing}
       />
 
       <DeleteConfirmModal
@@ -142,6 +163,7 @@ export default function AdminUsersPage() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteConfirm}
         itemName={selectedUser?.name}
+        processing={processing}
       />
     </AdminLayout>
   );

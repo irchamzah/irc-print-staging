@@ -12,6 +12,8 @@ import { RefillDetailModal } from "./components/RefillDetailModal";
 import { PrintJobsTable } from "./components/PrintJobsTable";
 import { InfoCard } from "./components/InfoCard";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
+import { HubLayout } from "../../components/HubLayout";
+import Link from "next/link";
 
 export default function PartnerHubPage() {
   const params = useParams();
@@ -137,64 +139,80 @@ export default function PartnerHubPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <HubHeader printerId={printerId} printerName={printer.name} />
+    <HubLayout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-sm text-gray-500 mt-1">{printer.name}</p>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
+              ID: {printer.printerId.slice(0, 8)}...
+            </div>
+            <Link
+              href="/hub/printers"
+              className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+            >
+              ← Kembali
+            </Link>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <PaperStatusCard
+            paperCount={printer.paperStatus?.paperCount || 0}
+            lastRefill={printer.paperStatus?.lastRefill}
+            onRefill={handleRefill}
+            loading={refillLoading}
+            showSuccess={showRefillSuccess}
+            formatDate={formatDate}
+          />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <PaperStatusCard
-          paperCount={printer.paperStatus?.paperCount || 0}
-          lastRefill={printer.paperStatus?.lastRefill}
-          onRefill={handleRefill}
-          loading={refillLoading}
-          showSuccess={showRefillSuccess}
-          formatDate={formatDate}
-        />
+          <DateRangeFilter
+            dateRange={dateRange}
+            onApplyFilter={handleApplyFilter}
+            onResetFilter={resetDateRange}
+            formatDate={formatDate}
+          />
 
-        <DateRangeFilter
-          dateRange={dateRange}
-          onApplyFilter={handleApplyFilter}
-          onResetFilter={resetDateRange}
-          formatDate={formatDate}
-        />
+          <ProfitOverview
+            totalRevenue={filteredTotalRevenue}
+            profitShare={profit.profitShare}
+            pendingPayout={profit.pendingPayout}
+            totalProfit={profit.partnerProfit}
+            formatRupiah={formatRupiah}
+            dateRange={dateRange}
+          />
 
-        <ProfitOverview
-          totalRevenue={filteredTotalRevenue}
-          profitShare={profit.profitShare}
-          pendingPayout={profit.pendingPayout}
-          totalProfit={profit.partnerProfit}
+          <PaperRefillHistory
+            refills={filteredRefills}
+            onViewRefill={handleViewRefill}
+            formatRupiah={formatRupiah}
+            formatShortDate={formatShortDate}
+          />
+
+          <PrintJobsTable
+            jobs={filteredJobs}
+            refills={filteredRefills}
+            onViewRefill={handleViewRefill}
+            formatRupiah={formatRupiah}
+            formatDate={formatDate}
+            formatShortDate={formatShortDate}
+          />
+
+          <InfoCard profitShare={profit.profitShare} />
+        </div>
+
+        <RefillDetailModal
+          isOpen={showRefillModal}
+          refill={selectedRefill}
+          jobs={selectedRefill?.jobs}
+          onClose={() => setShowRefillModal(false)}
+          onMarkAsPaid={user?.role === "super_admin" ? handleMarkAsPaid : null}
           formatRupiah={formatRupiah}
-          dateRange={dateRange}
-        />
-
-        <PaperRefillHistory
-          refills={filteredRefills}
-          onViewRefill={handleViewRefill}
-          formatRupiah={formatRupiah}
-          formatShortDate={formatShortDate}
-        />
-
-        <PrintJobsTable
-          jobs={filteredJobs}
-          refills={filteredRefills}
-          onViewRefill={handleViewRefill}
-          formatRupiah={formatRupiah}
           formatDate={formatDate}
-          formatShortDate={formatShortDate}
+          userRole={user?.role}
         />
-
-        <InfoCard profitShare={profit.profitShare} />
       </div>
-
-      <RefillDetailModal
-        isOpen={showRefillModal}
-        refill={selectedRefill}
-        jobs={selectedRefill?.jobs}
-        onClose={() => setShowRefillModal(false)}
-        onMarkAsPaid={user?.role === "super_admin" ? handleMarkAsPaid : null}
-        formatRupiah={formatRupiah}
-        formatDate={formatDate}
-        userRole={user?.role}
-      />
-    </div>
+    </HubLayout>
   );
 }

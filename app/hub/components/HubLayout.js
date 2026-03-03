@@ -68,9 +68,17 @@ export const HubLayout = ({ children }) => {
               )}
 
               {user && (
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <span className="hidden sm:inline">Halaman User</span>
+                </Link>
+              )}
+              {user && (
                 <button
                   onClick={logout}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <svg
                     className="w-4 h-4"
