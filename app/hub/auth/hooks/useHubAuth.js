@@ -1,23 +1,25 @@
-// app/hub/hooks/useHubAuth.js
+// app/hub/auth/hooks/useHubAuth.js
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export const useHubAuth = () => {
+  const router = useRouter();
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [token, setToken] = useState(null);
 
-  // Cek session saat initial load
+  // Load user from localStorage on mount
   useEffect(() => {
-    const savedToken = localStorage.getItem("hubToken");
-    const savedUser = localStorage.getItem("hubUser");
+    const storedToken = localStorage.getItem("hubToken");
+    const storedUser = localStorage.getItem("hubUser");
 
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
     }
   }, []);
 
@@ -26,10 +28,8 @@ export const useHubAuth = () => {
     setLoading(true);
     setError(null);
 
-    console.log("API URL:", API_URL);
-
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${API_URL}/api/hub/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,15 +37,14 @@ export const useHubAuth = () => {
         body: JSON.stringify({ phone, password }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result.success) {
-        const { user, token, accessiblePrinters } = result.data;
+      if (data.success) {
+        const { user, token, accessiblePrinters } = data.data;
 
         setUser(user);
         setToken(token);
 
-        // Simpan ke localStorage
         localStorage.setItem("hubToken", token);
         localStorage.setItem("hubUser", JSON.stringify(user));
         localStorage.setItem(
@@ -53,18 +52,16 @@ export const useHubAuth = () => {
           JSON.stringify(accessiblePrinters),
         );
 
-        setLoading(false);
-        return { success: true, user };
+        return { success: true };
       } else {
-        setError(result.error || "Login failed");
-        setLoading(false);
-        return { success: false, error: result.error };
+        setError(data.error || "Login failed");
+        return { success: false, error: data.error };
       }
-    } catch (error) {
-      console.error("❌ Login error:", error);
+    } catch (err) {
       setError("Network error. Please try again.");
-      setLoading(false);
       return { success: false, error: "Network error" };
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,27 +69,36 @@ export const useHubAuth = () => {
   const logout = async () => {
     try {
       if (token) {
-        await fetch(`${API_URL}/api/auth/logout`, {
+        await fetch(`${API_URL}/api/hub/auth/logout`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
           },
         });
       }
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Hapus dari localStorage
       setUser(null);
       setToken(null);
       localStorage.removeItem("hubToken");
       localStorage.removeItem("hubUser");
       localStorage.removeItem("accessiblePrinters");
+      router.push("/hub/auth");
     }
   };
 
-  // Get accessible printers from API
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    return !!token && !!user;
+  };
+
+  // Check if user is super admin
+  const isSuperAdmin = () => {
+    return user?.role === "super_admin";
+  };
+
+  // Get accessible printers
   const getAccessiblePrinters = async () => {
     if (!user || !token) return [];
 
@@ -106,34 +112,12 @@ export const useHubAuth = () => {
         },
       );
 
-      const result = await response.json();
-
-      if (result.success) {
-        return result.data;
-      } else {
-        console.error("Failed to fetch printers:", result.error);
-        return [];
-      }
+      const data = await response.json();
+      return data.success ? data.data : [];
     } catch (error) {
       console.error("Error fetching printers:", error);
       return [];
     }
-  };
-
-  // Format tanggal
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Format angka
-  const formatNumber = (num) => {
-    return new Intl.NumberFormat("id-ID").format(num);
   };
 
   return {
@@ -143,8 +127,8 @@ export const useHubAuth = () => {
     error,
     login,
     logout,
+    isAuthenticated,
+    isSuperAdmin,
     getAccessiblePrinters,
-    formatDate,
-    formatNumber,
   };
 };

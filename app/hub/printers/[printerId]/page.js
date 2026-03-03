@@ -2,7 +2,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useHubAuth } from "../hooks/useHubAuth";
 import { useHubData } from "./hooks/useHubData";
 import { HubHeader } from "./components/HubHeader";
 import { DateRangeFilter } from "./components/DateRangeFilter";
@@ -12,6 +11,7 @@ import { PaperRefillHistory } from "./components/PaperRefillHistory";
 import { RefillDetailModal } from "./components/RefillDetailModal";
 import { PrintJobsTable } from "./components/PrintJobsTable";
 import { InfoCard } from "./components/InfoCard";
+import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
 export default function PartnerHubPage() {
   const params = useParams();

@@ -78,7 +78,7 @@ export const PrinterHeader = ({ printer }) => {
             </div>
             {/* // Tambahkan di bagian kanan header */}
             <Link
-              href={`/hub/${printer.printerId}`}
+              href={`/hub`}
               className="text-sm bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg hover:bg-purple-200 flex items-center gap-1"
             >
               <svg

@@ -8,7 +8,7 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
 
   return (
     <Link
-      href={`/hub/${printer.printerId}`}
+      href={`/hub/printers/${printer.printerId}`}
       className="block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
       {/* Header with status */}
