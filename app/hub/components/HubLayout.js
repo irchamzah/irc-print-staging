@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
 import { FaHome } from "react-icons/fa";
+import CustomLink from "@/app/components/CustomLink";
 
 export const HubLayout = ({ children }) => {
   const { user, isSuperAdmin, logout } = useHubAuth();
@@ -13,7 +14,7 @@ export const HubLayout = ({ children }) => {
       <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center justify-between">
-            <Link href="/hub" className="flex items-center gap-3">
+            <CustomLink href="/hub" className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-white"
@@ -37,11 +38,11 @@ export const HubLayout = ({ children }) => {
                   </p>
                 )}
               </div>
-            </Link>
+            </CustomLink>
 
             <div className="flex items-center gap-2">
               {isSuperAdmin() && (
-                <Link
+                <CustomLink
                   href="/hub/admin"
                   className="flex items-center gap-2 px-3 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors"
                 >
@@ -65,17 +66,17 @@ export const HubLayout = ({ children }) => {
                     />
                   </svg>
                   <span className="hidden sm:inline">Admin</span>
-                </Link>
+                </CustomLink>
               )}
 
               {user && (
-                <Link
+                <CustomLink
                   href="/"
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <FaHome />
                   <span className="hidden sm:inline">Halaman User</span>
-                </Link>
+                </CustomLink>
               )}
               {user && (
                 <button

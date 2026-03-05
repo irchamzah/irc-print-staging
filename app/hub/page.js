@@ -3,6 +3,7 @@
 import { useHubAuth } from "./auth/hooks/useHubAuth";
 import Link from "next/link";
 import { HubLayout } from "./components/HubLayout";
+import CustomLink from "../components/CustomLink";
 
 export default function HubDashboard() {
   const { user, isAuthenticated, isSuperAdmin } = useHubAuth();
@@ -15,12 +16,12 @@ export default function HubDashboard() {
             <p className="text-gray-600 mb-4">
               Silakan login untuk mengakses dashboard
             </p>
-            <Link
+            <CustomLink
               href="/hub/auth"
               className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Login
-            </Link>
+            </CustomLink>
           </div>
         </div>
       </HubLayout>
@@ -57,7 +58,7 @@ export default function HubDashboard() {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              <Link
+              <CustomLink
                 href="/hub/printers"
                 className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-shadow text-left"
               >
@@ -82,10 +83,10 @@ export default function HubDashboard() {
                 <p className="text-sm text-gray-500">
                   Lihat semua printer yang Anda akses
                 </p>
-              </Link>
+              </CustomLink>
 
               {isSuperAdmin() && (
-                <Link
+                <CustomLink
                   href="/hub/admin"
                   className="p-6 bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-shadow text-left"
                 >
@@ -116,7 +117,7 @@ export default function HubDashboard() {
                   <p className="text-sm text-gray-500">
                     Kelola users, printers, dan pembayaran
                   </p>
-                </Link>
+                </CustomLink>
               )}
             </div>
           </div>

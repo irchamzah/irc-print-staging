@@ -1,6 +1,7 @@
 import Link from "next/link";
 import TopBar from "./components/TopBar";
 import BottomBar from "./components/BottomBar";
+import CustomLink from "./components/CustomLink";
 
 export default function HomePage() {
   return (
@@ -13,13 +14,13 @@ export default function HomePage() {
             <h1 className="text-4xl font-bold text-gray-800 mb-2">
               Halaman Beranda
             </h1>
-            <p className="text-gray-600">
+            <span className="text-gray-600">
               Klik{" "}
-              <Link href="/printers" className="text-blue-600 underline">
+              <CustomLink href="/printers" className="text-blue-600 underline">
                 disini
-              </Link>{" "}
+              </CustomLink>{" "}
               untuk pilih printer
-            </p>
+            </span>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 "use client";
+import CustomLink from "@/app/components/CustomLink";
 import Link from "next/link";
 
 export const HubHeader = ({ printerId, printerName }) => {
@@ -16,12 +17,12 @@ export const HubHeader = ({ printerId, printerName }) => {
             <div className="text-sm bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
               ID: {printerId.slice(0, 8)}...
             </div>
-            <Link
+            <CustomLink
               href="/hub/printers"
               className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50"
             >
               ← Kembali
-            </Link>
+            </CustomLink>
           </div>
         </div>
       </div>

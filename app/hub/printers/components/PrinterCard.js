@@ -1,4 +1,5 @@
 "use client";
+import CustomLink from "@/app/components/CustomLink";
 import Link from "next/link";
 
 export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
@@ -7,7 +8,7 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
   const statusText = printer.status === "online" ? "Online" : "Offline";
 
   return (
-    <Link
+    <CustomLink
       href={`/hub/printers/${printer.printerId}`}
       className="block bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
@@ -72,6 +73,6 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
           />
         </svg>
       </div>
-    </Link>
+    </CustomLink>
   );
 };

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TopBar from "@/app/components/TopBar";
 import BottomBar from "@/app/components/BottomBar";
+import CustomLink from "@/app/components/CustomLink";
 
 export default function HubLoginPage() {
   const router = useRouter();
@@ -276,12 +277,12 @@ export default function HubLoginPage() {
 
             {/* Link ke Halaman Utama */}
             <div className="mt-6 text-center">
-              <Link
+              <CustomLink
                 href="/"
                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 ← Kembali ke Beranda
-              </Link>
+              </CustomLink>
             </div>
           </div>
 

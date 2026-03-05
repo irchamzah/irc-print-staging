@@ -7,6 +7,7 @@ import { AdminLayout } from "../components/AdminLayout";
 import { PrintersTable } from "../components/PrintersTable";
 import { PrinterFormModal } from "../components/PrinterFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
+import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 export default function AdminPrintersPage() {
   const router = useRouter();
@@ -95,9 +96,7 @@ export default function AdminPrintersPage() {
   if (loading) {
     return (
       <AdminLayout tabs={tabs} activeTab="printers">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        </div>
+        <LoadingAnimation />
       </AdminLayout>
     );
   }

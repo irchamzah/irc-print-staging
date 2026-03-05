@@ -7,6 +7,7 @@ import { AdminLayout } from "../components/AdminLayout";
 import { UsersTable } from "../components/UsersTable";
 import { UserFormModal } from "../components/UserFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
+import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -96,9 +97,7 @@ export default function AdminUsersPage() {
   if (loading) {
     return (
       <AdminLayout tabs={tabs} activeTab="users">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
-        </div>
+        <LoadingAnimation />
       </AdminLayout>
     );
   }

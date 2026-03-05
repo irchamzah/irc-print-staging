@@ -7,13 +7,14 @@ import { usePrinters } from "./hooks/usePrinters";
 import { useUserLocation } from "./hooks/useUserLocation";
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
+import LoadingAnimation from "../components/LoadingAnimation";
 
 export default function PrintersPage() {
   const { printers, loading, fetchPrinters } = usePrinters();
   const { userLocation } = useUserLocation();
 
   if (loading) {
-    return <LoadingState />;
+    return <LoadingAnimation />;
   }
 
   return (

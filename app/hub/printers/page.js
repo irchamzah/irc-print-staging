@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
 import { PrinterGrid } from "./components/PrinterGrid";
 import { HubLayout } from "../components/HubLayout";
+import CustomLink from "@/app/components/CustomLink";
+import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 const API_URL = process.env.VPS_API_URL;
 
@@ -75,12 +77,12 @@ export default function PrintersPage() {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
           <div className="text-center">
             <p className="text-gray-600 mb-4">Silakan login terlebih dahulu</p>
-            <Link
+            <CustomLink
               href="/hub/auth"
               className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Login
-            </Link>
+            </CustomLink>
           </div>
         </div>
       </HubLayout>
@@ -90,9 +92,7 @@ export default function PrintersPage() {
   if (loading) {
     return (
       <HubLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
+        <LoadingAnimation />
       </HubLayout>
     );
   }
@@ -146,12 +146,12 @@ export default function PrintersPage() {
                 Anda memiliki akses ke {printers.length} printer
               </p>
             </div>
-            <Link
+            <CustomLink
               href="/hub"
               className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1.5 rounded-lg"
             >
               ← Kembali
-            </Link>
+            </CustomLink>
           </div>
 
           {printers.length === 0 ? (

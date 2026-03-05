@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth"; // ✅ Import hook auth
+import CustomLink from "@/app/components/CustomLink";
 
 export const AdminLayout = ({ children, tabs, activeTab }) => {
   const { user, logout } = useHubAuth(); // ✅ Ambil fungsi logout
@@ -98,12 +99,12 @@ export const AdminLayout = ({ children, tabs, activeTab }) => {
 
             {/* Right side - Navigation and Logout */}
             <div className="flex items-center gap-3">
-              <Link
+              <CustomLink
                 href="/hub"
                 className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1.5 rounded-lg hidden sm:block"
               >
                 ← Kembali ke Hub
-              </Link>
+              </CustomLink>
 
               {/* Logout Button */}
               <button
@@ -133,7 +134,7 @@ export const AdminLayout = ({ children, tabs, activeTab }) => {
           {tabs && (
             <div className="flex gap-2 mt-2 pb-2 overflow-x-auto">
               {tabs.map((tab) => (
-                <Link
+                <CustomLink
                   key={tab.id}
                   href={tab.href}
                   className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
@@ -143,7 +144,7 @@ export const AdminLayout = ({ children, tabs, activeTab }) => {
                   }`}
                 >
                   {tab.label}
-                </Link>
+                </CustomLink>
               ))}
             </div>
           )}
@@ -152,7 +153,7 @@ export const AdminLayout = ({ children, tabs, activeTab }) => {
 
       {/* Mobile back button (visible only on mobile) */}
       <div className="sm:hidden bg-white border-b border-gray-200 px-4 py-2">
-        <Link
+        <CustomLink
           href="/hub"
           className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
         >
@@ -170,7 +171,7 @@ export const AdminLayout = ({ children, tabs, activeTab }) => {
             />
           </svg>
           Kembali ke Hub
-        </Link>
+        </CustomLink>
       </div>
 
       {/* Content */}

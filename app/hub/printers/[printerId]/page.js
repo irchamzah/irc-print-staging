@@ -14,6 +14,8 @@ import { InfoCard } from "./components/InfoCard";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 import { HubLayout } from "../../components/HubLayout";
 import Link from "next/link";
+import CustomLink from "@/app/components/CustomLink";
+import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 export default function PartnerHubPage() {
   const params = useParams();
@@ -98,10 +100,7 @@ export default function PartnerHubPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Memuat data printer...</p>
-        </div>
+        <LoadingAnimation />
       </div>
     );
   }
@@ -159,12 +158,12 @@ export default function PartnerHubPage() {
             <div className="text-sm bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">
               ID: {printer.printerId.slice(0, 8)}...
             </div>
-            <Link
+            <CustomLink
               href="/hub/printers"
               className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50"
             >
               ← Kembali
-            </Link>
+            </CustomLink>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
