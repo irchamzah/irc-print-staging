@@ -16,6 +16,7 @@ import { HubLayout } from "../../components/HubLayout";
 import Link from "next/link";
 import CustomLink from "@/app/components/CustomLink";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
+import { ProofUploadModal } from "../../admin/components/ProofUploadModal";
 
 export default function PartnerHubPage() {
   const params = useParams();
@@ -47,6 +48,8 @@ export default function PartnerHubPage() {
   const [selectedRefill, setSelectedRefill] = useState(null);
   const [showRefillModal, setShowRefillModal] = useState(false);
   const [refillLoading, setRefillLoading] = useState(false);
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [processingId, setProcessingId] = useState(null);
 
   const handleRefill = async () => {
     setRefillLoading(true);
@@ -68,6 +71,7 @@ export default function PartnerHubPage() {
   };
 
   const handleMarkAsPaid = async (refill) => {
+    // Validasi di frontend
     if (refill.status !== "completed") {
       alert('❌ Hanya refill dengan status "Selesai" yang bisa dibayar');
       return;
@@ -78,14 +82,50 @@ export default function PartnerHubPage() {
       return;
     }
 
-    if (!confirm("Tandai pengisian ini sebagai sudah dibayar?")) return;
+    // Tampilkan modal upload bukti
+    setSelectedRefill(refill);
+    setShowProofModal(true);
+  };
 
-    const result = await markRefillAsPaid(refill.refillId);
-    if (result.success) {
-      alert("✅ Berhasil ditandai sebagai dibayar");
-      setShowRefillModal(false);
-    } else {
-      alert("❌ Gagal: " + result.error);
+  const handleConfirmPayment = async (formData) => {
+    if (!selectedRefill) return;
+
+    setProcessingId(selectedRefill.refillId);
+
+    try {
+      // ✅ FETCH dilakukan di sini, bukan di modal
+      const response = await fetch(
+        `/api/hub/admin/paper-refills/${selectedRefill.refillId}/pay`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData, // FormData langsung dikirim
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`,
+        );
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("✅ Pembayaran berhasil");
+        setShowProofModal(false);
+        setShowRefillModal(false);
+        await refreshData();
+      } else {
+        alert("❌ Gagal: " + result.error);
+      }
+    } catch (error) {
+      alert("❌ Gagal: " + error.message);
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -220,6 +260,14 @@ export default function PartnerHubPage() {
           formatRupiah={formatRupiah}
           formatDate={formatDate}
           userRole={user?.role}
+        />
+        <ProofUploadModal
+          isOpen={showProofModal}
+          onClose={() => setShowProofModal(false)}
+          onConfirm={handleConfirmPayment}
+          refill={selectedRefill}
+          processing={processingId === selectedRefill?.refillId}
+          formatRupiah={formatRupiah}
         />
       </div>
     </HubLayout>

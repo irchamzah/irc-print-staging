@@ -7,7 +7,6 @@ export async function POST(request, { params }) {
   try {
     const { refillId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];
-    const body = await request.json();
 
     if (!token) {
       return NextResponse.json(
@@ -16,15 +15,27 @@ export async function POST(request, { params }) {
       );
     }
 
+    // ✅ AMBIL FormData, bukan json()
+    const formData = await request.formData();
+
+    // Buat FormData baru untuk dikirim ke VPS
+    const vpsFormData = new FormData();
+
+    // Salin semua field dari formData asli
+    for (const [key, value] of formData.entries()) {
+      vpsFormData.append(key, value);
+    }
+
+    // Kirim ke VPS dengan FormData
     const response = await fetch(
       `${VPS_API_URL}/api/hub/admin/paper-refills/${refillId}/pay`,
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          // JANGAN set Content-Type, biarkan browser set dengan boundary
         },
-        body: JSON.stringify(body),
+        body: vpsFormData, // ✅ Kirim FormData, bukan JSON
       },
     );
 

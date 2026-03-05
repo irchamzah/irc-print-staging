@@ -152,7 +152,7 @@ export const PaperRefillHistory = ({
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {refill.filledByName} • {refill.sheetsAdded} lembar •{" "}
-                    {refill.jobsCount || 0} print jobs
+                    {refill.jobsCovered.length} print jobs
                   </p>
                 </div>
               </div>
@@ -220,7 +220,7 @@ export const PaperRefillHistory = ({
                 <div className="bg-gray-50 p-2 rounded-lg">
                   <p className="text-gray-500">Jobs</p>
                   <p className="font-medium text-gray-800">
-                    {refill.jobsCount || 0}
+                    {refill.jobsCovered.length}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-2 rounded-lg">

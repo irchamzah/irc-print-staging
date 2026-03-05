@@ -287,17 +287,25 @@ export const useAdminData = () => {
   // Refill operations - via internal API
   const markRefillAsPaid = async (refillId, data = {}) => {
     try {
-      const response = await fetch(
-        `/api/hub/admin/paper-refills/${refillId}/pay`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
+      let url = `/api/hub/admin/paper-refills/${refillId}/pay`;
+      let options = {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      };
+
+      // Jika data adalah FormData (ada file upload)
+      if (data instanceof FormData) {
+        options.body = data;
+        // Jangan set Content-Type, browser akan set otomatis dengan boundary
+      } else {
+        // Jika data biasa (JSON)
+        options.headers["Content-Type"] = "application/json";
+        options.body = JSON.stringify(data);
+      }
+
+      const response = await fetch(url, options);
 
       if (!response.ok) {
         const errorText = await response.text();
