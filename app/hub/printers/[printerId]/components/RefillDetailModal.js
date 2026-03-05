@@ -11,6 +11,35 @@ export const RefillDetailModal = ({
   formatDate,
   userRole,
 }) => {
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "active":
+        return (
+          <span className="text-sm px-3 py-1 rounded-full bg-green-100 text-green-700">
+            Aktif
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="text-sm px-3 py-1 rounded-full bg-blue-100 text-blue-700 ">
+            Selesai
+          </span>
+        );
+      case "paid":
+        return (
+          <span className="text-sm px-3 py-1 rounded-full bg-purple-100 text-purple-700 ">
+            Dibayar
+          </span>
+        );
+      default:
+        return (
+          <span className="text-sm px-3 py-1 rounded-full bg-gray-100 text-gray-700 ">
+            {status}
+          </span>
+        );
+    }
+  };
+
   if (!isOpen || !refill) return null;
 
   return (
@@ -91,22 +120,19 @@ export const RefillDetailModal = ({
               </span>
             </div>
             <div className="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
-              <span
-                className={`text-sm px-3 py-1 rounded-full ${
-                  refill.status === "paid"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-yellow-100 text-yellow-700"
-                }`}
-              >
-                {refill.status === "paid"
-                  ? "✓ Sudah Dibayar"
-                  : "⏳ Menunggu Pembayaran"}
-              </span>
+              <div>
+                {getStatusBadge(refill.status)}
+                {refill.status === "active" && (
+                  <span className="text-xs text-green-600 animate-pulse">
+                    ● Menerima profit
+                  </span>
+                )}
+              </div>
 
               {/* Tombol Bayar untuk Admin */}
               {userRole === "super_admin" && refill.status !== "paid" && (
                 <button
-                  onClick={() => onMarkAsPaid(refill.refillId)}
+                  onClick={() => onMarkAsPaid(refill)}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
                 >
                   Tandai Dibayar

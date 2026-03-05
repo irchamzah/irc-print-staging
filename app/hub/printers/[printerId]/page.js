@@ -65,10 +65,20 @@ export default function PartnerHubPage() {
     setShowRefillModal(true);
   };
 
-  const handleMarkAsPaid = async (refillId) => {
+  const handleMarkAsPaid = async (refill) => {
+    if (refill.status !== "completed") {
+      alert('❌ Hanya refill dengan status "Selesai" yang bisa dibayar');
+      return;
+    }
+
+    if (refill.totalRevenue <= 0) {
+      alert("❌ Tidak bisa membayar refill tanpa pendapatan");
+      return;
+    }
+
     if (!confirm("Tandai pengisian ini sebagai sudah dibayar?")) return;
 
-    const result = await markRefillAsPaid(refillId);
+    const result = await markRefillAsPaid(refill.refillId);
     if (result.success) {
       alert("✅ Berhasil ditandai sebagai dibayar");
       setShowRefillModal(false);

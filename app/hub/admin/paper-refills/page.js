@@ -27,6 +27,17 @@ export default function AdminPaperRefillsPage() {
   };
 
   const handleMarkAsPaid = async (refill) => {
+    // Validasi di frontend
+    if (refill.status !== "completed") {
+      alert('❌ Hanya refill dengan status "Selesai" yang bisa dibayar');
+      return;
+    }
+
+    if (refill.totalRevenue <= 0) {
+      alert("❌ Tidak bisa membayar refill tanpa pendapatan");
+      return;
+    }
+
     if (
       !confirm(
         `Tandai pembayaran untuk ${refill.filledByName} sebesar ${formatRupiah(refill.partnerProfit)}?`,
@@ -48,6 +59,35 @@ export default function AdminPaperRefillsPage() {
 
   const handleRetry = () => {
     refreshData();
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "active":
+        return (
+          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+            Aktif
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+            Selesai
+          </span>
+        );
+      case "paid":
+        return (
+          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
+            Dibayar
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+            {status}
+          </span>
+        );
+    }
   };
 
   const tabs = [
@@ -197,13 +237,11 @@ export default function AdminPaperRefillsPage() {
                       {formatRupiah(refill.partnerProfit)}
                     </td>
                     <td className="px-4 sm:px-6 py-3">
-                      {refill.status === "paid" ? (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                          Dibayar
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">
-                          Pending
+                      {getStatusBadge(refill.status)}
+                      <br />
+                      {refill.status === "active" && (
+                        <span className="text-xs text-green-600 animate-pulse">
+                          ● Menerima profit
                         </span>
                       )}
                     </td>

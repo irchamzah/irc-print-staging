@@ -48,6 +48,35 @@ export const PaperRefillHistory = ({
     );
   };
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "active":
+        return (
+          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
+            Aktif
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
+            Selesai
+          </span>
+        );
+      case "paid":
+        return (
+          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
+            Dibayar
+          </span>
+        );
+      default:
+        return (
+          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
+            {status}
+          </span>
+        );
+    }
+  };
+
   if (refills.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
@@ -143,15 +172,13 @@ export const PaperRefillHistory = ({
                   </p>
                 </div>
                 <div className="w-20">
-                  <span
-                    className={`inline-block text-xs px-2 py-1 rounded-full w-full text-center ${
-                      refill.status === "paid"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {refill.status === "paid" ? "Dibayar" : "Pending"}
-                  </span>
+                  {getStatusBadge(refill.status)}
+                  <br />
+                  {refill.status === "active" && (
+                    <span className="text-xs text-green-600 animate-pulse">
+                      ● Menerima profit
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -161,44 +188,14 @@ export const PaperRefillHistory = ({
               {/* Header with Date and Badges */}
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      refill.status === "paid" ? "bg-green-100" : "bg-blue-100"
-                    }`}
-                  >
-                    <svg
-                      className={`w-4 h-4 ${
-                        refill.status === "paid"
-                          ? "text-green-600"
-                          : "text-blue-600"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-800">
-                      {formatShortDate(refill.createdAt)}
-                    </p>
-                  </div>
+                  {getStatusBadge(refill.status)}
+                  <br />
+                  {refill.status === "active" && (
+                    <span className="text-xs text-green-600 animate-pulse">
+                      ● Menerima profit
+                    </span>
+                  )}
                 </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    refill.status === "paid"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-yellow-100 text-yellow-700"
-                  }`}
-                >
-                  {refill.status === "paid" ? "Dibayar" : "Pending"}
-                </span>
               </div>
 
               {/* Info Row - Who filled and share */}
