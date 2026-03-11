@@ -1,10 +1,23 @@
+// app/hub/printers/[printerId]/components/PaperRefillHistory.js
 "use client";
+
+import { Pagination } from "./Pagination";
 
 export const PaperRefillHistory = ({
   refills,
   onViewRefill,
   formatRupiah,
   formatShortDate,
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize,
+  section,
+  currentJobsPage,
+  currentRefillsPage,
+  startDate,
+  endDate,
+  loading,
 }) => {
   // Fungsi untuk mendapatkan badge role
   const getRoleBadge = (role) => {
@@ -114,7 +127,6 @@ export const PaperRefillHistory = ({
           >
             {/* Desktop Layout (sm:flex) */}
             <div className="hidden sm:flex sm:items-center sm:justify-between gap-4">
-              {/* Left Section - Date and Stats */}
               <div className="flex items-center gap-4 flex-1">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -152,12 +164,11 @@ export const PaperRefillHistory = ({
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {refill.filledByName} • {refill.sheetsAdded} lembar •{" "}
-                    {refill.jobsCovered.length} print jobs
+                    {refill.jobsCovered?.length || 0} print jobs
                   </p>
                 </div>
               </div>
 
-              {/* Right Section - Financial Info */}
               <div className="flex items-center gap-6 flex-shrink-0">
                 <div className="text-right">
                   <p className="text-xs text-gray-500">Pendapatan</p>
@@ -184,63 +195,106 @@ export const PaperRefillHistory = ({
             </div>
 
             {/* Mobile Layout (sm:hidden) */}
-            <div className="sm:hidden space-y-3">
-              {/* Header with Date and Badges */}
-              <div className="flex items-start justify-between">
+            <div className="sm:hidden">
+              <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  {getStatusBadge(refill.status)}
-                  <br />
-                  {refill.status === "active" && (
-                    <span className="text-xs text-green-600 animate-pulse">
-                      ● Menerima profit
-                    </span>
-                  )}
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      refill.status === "paid" ? "bg-green-100" : "bg-blue-100"
+                    }`}
+                  >
+                    <svg
+                      className={`w-4 h-4 ${
+                        refill.status === "paid"
+                          ? "text-green-600"
+                          : "text-blue-600"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 text-sm">
+                      {formatShortDate(refill.createdAt)}
+                    </p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {getRoleBadge(refill.filledByRole)}
+                    </div>
+                  </div>
                 </div>
+                {getStatusBadge(refill.status)}
               </div>
 
-              {/* Info Row - Who filled and share */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {getRoleBadge(refill.filledByRole)}
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                  {refill.profitShare}% share
-                </span>
-                <span className="text-xs text-gray-500">
-                  {refill.filledByName}
-                </span>
-              </div>
+              <div className="ml-10 space-y-2">
+                <p className="text-xs text-gray-600">
+                  {refill.filledByName} • {refill.sheetsAdded} lembar
+                </p>
 
-              {/* Stats Row */}
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="bg-gray-50 p-2 rounded-lg">
-                  <p className="text-gray-500">Kertas</p>
-                  <p className="font-medium text-gray-800">
-                    {refill.sheetsAdded}
-                  </p>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="bg-gray-50 p-2 rounded-lg">
+                    <p className="text-gray-500">Jobs</p>
+                    <p className="font-medium text-gray-800">
+                      {refill.jobsCovered?.length || 0}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded-lg">
+                    <p className="text-gray-500">Profit</p>
+                    <p className="font-medium text-green-600">
+                      {formatRupiah(refill.partnerProfit)
+                        .replace("Rp", "")
+                        .trim()}
+                    </p>
+                  </div>
+                  <div className="bg-gray-50 p-2 rounded-lg">
+                    <p className="text-gray-500">Share</p>
+                    <p className="font-medium text-gray-800">
+                      {refill.profitShare}%
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-gray-50 p-2 rounded-lg">
-                  <p className="text-gray-500">Jobs</p>
-                  <p className="font-medium text-gray-800">
-                    {refill.jobsCovered.length}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-2 rounded-lg">
-                  <p className="text-gray-500">Profit</p>
-                  <p className="font-medium text-green-600">
-                    {formatRupiah(refill.partnerProfit).replace("Rp", "")}
-                  </p>
-                </div>
-              </div>
 
-              {/* Revenue */}
-              <div className="flex justify-between items-center text-sm pt-1 border-t border-gray-100">
-                <span className="text-gray-500">Total Pendapatan</span>
-                <span className="font-medium text-gray-800">
-                  {formatRupiah(refill.totalRevenue)}
-                </span>
+                <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-100">
+                  <span className="text-gray-500">Pendapatan</span>
+                  <span className="font-medium text-gray-800">
+                    {formatRupiah(refill.totalRevenue)}
+                  </span>
+                </div>
+
+                {refill.status === "active" && (
+                  <span className="text-xs text-green-600 animate-pulse block text-center">
+                    ● Menerima profit
+                  </span>
+                )}
               </div>
             </div>
           </div>
         ))}
+
+        {/* ✅ Pagination Component */}
+        {totalPages > 1 && (
+          <div className="border-t border-gray-200">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              section={section}
+              currentJobsPage={currentJobsPage}
+              currentRefillsPage={currentRefillsPage}
+              startDate={startDate}
+              endDate={endDate}
+              loading={loading}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

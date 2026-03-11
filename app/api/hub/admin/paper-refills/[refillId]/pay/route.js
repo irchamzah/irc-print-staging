@@ -1,8 +1,8 @@
+// app/api/hub/admin/paper-refills/[refillId]/pay/route.js
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL || "http://103.150.90.67:3002";
+const VPS_API_URL = process.env.VPS_API_URL;
 
-// POST /api/hub/admin/paper-refills/[refillId]/pay - Mark refill as paid
 export async function POST(request, { params }) {
   try {
     const { refillId } = params;

@@ -4,10 +4,16 @@ const VPS_API_URL = process.env.VPS_API_URL;
 
 export async function GET(request, { params }) {
   try {
-    const { printerId } = params;
+    const { printerId } = await params;
     const token = request.headers.get("authorization")?.split(" ")[1];
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get("limit") || "50";
+
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    const skip = (page - 1) * limit;
 
     if (!token) {
       return NextResponse.json(
@@ -16,17 +22,38 @@ export async function GET(request, { params }) {
       );
     }
 
-    const response = await fetch(
-      `${VPS_API_URL}/api/hub/printers/${printerId}/refills?limit=${limit}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+    // Fetch dari VPS API
+    let url = `${VPS_API_URL}/api/hub/printers/${printerId}/refills?skip=${skip}&limit=${limit}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-    );
+    });
 
     const data = await response.json();
+
+    // ✅ TAMBAHKAN FIELD TOTAL
+    if (data.success) {
+      // Hitung total dari response atau dari header
+      // Asumsikan VPS mengembalikan total di response
+      const total = data.pagination?.total || data.data.length;
+
+      return NextResponse.json({
+        success: true,
+        data: data.data,
+        pagination: {
+          page,
+          limit,
+          total,
+          hasMore: skip + data.data.length < total,
+        },
+      });
+    }
+
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error("❌ Error in /api/hub/printers/[printerId]/refills:", error);

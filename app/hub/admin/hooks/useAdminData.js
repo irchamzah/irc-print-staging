@@ -30,8 +30,6 @@ export const useAdminData = () => {
     setError(null);
 
     try {
-      console.log("🔍 Fetching admin data from internal API...");
-
       // Fetch users via internal API
       const usersRes = await fetch(`/api/hub/admin/users`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -92,8 +90,6 @@ export const useAdminData = () => {
       if (statsData.success) {
         setRefillStats(statsData.data);
       }
-
-      console.log("✅ All admin data fetched successfully");
     } catch (error) {
       console.error("❌ Error fetching admin data:", error);
       setError(error.message);

@@ -1,8 +1,15 @@
+// app/hub/printers/[printerId]/hooks/useHubData.js
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useHubAuth } from "../../../auth/hooks/useHubAuth";
 
-export const useHubData = (printerId) => {
+export const useHubData = (
+  printerId,
+  initialRefillsPage = 1,
+  initialJobsPage = 1,
+  initialStartDate = null,
+  initialEndDate = null,
+) => {
   const { token, user } = useHubAuth();
 
   const [printer, setPrinter] = useState(null);
@@ -10,112 +17,165 @@ export const useHubData = (printerId) => {
   const [paperRefills, setPaperRefills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Pagination untuk Paper Refills - diinisialisasi dari params
+  const [refillsCurrentPage, setRefillsCurrentPage] =
+    useState(initialRefillsPage);
+  const [refillsTotalPages, setRefillsTotalPages] = useState(1);
+  const [refillsTotalItems, setRefillsTotalItems] = useState(0);
+  const [refillsPageSize, setRefillsPageSize] = useState(10);
+  const [loadingRefillsPage, setLoadingRefillsPage] = useState(false);
+
+  // Pagination untuk Print Jobs - diinisialisasi dari params
+  const [jobsCurrentPage, setJobsCurrentPage] = useState(initialJobsPage);
+  const [jobsTotalPages, setJobsTotalPages] = useState(1);
+  const [jobsTotalItems, setJobsTotalItems] = useState(0);
+  const [jobsPageSize, setJobsPageSize] = useState(10);
+  const [loadingJobsPage, setLoadingJobsPage] = useState(false);
+
+  // Date range - diinisialisasi dari params
   const [dateRange, setDateRange] = useState({
-    startDate: null,
-    endDate: null,
-    filterType: "all",
+    startDate: initialStartDate,
+    endDate: initialEndDate,
+    filterType: initialStartDate && initialEndDate ? "custom" : "all",
   });
 
+  // ✅ PISAHKAN useEffect untuk masing-masing state
   useEffect(() => {
-    if (token && printerId) {
-      fetchAllData();
-    }
-  }, [token, printerId]);
+    setRefillsCurrentPage(initialRefillsPage);
+  }, [initialRefillsPage]);
 
-  const fetchAllData = async () => {
-    setLoading(true);
+  useEffect(() => {
+    setJobsCurrentPage(initialJobsPage);
+  }, [initialJobsPage]);
+
+  useEffect(() => {
+    setDateRange({
+      startDate: initialStartDate,
+      endDate: initialEndDate,
+      filterType: initialStartDate && initialEndDate ? "custom" : "all",
+    });
+  }, [initialStartDate, initialEndDate]);
+
+  // Detect mobile for page size
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 640;
+      setRefillsPageSize(isMobile ? 3 : 10);
+      setJobsPageSize(isMobile ? 3 : 10);
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const fetchAllData = useCallback(async () => {
+    if (!token || !printerId) return;
+
+    setLoadingRefillsPage(true);
     setError(null);
 
     try {
-      console.log("🔍 Fetching printer details from internal API...");
-
-      // Fetch printer details via internal API
+      // Fetch printer details
       const printerRes = await fetch(`/api/hub/printers/${printerId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!printerRes.ok) {
+      if (!printerRes.ok)
         throw new Error(`Failed to fetch printer: ${printerRes.status}`);
-      }
-
       const printerData = await printerRes.json();
+      if (printerData.success) setPrinter(printerData.data);
 
-      if (printerData.success) {
-        setPrinter(printerData.data);
-      } else {
-        throw new Error(printerData.error || "Failed to fetch printer");
+      // Fetch refills dengan pagination
+      let refillsUrl = `/api/hub/printers/${printerId}/refills?page=${refillsCurrentPage}&limit=${refillsPageSize}`;
+
+      if (dateRange.startDate && dateRange.endDate) {
+        refillsUrl += `&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
       }
 
-      // Fetch refills via internal API
-      console.log("🔍 Fetching refills via internal API...");
-      const refillsRes = await fetch(
-        `/api/hub/printers/${printerId}/refills?limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      const refillsRes = await fetch(refillsUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      if (!refillsRes.ok) {
+      if (!refillsRes.ok)
         throw new Error(`Failed to fetch refills: ${refillsRes.status}`);
-      }
 
       const refillsData = await refillsRes.json();
 
       if (refillsData.success) {
         setPaperRefills(refillsData.data);
-      } else {
-        console.warn("Refills data not in expected format:", refillsData);
+
+        // Handle pagination data
+        const total = refillsData.pagination?.total || 0;
+        setRefillsTotalItems(total);
+        setRefillsTotalPages(Math.ceil(total / refillsPageSize) || 1);
       }
 
-      // Fetch print jobs via internal API
-      console.log("🔍 Fetching print jobs via internal API...");
+      // Fetch print jobs dengan pagination
+      let jobsUrl = `/api/hub/printers/${printerId}/jobs?page=${jobsCurrentPage}&limit=${jobsPageSize}`;
 
-      const jobsRes = await fetch(
-        `/api/hub/printers/${printerId}/jobs?limit=100`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      );
+      if (dateRange.startDate && dateRange.endDate) {
+        jobsUrl += `&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`;
+      }
 
-      if (!jobsRes.ok) {
-        console.warn("Jobs endpoint not available yet");
-        setPrintJobs([]);
-      } else {
+      setLoadingJobsPage(true);
+      const jobsRes = await fetch(jobsUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (jobsRes.ok) {
         const jobsData = await jobsRes.json();
         if (jobsData.success) {
           setPrintJobs(jobsData.data);
+
+          const jobsTotal = jobsData.pagination?.total || 0;
+          setJobsTotalItems(jobsTotal);
+          setJobsTotalPages(Math.ceil(jobsTotal / jobsPageSize) || 1);
         }
       }
-
-      console.log("✅ All data fetched successfully");
+      setLoadingJobsPage(false);
     } catch (error) {
-      console.error("❌ Error fetching hub data:", error);
+      console.error("❌ Error fetching data:", error);
       setError(error.message);
     } finally {
       setLoading(false);
+      setLoadingRefillsPage(false);
     }
-  };
+  }, [
+    token,
+    printerId,
+    refillsCurrentPage,
+    jobsCurrentPage,
+    dateRange,
+    refillsPageSize,
+    jobsPageSize,
+  ]);
+
+  // Initial fetch
+  useEffect(() => {
+    setLoading(true);
+    fetchAllData();
+  }, [fetchAllData]);
+
+  const refreshData = useCallback(() => {
+    fetchAllData();
+  }, [fetchAllData]);
+
+  // Reset ketika printerId berubah
+  useEffect(() => {
+    setRefillsCurrentPage(1);
+    setJobsCurrentPage(1);
+  }, [printerId]);
 
   const handleRefillPaper = async () => {
     try {
-      // Validasi di frontend dulu
       if (printer?.paperStatus?.paperCount > 20) {
         return {
           success: false,
           error: "Kapasitas hampir penuh. Tidak bisa menambah kertas.",
         };
       }
-
-      console.log("🔍 Creating refill via internal API...");
 
       const response = await fetch(`/api/hub/printers/${printerId}/refills`, {
         method: "POST",
@@ -126,27 +186,22 @@ export const useHubData = (printerId) => {
         body: JSON.stringify({ sheetsAdded: 80 }),
       });
 
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const result = await response.json();
 
       if (result.success) {
         await fetchAllData();
         return { success: true, data: result.data };
-      } else {
-        return { success: false, error: result.error };
       }
+      return { success: false, error: result.error };
     } catch (error) {
-      console.error("Error refilling paper:", error);
       return { success: false, error: error.message };
     }
   };
 
-  // ✅ TAMBAHKAN FUNGSI INI - Mark refill as paid (hanya untuk super admin)
   const markRefillAsPaid = async (refillId) => {
-    // Cek apakah user adalah super admin
     if (user?.role !== "super_admin") {
       return {
         success: false,
@@ -155,8 +210,6 @@ export const useHubData = (printerId) => {
     }
 
     try {
-      console.log("🔍 Marking refill as paid via internal API...");
-
       const response = await fetch(
         `/api/hub/admin/paper-refills/${refillId}/pay`,
         {
@@ -169,20 +222,17 @@ export const useHubData = (printerId) => {
         },
       );
 
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
 
       const result = await response.json();
 
       if (result.success) {
-        await fetchAllData(); // Refresh data setelah update
+        await fetchAllData();
         return { success: true };
-      } else {
-        return { success: false, error: result.error };
       }
+      return { success: false, error: result.error };
     } catch (error) {
-      console.error("Error marking refill as paid:", error);
       return { success: false, error: error.message };
     }
   };
@@ -191,18 +241,12 @@ export const useHubData = (printerId) => {
     return printJobs.filter((job) => job.refillId === refillId);
   };
 
+  // Filter functions - sekarang hanya untuk profit calculation
   const filterJobsByDateRange = (jobs) => {
-    if (
-      dateRange.filterType === "all" ||
-      !dateRange.startDate ||
-      !dateRange.endDate
-    ) {
-      return jobs;
-    }
+    if (!dateRange.startDate || !dateRange.endDate) return jobs;
 
     const start = new Date(dateRange.startDate);
     start.setHours(0, 0, 0, 0);
-
     const end = new Date(dateRange.endDate);
     end.setHours(23, 59, 59, 999);
 
@@ -213,17 +257,10 @@ export const useHubData = (printerId) => {
   };
 
   const filterRefillsByDateRange = (refills) => {
-    if (
-      dateRange.filterType === "all" ||
-      !dateRange.startDate ||
-      !dateRange.endDate
-    ) {
-      return refills;
-    }
+    if (!dateRange.startDate || !dateRange.endDate) return refills;
 
     const start = new Date(dateRange.startDate);
     start.setHours(0, 0, 0, 0);
-
     const end = new Date(dateRange.endDate);
     end.setHours(23, 59, 59, 999);
 
@@ -249,11 +286,11 @@ export const useHubData = (printerId) => {
     });
   };
 
-  // Data yang sudah difilter
+  // Data yang sudah difilter untuk profit calculation
   const filteredJobs = filterJobsByDateRange(printJobs);
   const filteredRefills = filterRefillsByDateRange(paperRefills);
 
-  // Hitung profit
+  // Hitung profit dari semua data (tidak terpengaruh pagination)
   const totalRevenue = filteredJobs.reduce(
     (sum, job) => sum + (job.totalCost || 0),
     0,
@@ -306,14 +343,29 @@ export const useHubData = (printerId) => {
     printJobs,
     paperRefills,
     loading,
+    loadingRefillsPage,
     error,
 
+    // Pagination untuk Refills
+    refillsCurrentPage,
+    refillsTotalPages,
+    refillsTotalItems,
+    refillsPageSize,
+
+    // Pagination untuk Jobs
+    jobsCurrentPage,
+    jobsTotalPages,
+    jobsTotalItems,
+    jobsPageSize,
+    loadingJobsPage,
+
+    // Data terfilter untuk profit
     filteredJobs,
-    filteredRefills,
+    filteredRefills: paperRefills,
     filteredTotalRevenue: totalRevenue,
     filteredPartnerProfit: totalProfit,
-    profit,
 
+    profit,
     dateRange,
     setCustomDateRange,
     resetDateRange,
@@ -322,8 +374,8 @@ export const useHubData = (printerId) => {
     formatDate,
     formatShortDate,
     handleRefillPaper,
-    markRefillAsPaid, // ✅ TAMBAHKAN INI
+    markRefillAsPaid,
     getJobsByRefill,
-    refreshData: fetchAllData,
+    refreshData,
   };
 };

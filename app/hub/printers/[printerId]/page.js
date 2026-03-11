@@ -1,7 +1,6 @@
-// app/hub/[printerId]/page.js
 "use client";
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useHubData } from "./hooks/useHubData";
 import { HubHeader } from "./components/HubHeader";
 import { DateRangeFilter } from "./components/DateRangeFilter";
@@ -13,15 +12,29 @@ import { PrintJobsTable } from "./components/PrintJobsTable";
 import { InfoCard } from "./components/InfoCard";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 import { HubLayout } from "../../components/HubLayout";
-import Link from "next/link";
 import CustomLink from "@/app/components/CustomLink";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
 import { ProofUploadModal } from "../../admin/components/ProofUploadModal";
 
 export default function PartnerHubPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const printerId = params.printerId;
   const { user, token } = useHubAuth();
+
+  // ✅ Ref untuk menyimpan posisi scroll
+  const refillsSectionRef = useRef(null);
+  const jobsSectionRef = useRef(null);
+
+  // ✅ State untuk tracking loading data
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+  // ✅ State untuk tracking section yang akan di-scroll
+  const [targetSection, setTargetSection] = useState(null);
+
+  const refillsPage = parseInt(searchParams.get("refillsPage") || "1");
+  const jobsPage = parseInt(searchParams.get("jobsPage") || "1");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
 
   const {
     printer,
@@ -42,7 +55,17 @@ export default function PartnerHubPage() {
     markRefillAsPaid,
     getJobsByRefill,
     refreshData,
-  } = useHubData(printerId);
+    refillsCurrentPage,
+    refillsTotalPages,
+    refillsTotalItems,
+    refillsPageSize,
+    jobsCurrentPage,
+    jobsTotalPages,
+    jobsTotalItems,
+    jobsPageSize,
+    loadingRefillsPage,
+    loadingJobsPage,
+  } = useHubData(printerId, refillsPage, jobsPage, startDate, endDate);
 
   const [showRefillSuccess, setShowRefillSuccess] = useState(false);
   const [selectedRefill, setSelectedRefill] = useState(null);
@@ -50,6 +73,41 @@ export default function PartnerHubPage() {
   const [refillLoading, setRefillLoading] = useState(false);
   const [showProofModal, setShowProofModal] = useState(false);
   const [processingId, setProcessingId] = useState(null);
+
+  // ✅ Effect untuk menentukan section target dari URL
+  useEffect(() => {
+    if (!loading) {
+      const activeSection = searchParams.get("refillsPage")
+        ? "refills"
+        : searchParams.get("jobsPage")
+          ? "jobs"
+          : null;
+      setTargetSection(activeSection);
+    }
+  }, [searchParams, loading]);
+
+  // ✅ Effect untuk scroll ke section setelah data selesai loading
+  useEffect(() => {
+    if (!loadingRefillsPage && !loadingJobsPage && targetSection) {
+      // Beri sedikit waktu untuk DOM selesai update
+      const timer = setTimeout(() => {
+        if (targetSection === "refills" && refillsSectionRef.current) {
+          refillsSectionRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        } else if (targetSection === "jobs" && jobsSectionRef.current) {
+          jobsSectionRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+        setTargetSection(null); // Reset setelah scroll
+      }, 300); // ✅ Beri waktu untuk render
+
+      return () => clearTimeout(timer);
+    }
+  }, [loadingRefillsPage, loadingJobsPage, targetSection]);
 
   const handleRefill = async () => {
     setRefillLoading(true);
@@ -71,7 +129,6 @@ export default function PartnerHubPage() {
   };
 
   const handleMarkAsPaid = async (refill) => {
-    // Validasi di frontend
     if (refill.status !== "completed") {
       alert('❌ Hanya refill dengan status "Selesai" yang bisa dibayar');
       return;
@@ -82,7 +139,6 @@ export default function PartnerHubPage() {
       return;
     }
 
-    // Tampilkan modal upload bukti
     setSelectedRefill(refill);
     setShowProofModal(true);
   };
@@ -93,15 +149,12 @@ export default function PartnerHubPage() {
     setProcessingId(selectedRefill.refillId);
 
     try {
-      // ✅ FETCH dilakukan di sini, bukan di modal
       const response = await fetch(
         `/api/hub/admin/paper-refills/${selectedRefill.refillId}/pay`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData, // FormData langsung dikirim
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
         },
       );
 
@@ -131,6 +184,10 @@ export default function PartnerHubPage() {
 
   const handleApplyFilter = (startDate, endDate) => {
     setCustomDateRange(startDate, endDate);
+  };
+
+  const handleResetFilter = () => {
+    resetDateRange();
   };
 
   if (!user || !token) {
@@ -219,7 +276,7 @@ export default function PartnerHubPage() {
           <DateRangeFilter
             dateRange={dateRange}
             onApplyFilter={handleApplyFilter}
-            onResetFilter={resetDateRange}
+            onResetFilter={handleResetFilter}
             formatDate={formatDate}
           />
 
@@ -232,21 +289,49 @@ export default function PartnerHubPage() {
             dateRange={dateRange}
           />
 
-          <PaperRefillHistory
-            refills={filteredRefills}
-            onViewRefill={handleViewRefill}
-            formatRupiah={formatRupiah}
-            formatShortDate={formatShortDate}
-          />
+          {/* ✅ Tambahkan ref ke section refills */}
+          <div ref={refillsSectionRef}>
+            <PaperRefillHistory
+              refills={filteredRefills}
+              onViewRefill={handleViewRefill}
+              formatRupiah={formatRupiah}
+              formatShortDate={formatShortDate}
+              // Props pagination
+              currentPage={refillsCurrentPage}
+              totalPages={refillsTotalPages}
+              totalItems={refillsTotalItems}
+              pageSize={refillsPageSize}
+              section={"refills"}
+              currentJobsPage={jobsCurrentPage}
+              currentRefillsPage={refillsCurrentPage}
+              startDate={startDate}
+              endDate={endDate}
+              loading={loadingRefillsPage}
+            />
+          </div>
 
-          <PrintJobsTable
-            jobs={filteredJobs}
-            refills={filteredRefills}
-            onViewRefill={handleViewRefill}
-            formatRupiah={formatRupiah}
-            formatDate={formatDate}
-            formatShortDate={formatShortDate}
-          />
+          {/* ✅ Tambahkan ref ke section jobs */}
+          <div ref={jobsSectionRef} className="mt-8">
+            <PrintJobsTable
+              jobs={filteredJobs}
+              refills={filteredRefills}
+              onViewRefill={handleViewRefill}
+              formatRupiah={formatRupiah}
+              formatDate={formatDate}
+              formatShortDate={formatShortDate}
+              // Props pagination
+              currentPage={jobsCurrentPage}
+              totalPages={jobsTotalPages}
+              totalItems={jobsTotalItems}
+              pageSize={jobsPageSize}
+              section={"jobs"}
+              currentJobsPage={jobsCurrentPage}
+              currentRefillsPage={refillsCurrentPage}
+              startDate={startDate}
+              endDate={endDate}
+              loading={loadingJobsPage}
+            />
+          </div>
 
           <InfoCard profitShare={profit.profitShare} />
         </div>

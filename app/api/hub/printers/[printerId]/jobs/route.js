@@ -4,10 +4,16 @@ const VPS_API_URL = process.env.VPS_API_URL;
 
 export async function GET(request, { params }) {
   try {
-    const { printerId } = params;
+    const { printerId } = await params;
     const token = request.headers.get("authorization")?.split(" ")[1];
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get("limit") || "50";
+
+    const page = parseInt(searchParams.get("page")) || 1;
+    const limit = parseInt(searchParams.get("limit")) || 10;
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    const skip = (page - 1) * limit;
 
     if (!token) {
       return NextResponse.json(
@@ -30,14 +36,41 @@ export async function GET(request, { params }) {
 
     const data = await response.json();
 
-    // Filter jobs untuk printer ini
     if (data.success) {
-      const printerJobs = data.jobs.filter(
-        (job) => job.printerId === printerId,
-      );
+      // Filter jobs untuk printer ini
+      let printerJobs = data.jobs.filter((job) => job.printerId === printerId);
+
+      // Filter berdasarkan tanggal jika ada
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        printerJobs = printerJobs.filter((job) => {
+          const jobDate = new Date(job.createdAt);
+          return jobDate >= start && jobDate <= end;
+        });
+      }
+
+      // Urutkan dari terbaru
+      printerJobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      // Hitung total untuk pagination
+      const total = printerJobs.length;
+
+      // Ambil data sesuai page
+      const paginatedJobs = printerJobs.slice(skip, skip + limit);
+
       return NextResponse.json({
         success: true,
-        data: printerJobs.slice(0, parseInt(limit)),
+        data: paginatedJobs,
+        pagination: {
+          page,
+          limit,
+          total,
+          hasMore: skip + limit < total,
+        },
       });
     }
 

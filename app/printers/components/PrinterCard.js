@@ -38,11 +38,6 @@ export default function PrinterCard({ printer, userLocation }) {
   const handleMapsClick = (e) => {
     e.stopPropagation();
 
-    console.log(
-      "normalizedPrinter >>>>>",
-      normalizedPrinter.location?.coordinates.coordinates,
-    );
-
     if (normalizedPrinter.location?.mapsUrl) {
       window.open(
         normalizedPrinter.location.mapsUrl,

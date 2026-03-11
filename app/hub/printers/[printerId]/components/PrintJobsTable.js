@@ -1,16 +1,27 @@
+// app/hub/printers/[printerId]/components/PrintJobsTable.js
 "use client";
+
+import { Pagination } from "./Pagination";
 
 export const PrintJobsTable = ({
   jobs,
   refills,
   onViewRefill,
-  selectedPeriod,
-  onPeriodChange,
   formatRupiah,
   formatDate,
   formatShortDate,
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize,
+  section,
+  currentJobsPage,
+  currentRefillsPage,
+  startDate,
+  endDate,
+  loading,
 }) => {
-  if (jobs.length === 0) {
+  if (jobs.length === 0 && !loading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-6 border-b border-gray-200">
@@ -32,6 +43,12 @@ export const PrintJobsTable = ({
           <h2 className="text-lg font-semibold text-gray-800">
             🖨️ Riwayat Print Jobs
           </h2>
+          {/* Info jumlah data */}
+          {totalItems > 0 && (
+            <p className="text-sm text-gray-500">
+              Total {totalItems} print jobs
+            </p>
+          )}
         </div>
       </div>
 
@@ -103,7 +120,25 @@ export const PrintJobsTable = ({
         </table>
       </div>
 
-      {jobs.length === 0 && (
+      {/* ✅ Pagination Component */}
+      {totalPages > 1 && (
+        <div className="border-t border-gray-200">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            section={section}
+            currentJobsPage={currentJobsPage}
+            currentRefillsPage={currentRefillsPage}
+            startDate={startDate}
+            endDate={endDate}
+            loading={loading}
+          />
+        </div>
+      )}
+
+      {jobs.length === 0 && !loading && (
         <div className="text-center py-12">
           <svg
             className="w-16 h-16 text-gray-300 mx-auto mb-4"

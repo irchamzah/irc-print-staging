@@ -89,11 +89,6 @@ export default function AdminPaperRefillsPage() {
   };
 
   const handleViewProof = (refill) => {
-    console.log(
-      "process.env.NEXT_PUBLIC_VPS_API_URL:",
-      process.env.NEXT_PUBLIC_VPS_API_URL,
-    );
-    console.log("refill.transferProof:", refill.transferProof.url);
     if (refill.transferProof) {
       const imageUrl = `${process.env.NEXT_PUBLIC_VPS_API_URL}${refill.transferProof.url}`;
       window.open(imageUrl, "_blank");

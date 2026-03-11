@@ -27,8 +27,6 @@ export default function PrintersPage() {
     setError(null);
 
     try {
-      console.log("🔍 Fetching printers from internal API");
-
       // ✅ Ganti dengan internal API route
       const response = await fetch("/api/hub/printers", {
         headers: {
@@ -42,7 +40,6 @@ export default function PrintersPage() {
       }
 
       const data = await response.json();
-      console.log("✅ Printers data:", data);
 
       if (data.success) {
         setPrinters(data.data);

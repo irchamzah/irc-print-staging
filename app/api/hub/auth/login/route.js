@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 const VPS_API_URL = process.env.VPS_API_URL;
 
 export async function POST(request) {
-  console.log("API >>>>", VPS_API_URL);
   try {
     const body = await request.json();
 
