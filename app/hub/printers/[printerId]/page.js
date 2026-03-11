@@ -22,13 +22,8 @@ export default function PartnerHubPage() {
   const printerId = params.printerId;
   const { user, token } = useHubAuth();
 
-  // ✅ Ref untuk menyimpan posisi scroll
   const refillsSectionRef = useRef(null);
   const jobsSectionRef = useRef(null);
-
-  // ✅ State untuk tracking loading data
-  const [isDataLoaded, setIsDataLoaded] = useState(false);
-  // ✅ State untuk tracking section yang akan di-scroll
   const [targetSection, setTargetSection] = useState(null);
 
   const refillsPage = parseInt(searchParams.get("refillsPage") || "1");
@@ -38,7 +33,7 @@ export default function PartnerHubPage() {
 
   const {
     printer,
-    loading,
+    initialLoading,
     error,
     filteredJobs,
     filteredRefills,
@@ -76,7 +71,7 @@ export default function PartnerHubPage() {
 
   // ✅ Effect untuk menentukan section target dari URL
   useEffect(() => {
-    if (!loading) {
+    if (!initialLoading) {
       const activeSection = searchParams.get("refillsPage")
         ? "refills"
         : searchParams.get("jobsPage")
@@ -84,30 +79,7 @@ export default function PartnerHubPage() {
           : null;
       setTargetSection(activeSection);
     }
-  }, [searchParams, loading]);
-
-  // ✅ Effect untuk scroll ke section setelah data selesai loading
-  useEffect(() => {
-    if (!loadingRefillsPage && !loadingJobsPage && targetSection) {
-      // Beri sedikit waktu untuk DOM selesai update
-      const timer = setTimeout(() => {
-        if (targetSection === "refills" && refillsSectionRef.current) {
-          refillsSectionRef.current.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        } else if (targetSection === "jobs" && jobsSectionRef.current) {
-          jobsSectionRef.current.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
-        }
-        setTargetSection(null); // Reset setelah scroll
-      }, 300); // ✅ Beri waktu untuk render
-
-      return () => clearTimeout(timer);
-    }
-  }, [loadingRefillsPage, loadingJobsPage, targetSection]);
+  }, [searchParams, initialLoading]);
 
   const handleRefill = async () => {
     setRefillLoading(true);
@@ -194,7 +166,7 @@ export default function PartnerHubPage() {
     return <div>Please login first</div>;
   }
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
         <LoadingAnimation />

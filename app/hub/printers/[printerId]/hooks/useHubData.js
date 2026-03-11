@@ -15,7 +15,8 @@ export const useHubData = (
   const [printer, setPrinter] = useState(null);
   const [printJobs, setPrintJobs] = useState([]);
   const [paperRefills, setPaperRefills] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Pagination untuk Paper Refills - diinisialisasi dari params
@@ -40,7 +41,6 @@ export const useHubData = (
     filterType: initialStartDate && initialEndDate ? "custom" : "all",
   });
 
-  // ✅ PISAHKAN useEffect untuk masing-masing state
   useEffect(() => {
     setRefillsCurrentPage(initialRefillsPage);
   }, [initialRefillsPage]);
@@ -77,15 +77,16 @@ export const useHubData = (
     setError(null);
 
     try {
-      // Fetch printer details
-      const printerRes = await fetch(`/api/hub/printers/${printerId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      if (!printer) {
+        const printerRes = await fetch(`/api/hub/printers/${printerId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-      if (!printerRes.ok)
-        throw new Error(`Failed to fetch printer: ${printerRes.status}`);
-      const printerData = await printerRes.json();
-      if (printerData.success) setPrinter(printerData.data);
+        if (!printerRes.ok)
+          throw new Error(`Failed to fetch printer: ${printerRes.status}`);
+        const printerData = await printerRes.json();
+        if (printerData.success) setPrinter(printerData.data);
+      }
 
       // Fetch refills dengan pagination
       let refillsUrl = `/api/hub/printers/${printerId}/refills?page=${refillsCurrentPage}&limit=${refillsPageSize}`;
@@ -105,8 +106,6 @@ export const useHubData = (
 
       if (refillsData.success) {
         setPaperRefills(refillsData.data);
-
-        // Handle pagination data
         const total = refillsData.pagination?.total || 0;
         setRefillsTotalItems(total);
         setRefillsTotalPages(Math.ceil(total / refillsPageSize) || 1);
@@ -139,7 +138,7 @@ export const useHubData = (
       console.error("❌ Error fetching data:", error);
       setError(error.message);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
       setLoadingRefillsPage(false);
     }
   }, [
@@ -150,11 +149,11 @@ export const useHubData = (
     dateRange,
     refillsPageSize,
     jobsPageSize,
+    printer,
   ]);
 
   // Initial fetch
   useEffect(() => {
-    setLoading(true);
     fetchAllData();
   }, [fetchAllData]);
 
@@ -342,8 +341,7 @@ export const useHubData = (
     printer,
     printJobs,
     paperRefills,
-    loading,
-    loadingRefillsPage,
+    initialLoading,
     error,
 
     // Pagination untuk Refills
@@ -351,6 +349,7 @@ export const useHubData = (
     refillsTotalPages,
     refillsTotalItems,
     refillsPageSize,
+    loadingRefillsPage,
 
     // Pagination untuk Jobs
     jobsCurrentPage,

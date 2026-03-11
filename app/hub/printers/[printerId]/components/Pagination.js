@@ -1,5 +1,6 @@
 // app/hub/printers/[printerId]/components/Pagination.js
 "use client";
+import LoadingAnimation from "@/app/components/LoadingAnimation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -231,11 +232,7 @@ export const Pagination = ({
         </div>
       </div>
 
-      {loading && (
-        <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-        </div>
-      )}
+      {loading && section === "refills" && <LoadingAnimation />}
     </div>
   );
 };
