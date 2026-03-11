@@ -150,6 +150,13 @@ export const useHubData = (
         const allRefillsData = await allRefillsRes.json();
         if (allRefillsData.success) {
           setAllPaperRefills(allRefillsData.data);
+
+          // Gunakan count berdasarkan data penuh (all refills) yang sudah difilter date range untuk akurasi pagination
+          const allFilteredRefills = filterRefillsByDateRange(allRefillsData.data);
+          setRefillsTotalItems(allFilteredRefills.length);
+          setRefillsTotalPages(
+            Math.max(Math.ceil(allFilteredRefills.length / refillsPageSize), 1),
+          );
         }
       }
 

@@ -90,7 +90,23 @@ export const PaperRefillHistory = ({
     }
   };
 
-  if (refills.length === 0) {
+  const filterRefillsByDateRange = (refills) => {
+    if (!startDate || !endDate) return refills;
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    return refills.filter((refill) => {
+      const refillDate = new Date(refill.createdAt);
+      return refillDate >= start && refillDate <= end;
+    });
+  };
+
+  const visibleRefills = filterRefillsByDateRange(refills);
+
+  if (visibleRefills.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
         <div className="p-4 sm:p-6 border-b border-gray-200">
@@ -119,7 +135,7 @@ export const PaperRefillHistory = ({
       </div>
 
       <div className="divide-y divide-gray-200">
-        {refills.map((refill) => (
+        {visibleRefills.map((refill) => (
           <div
             key={refill.refillId}
             onClick={() => onViewRefill(refill)}

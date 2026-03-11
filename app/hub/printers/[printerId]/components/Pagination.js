@@ -232,7 +232,7 @@ export const Pagination = ({
         </div>
       </div>
 
-      {loading && section === "refills" && <LoadingAnimation />}
+      {/* {loading && section === "refills" && <LoadingAnimation />} */}
     </div>
   );
 };
