@@ -61,8 +61,8 @@ export const useHubData = (
   useEffect(() => {
     const handleResize = () => {
       const isMobile = window.innerWidth < 640;
-      setRefillsPageSize(isMobile ? 3 : 10);
-      setJobsPageSize(isMobile ? 3 : 10);
+      setRefillsPageSize(isMobile ? 3 : 8);
+      setJobsPageSize(isMobile ? 6 : 10);
     };
 
     handleResize();
