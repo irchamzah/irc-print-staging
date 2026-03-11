@@ -1,6 +1,11 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
+import {
+  useParams,
+  useSearchParams,
+  useRouter,
+  usePathname,
+} from "next/navigation";
 import { useHubData } from "./hooks/useHubData";
 import { HubHeader } from "./components/HubHeader";
 import { DateRangeFilter } from "./components/DateRangeFilter";
@@ -157,8 +162,8 @@ export default function PartnerHubPage() {
     }
   };
 
-  const handleApplyFilter = (startDate, endDate) => {
-    setCustomDateRange(startDate, endDate);
+  const handleApplyFilter = (startDate, endDate, filterType = "custom") => {
+    setCustomDateRange(startDate, endDate, filterType);
 
     const params = new URLSearchParams(searchParams.toString());
     params.set("startDate", startDate);

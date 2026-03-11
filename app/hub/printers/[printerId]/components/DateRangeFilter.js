@@ -65,10 +65,11 @@ export const DateRangeFilter = ({
               onApplyFilter(
                 weekAgo.toISOString().split("T")[0],
                 today.toISOString().split("T")[0],
+                "week",
               );
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              !showCustom && dateRange.filterType === "custom"
+              dateRange.filterType === "week"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
@@ -86,10 +87,11 @@ export const DateRangeFilter = ({
               onApplyFilter(
                 monthAgo.toISOString().split("T")[0],
                 today.toISOString().split("T")[0],
+                "month",
               );
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              !showCustom && dateRange.filterType === "custom"
+              dateRange.filterType === "month"
                 ? "bg-blue-600 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}

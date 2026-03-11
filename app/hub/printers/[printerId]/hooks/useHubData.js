@@ -152,7 +152,9 @@ export const useHubData = (
           setAllPaperRefills(allRefillsData.data);
 
           // Gunakan count berdasarkan data penuh (all refills) yang sudah difilter date range untuk akurasi pagination
-          const allFilteredRefills = filterRefillsByDateRange(allRefillsData.data);
+          const allFilteredRefills = filterRefillsByDateRange(
+            allRefillsData.data,
+          );
           setRefillsTotalItems(allFilteredRefills.length);
           setRefillsTotalPages(
             Math.max(Math.ceil(allFilteredRefills.length / refillsPageSize), 1),
@@ -311,11 +313,11 @@ export const useHubData = (
     });
   };
 
-  const setCustomDateRange = (startDate, endDate) => {
+  const setCustomDateRange = (startDate, endDate, filterType = "custom") => {
     setDateRange({
       startDate,
       endDate,
-      filterType: "custom",
+      filterType,
     });
   };
 
