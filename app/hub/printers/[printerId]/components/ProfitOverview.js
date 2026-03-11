@@ -1,12 +1,10 @@
-"use client";
-
 export const ProfitOverview = ({
-  totalRevenue, // ← filteredTotalRevenue
+  totalRevenue,
   profitShare,
   pendingPayout,
-  totalProfit, // ← total profit semua waktu (tidak terfilter)
+  totalProfit,
   formatRupiah,
-  dateRange, // ← untuk menampilkan info filter
+  dateRange,
 }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
@@ -24,7 +22,7 @@ export const ProfitOverview = ({
         <p className="text-sm text-gray-500 mb-1">Share Profit</p>
         <p className="text-2xl font-bold text-green-600">{profitShare}%</p>
         <p className="text-xs text-gray-400 mt-2">
-          {profitShare === 30 ? "✅ Anda isi sendiri" : "⏳ Diisi admin"}
+          {profitShare === 30 ? "✅ Partner isi sendiri" : "⏳ Diisi admin"}
         </p>
       </div>
 
@@ -33,7 +31,7 @@ export const ProfitOverview = ({
         <p className="text-2xl font-bold text-orange-600">
           {formatRupiah(pendingPayout)}
         </p>
-        <p className="text-xs text-gray-400 mt-2">Belum dicairkan</p>
+        <p className="text-xs text-gray-400 mt-2">Periode terpilih</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -41,7 +39,7 @@ export const ProfitOverview = ({
         <p className="text-2xl font-bold text-blue-600">
           {formatRupiah(totalProfit)}
         </p>
-        <p className="text-xs text-gray-400 mt-2">Semua waktu</p>
+        <p className="text-xs text-gray-400 mt-2">Periode terpilih</p>
       </div>
     </div>
   );
