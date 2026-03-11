@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useHubData } from "./hooks/useHubData";
 import { HubHeader } from "./components/HubHeader";
 import { DateRangeFilter } from "./components/DateRangeFilter";
@@ -30,6 +30,9 @@ export default function PartnerHubPage() {
   const jobsPage = parseInt(searchParams.get("jobsPage") || "1");
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
+
+  const router = useRouter();
+  const pathname = usePathname();
 
   const {
     printer,
@@ -156,10 +159,27 @@ export default function PartnerHubPage() {
 
   const handleApplyFilter = (startDate, endDate) => {
     setCustomDateRange(startDate, endDate);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("startDate", startDate);
+    params.set("endDate", endDate);
+    params.set("refillsPage", "1");
+    params.set("jobsPage", "1");
+
+    router.push(`${pathname}?${params.toString()}`);
   };
 
   const handleResetFilter = () => {
     resetDateRange();
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("startDate");
+    params.delete("endDate");
+    params.delete("refillsPage");
+    params.delete("jobsPage");
+
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
   };
 
   if (!user || !token) {

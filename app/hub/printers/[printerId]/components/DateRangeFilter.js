@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export const DateRangeFilter = ({
   dateRange,
@@ -12,6 +12,12 @@ export const DateRangeFilter = ({
   const [showCustom, setShowCustom] = useState(
     dateRange.filterType === "custom",
   );
+
+  useEffect(() => {
+    setStartDate(dateRange.startDate || "");
+    setEndDate(dateRange.endDate || "");
+    setShowCustom(dateRange.filterType === "custom");
+  }, [dateRange]);
 
   const handleApplyCustom = () => {
     if (startDate && endDate) {
