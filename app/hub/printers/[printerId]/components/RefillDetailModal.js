@@ -40,6 +40,13 @@ export const RefillDetailModal = ({
     }
   };
 
+  const handleViewProof = (refill) => {
+    if (refill.transferProof) {
+      const imageUrl = `${process.env.NEXT_PUBLIC_VPS_API_URL}${refill.transferProof.url}`;
+      window.open(imageUrl, "_blank");
+    }
+  };
+
   if (!isOpen || !refill) return null;
 
   return (
@@ -128,6 +135,38 @@ export const RefillDetailModal = ({
                   </span>
                 )}
               </div>
+              {refill.transferProof ? (
+                <button
+                  onClick={() => handleViewProof(refill)}
+                  className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1"
+                  title="Lihat Bukti"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                    />
+                  </svg>
+                  Lihat
+                </button>
+              ) : refill.status === "paid" ? (
+                <span className="text-xs text-gray-400">Tidak ada</span>
+              ) : (
+                <span className="text-xs text-gray-400">-</span>
+              )}
 
               {/* Tombol Bayar untuk Admin */}
               {userRole === "super_admin" && refill.status !== "paid" && (

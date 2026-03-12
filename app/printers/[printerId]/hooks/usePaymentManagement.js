@@ -1,4 +1,4 @@
-// app/printers/[printerId]/hooks/usePaymentManagement.js
+// app/printers/[printerId]/hooks/usePaymentManagement.js (FRONTEND Next.js)
 import { useState } from "react";
 
 const VPS_API_URL = process.env.VPS_API_URL;

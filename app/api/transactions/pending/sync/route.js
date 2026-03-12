@@ -41,9 +41,7 @@ export async function GET(request) {
       try {
         // Gunakan endpoint payment status yang sudah ada
         const statusResponse = await fetch(
-          `${
-            process.env.NEXTAUTH_URL
-          }/api/payment/status?orderId=${transaction.orderId}`,
+          `${VPS_API_URL}/api/payment/status?orderId=${transaction.orderId}`,
         );
 
         if (statusResponse.ok) {

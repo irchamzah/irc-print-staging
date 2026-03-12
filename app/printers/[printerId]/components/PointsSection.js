@@ -1,3 +1,4 @@
+// app/printers/[printerId]/components/PointsSection.js (FRONTEND Next.js)
 import { useEffect, useState } from "react";
 
 export const PointsSection = ({
