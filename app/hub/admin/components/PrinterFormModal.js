@@ -51,7 +51,7 @@ export const PrinterFormModal = ({
       partnerShare: 30,
       paperPackSize: 80,
     },
-    pointDivider: printer?.pointDivider,
+    pointDivider: printer?.pointDivider ?? "",
     paperStatus: {
       available: true,
       paperCount: 0,
@@ -116,6 +116,7 @@ export const PrinterFormModal = ({
           partnerShare: 30,
           paperPackSize: 80,
         },
+        pointDivider: printer.pointDivider || "",
         paperStatus: printer.paperStatus || {
           available: true,
           paperCount: 0,
@@ -178,6 +179,7 @@ export const PrinterFormModal = ({
           partnerShare: 30,
           paperPackSize: 80,
         },
+        pointDivider: "",
         paperStatus: {
           available: true,
           paperCount: 0,
