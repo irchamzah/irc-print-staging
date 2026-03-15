@@ -16,6 +16,7 @@ export const usePrinterPage = () => {
   const [isPaperInsufficient, setIsPaperInsufficient] = useState(false);
   const [availablePaper, setAvailablePaper] = useState(0);
   const [totalPagesNeeded, setTotalPagesNeeded] = useState(0);
+  const [pointDivider, setPointDivider] = useState(0);
 
   // Initialize all custom hooks
   const userManagement = useUserManagement();
@@ -75,6 +76,12 @@ export const usePrinterPage = () => {
 
       if (result.success) {
         setPrinter(result.printer);
+        setPointDivider(result.printer.pointDivider);
+
+        console.log(
+          "app/printers/[printerId]/hooks/usePrinterPage.js - fetchPrinterDetails:",
+          result.printer.pointDivider,
+        );
 
         // ✅ SET PRICES DARI DATA PRINTER
         if (result.printer?.pricing) {
@@ -82,6 +89,10 @@ export const usePrinterPage = () => {
           localStorage.setItem(
             "printerPrices",
             JSON.stringify(result.printer.pricing),
+          );
+          localStorage.setItem(
+            "printerPointDivider",
+            result.printer.pointDivider,
           );
         }
       }
@@ -224,6 +235,7 @@ export const usePrinterPage = () => {
     ...fileManagement,
     ...paymentManagement,
     isRefreshing: refreshData.isRefreshing,
+    pointDivider,
 
     // Setters
     setPrinter,

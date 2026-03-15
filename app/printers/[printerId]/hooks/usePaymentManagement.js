@@ -155,10 +155,19 @@ export const usePaymentManagement = (
         return; // Keluar tanpa error
       }
 
+      const pointDivider = parseInt(
+        localStorage.getItem("printerPointDivider"),
+      );
+
+      console.log(
+        "handlePaymentSuccess - pointDivider from localStorage:",
+        pointDivider,
+      );
+
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
         advancedSettings.copies;
-      const pointsToAdd = (advancedSettings.cost / 4000).toFixed(2);
+      const pointsToAdd = (advancedSettings.cost / pointDivider).toFixed(2);
 
       const printPayload = {
         orderId: currentJobId,
@@ -169,6 +178,7 @@ export const usePaymentManagement = (
         totalCost: advancedSettings.cost,
         totalPages: totalPagesToPrint,
         pointsToAdd: pointsToAdd,
+        pointDivider: pointDivider,
         phoneNumber: userSession?.phone,
         isRestoredTransaction: paymentData?.isRestored || false,
       };
@@ -440,11 +450,20 @@ export const usePaymentManagement = (
     try {
       setIsLoading(true);
 
+      const pointDivider = parseInt(
+        localStorage.getItem("printerPointDivider"),
+      );
+
+      console.log(
+        "processSuccessfulPayment - pointDivider from localStorage:",
+        pointDivider,
+      );
+
       const totalPagesToPrint =
         (transaction.settings.colorPages.length +
           transaction.settings.bwPages.length) *
         transaction.settings.copies;
-      const pointsToAdd = (transaction.cost / 4000).toFixed(2);
+      const pointsToAdd = (transaction.cost / pointDivider).toFixed(2);
 
       const printPayload = {
         orderId: transaction.orderId,
@@ -455,6 +474,7 @@ export const usePaymentManagement = (
         totalCost: transaction.cost,
         totalPages: totalPagesToPrint,
         pointsToAdd: pointsToAdd,
+        pointDivider: pointDivider,
         phoneNumber: userSession?.phone,
         isRestoredTransaction: true,
       };

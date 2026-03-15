@@ -115,6 +115,7 @@ export default function PrinterPage() {
                   checkingPoints={checkingPoints}
                   refreshingPoints={refreshingPoints}
                   advancedSettings={advancedSettings}
+                  pointDivider={printer.pointDivider}
                   onCheckPoints={checkUserPoints}
                   onRefreshPoints={refreshUserPoints}
                   onLogout={logoutUser}

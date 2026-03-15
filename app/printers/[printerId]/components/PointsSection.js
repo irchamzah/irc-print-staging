@@ -8,6 +8,7 @@ export const PointsSection = ({
   checkingPoints,
   refreshingPoints,
   advancedSettings,
+  pointDivider,
   onCheckPoints,
   onRefreshPoints,
   onLogout,
@@ -202,7 +203,7 @@ export const PointsSection = ({
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-700">Point akan ditambah:</span>
             <span className="text-sm font-bold text-green-600">
-              +{(advancedSettings.cost / 4000).toFixed(2)}
+              +{(advancedSettings.cost / pointDivider).toFixed(2)}
             </span>
           </div>
         </div>

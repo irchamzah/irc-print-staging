@@ -51,6 +51,7 @@ export const PrinterFormModal = ({
       partnerShare: 30,
       paperPackSize: 80,
     },
+    pointDivider: printer?.pointDivider,
     paperStatus: {
       available: true,
       paperCount: 0,
@@ -917,6 +918,39 @@ export const PrinterFormModal = ({
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h5 className="text-sm font-medium text-gray-700 mb-3">
+                  🎯 Point Settings
+                </h5>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Point Divider (Rp per point)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={formData.pointDivider}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            pointDivider: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        min="100"
+                        step="100"
+                      />
+                      <span className="text-sm text-gray-500">
+                        Rp = 1 point
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Contoh: Jika diisi 2000, maka setiap Rp 2.000 = 1 point
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
