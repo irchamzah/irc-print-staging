@@ -1,3 +1,4 @@
+// app/api/hub/admin/users/[userId]/route.js
 import { NextResponse } from "next/server";
 
 const VPS_API_URL = process.env.VPS_API_URL;
