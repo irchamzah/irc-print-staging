@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function GET(request, { params }) {
   try {
@@ -23,7 +23,7 @@ export async function GET(request, { params }) {
     }
 
     // Fetch dari VPS API
-    const response = await fetch(`${VPS_API_URL}/api/print/jobs`, {
+    const response = await fetch(`${NEXT_PUBLIC_VPS_API_URL}/api/print/jobs`, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

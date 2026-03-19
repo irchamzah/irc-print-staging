@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const API_URL = process.env.VPS_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export const useHubAuth = () => {
   const router = useRouter();

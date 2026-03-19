@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function GET(request, { params }) {
   try {
     const { printerId } = await params;
 
     const response = await fetch(
-      `${VPS_API_URL}/api/printers/${printerId}/point-divider`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/printers/${printerId}/point-divider`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -20,11 +20,6 @@ export async function GET(request, { params }) {
     }
 
     const data = await response.json();
-
-    console.log(
-      "app/api/printers/[printerId]/point-divider/route.js - GET point divider:",
-      data.pointDivider,
-    );
 
     return NextResponse.json({
       success: true,

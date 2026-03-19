@@ -1,4 +1,4 @@
-// components/LoadingAnimation.js
+// app/components/LoadingAnimation.js
 "use client";
 import { useEffect, useState } from "react";
 

@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request) {
   try {
@@ -28,7 +28,7 @@ export async function POST(request) {
     if (printerId) {
       try {
         const printerResponse = await fetch(
-          `${VPS_API_URL}/api/printers/${printerId}/point-divider`,
+          `${NEXT_PUBLIC_VPS_API_URL}/api/printers/${printerId}/point-divider`,
         );
         if (printerResponse.ok) {
           const printerData = await printerResponse.json();
@@ -39,23 +39,24 @@ export async function POST(request) {
       }
     }
 
-    console.log("app/api/users/route.js - POST point divider:", pointDivider);
-
     // Create user melalui VPS API dengan initial points 0
-    const response = await fetch(`${VPS_API_URL}/api/users/points`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${NEXT_PUBLIC_VPS_API_URL}/api/users/points`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phone: phone,
+          points: 0,
+          amount: 0,
+          orderId: `create-${Date.now()}`,
+          pointDivider: pointDivider,
+          fileName: "user-creation.pdf",
+        }),
       },
-      body: JSON.stringify({
-        phone: phone,
-        points: 0,
-        amount: 0,
-        orderId: `create-${Date.now()}`,
-        pointDivider: pointDivider,
-        fileName: "user-creation.pdf",
-      }),
-    });
+    );
 
     const result = await response.json();
 
@@ -102,7 +103,9 @@ export async function GET(request) {
 
     if (phone) {
       // Get specific user by phone from VPS
-      const response = await fetch(`${VPS_API_URL}/api/users/${phone}/points`);
+      const response = await fetch(
+        `${NEXT_PUBLIC_VPS_API_URL}/api/users/${phone}/points`,
+      );
 
       if (!response.ok) {
         throw new Error(`VPS API error: ${response.status}`);

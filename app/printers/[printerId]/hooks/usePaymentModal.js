@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-const MIDTRANS_ENVIRONMENT = "sandbox";
-const MIDTRANS_CLIENT_KEY_SANDBOX = "Mid-client-wPXTxafwqLeUkNQD";
-const MIDTRANS_CLIENT_KEY_PRODUCTION = "Mid-client-S7IFqCPzEbOVyOrF";
+const NEXT_PUBLIC_MIDTRANS_ENVIRONMENT =
+  process.env.NEXT_PUBLIC_MIDTRANS_ENVIRONMENT;
+const NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SANDBOX =
+  process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SANDBOX;
+const NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_PRODUCTION =
+  process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_PRODUCTION;
 
 export const usePaymentModal = (
   isOpen,
@@ -112,14 +115,14 @@ export const usePaymentModal = (
     }
 
     const snapUrl =
-      MIDTRANS_ENVIRONMENT === "production"
+      NEXT_PUBLIC_MIDTRANS_ENVIRONMENT === "production"
         ? "https://app.midtrans.com/snap/snap.js"
         : "https://app.sandbox.midtrans.com/snap/snap.js";
 
     const clientKey =
-      MIDTRANS_ENVIRONMENT === "production"
-        ? MIDTRANS_CLIENT_KEY_PRODUCTION
-        : MIDTRANS_CLIENT_KEY_SANDBOX;
+      NEXT_PUBLIC_MIDTRANS_ENVIRONMENT === "production"
+        ? NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_PRODUCTION
+        : NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SANDBOX;
 
     const script = document.createElement("script");
     script.src = snapUrl;

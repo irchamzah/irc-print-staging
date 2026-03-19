@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 import PaymentModal from "@/app/printers/[printerId]/components/PaymentModal";
 import BottomBar from "@/app/components/BottomBar";
 import TopBar from "@/app/components/TopBar";
+import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 const PageSelector = dynamic(
   () => import("@/app/printers/[printerId]/components/PageSelector"),
@@ -66,7 +67,7 @@ export default function PrinterPage() {
   } = usePrinterPage();
 
   if (!printer) {
-    return <LoadingSpinner />;
+    return <LoadingAnimation />;
   }
 
   if (!prices) {

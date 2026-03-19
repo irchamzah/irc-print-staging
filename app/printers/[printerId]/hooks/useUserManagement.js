@@ -18,11 +18,6 @@ export const useUserManagement = () => {
       // Coba ambil dari localStorage dulu (untuk caching)
       const cached = localStorage.getItem(`printer_${printerId}_pointDivider`);
 
-      console.log(
-        "app/printers/[printerId]/hooks/useUserManagement.js - getPrinterPointDivider cached point divider:",
-        cached,
-      );
-
       if (cached) {
         const { value, timestamp } = JSON.parse(cached);
         // Cache selama 1 jam
@@ -36,11 +31,6 @@ export const useUserManagement = () => {
       const data = await response.json();
 
       const pointDivider = data.pointDivider;
-
-      console.log(
-        "app/printers/[printerId]/hooks/useUserManagement.js - getPrinterPointDivider fetched point divider:",
-        pointDivider,
-      );
 
       // Simpan ke localStorage
       localStorage.setItem(
@@ -135,11 +125,6 @@ export const useUserManagement = () => {
     try {
       // Dapatkan point divider dari printer
       const pointDivider = await getPrinterPointDivider();
-
-      console.log(
-        "app/printers/[printerId]/hooks/useUserManagement.js - createNewUserDirect point divider:",
-        pointDivider,
-      );
 
       const createResponse = await fetch(`/api/users/points`, {
         method: "POST",

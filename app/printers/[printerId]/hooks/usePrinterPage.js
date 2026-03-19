@@ -78,11 +78,6 @@ export const usePrinterPage = () => {
         setPrinter(result.printer);
         setPointDivider(result.printer.pointDivider);
 
-        console.log(
-          "app/printers/[printerId]/hooks/usePrinterPage.js - fetchPrinterDetails:",
-          result.printer.pointDivider,
-        );
-
         // ✅ SET PRICES DARI DATA PRINTER
         if (result.printer?.pricing) {
           setPrices(result.printer.pricing);

@@ -1,7 +1,7 @@
 // app/api/hub/admin/paper-refills/[refillId]/pay/route.js
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request, { params }) {
   try {
@@ -28,7 +28,7 @@ export async function POST(request, { params }) {
 
     // Kirim ke VPS dengan FormData
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/paper-refills/${refillId}/pay`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/paper-refills/${refillId}/pay`,
       {
         method: "POST",
         headers: {

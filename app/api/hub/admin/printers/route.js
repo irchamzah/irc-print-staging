@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/printers - Get all printers
 export async function GET(request) {
@@ -14,12 +14,15 @@ export async function GET(request) {
       );
     }
 
-    const response = await fetch(`${VPS_API_URL}/api/hub/admin/printers`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printers`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       },
-    });
+    );
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });
@@ -45,14 +48,17 @@ export async function POST(request) {
       );
     }
 
-    const response = await fetch(`${VPS_API_URL}/api/hub/admin/printers`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printers`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+    );
 
     const data = await response.json();
     return NextResponse.json(data, { status: response.status });

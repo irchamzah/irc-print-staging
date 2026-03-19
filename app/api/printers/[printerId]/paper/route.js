@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request, { params }) {
   try {
@@ -10,20 +10,20 @@ export async function POST(request, { params }) {
     if (!pagesUsed || pagesUsed <= 0) {
       return NextResponse.json(
         { success: false, error: "Pages used must be greater than 0" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Kirim request ke VPS untuk update paper count
     const response = await fetch(
-      `${VPS_API_URL}/api/printers/${printerId}/paper`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/printers/${printerId}/paper`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ pagesUsed }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -33,7 +33,7 @@ export async function POST(request, { params }) {
     console.error("Error updating paper count:", error);
     return NextResponse.json(
       { success: false, error: "Failed to update paper count" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

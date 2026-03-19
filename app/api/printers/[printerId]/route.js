@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function GET(request, { params }) {
   try {
     // AWAIT params sebelum digunakan
     const { printerId } = await params;
 
-    const response = await fetch(`${VPS_API_URL}/api/printers/${printerId}`);
+    const response = await fetch(
+      `${NEXT_PUBLIC_VPS_API_URL}/api/printers/${printerId}`,
+    );
 
     if (!response.ok) {
       throw new Error(`VPS API error: ${response.status}`);
@@ -24,7 +26,7 @@ export async function GET(request, { params }) {
         error: "Failed to fetch printer details",
         details: error.message,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

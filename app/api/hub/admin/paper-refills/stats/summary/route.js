@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL || "http://103.150.90.67:3002";
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/paper-refills/stats/summary - Get refill statistics
 export async function GET(request) {
@@ -15,7 +15,7 @@ export async function GET(request) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/paper-refills/stats/summary`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/paper-refills/stats/summary`,
       {
         headers: {
           Authorization: `Bearer ${token}`,

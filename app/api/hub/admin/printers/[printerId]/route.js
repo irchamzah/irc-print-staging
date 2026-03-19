@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/printers/[printerId] - Get single printer
 export async function GET(request, { params }) {
@@ -16,7 +16,7 @@ export async function GET(request, { params }) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/printers/${printerId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printers/${printerId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -54,7 +54,7 @@ export async function PUT(request, { params }) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/printers/${printerId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printers/${printerId}`,
       {
         method: "PUT",
         headers: {
@@ -93,7 +93,7 @@ export async function DELETE(request, { params }) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/printers/${printerId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printers/${printerId}`,
       {
         method: "DELETE",
         headers: {

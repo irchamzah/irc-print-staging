@@ -1,5 +1,4 @@
 // app/printers/[printerId]/hooks/usePageSelection.js
-import { PRINT_SETTINGS } from "@/lib/printConstants";
 import { useEffect, useState } from "react";
 
 export const usePageSelection = (

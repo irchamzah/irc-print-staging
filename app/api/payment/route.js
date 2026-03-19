@@ -14,8 +14,8 @@ export async function POST(request) {
       : process.env.MIDTRANS_SERVER_KEY_SANDBOX;
 
     const clientKey = isProduction
-      ? process.env.MIDTRANS_CLIENT_KEY_PRODUCTION
-      : process.env.MIDTRANS_CLIENT_KEY_SANDBOX;
+      ? process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_PRODUCTION
+      : process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SANDBOX;
 
     // Initialize Snap client
     let snap = new midtransClient.Snap({
@@ -60,13 +60,10 @@ export async function POST(request) {
       environment: process.env.MIDTRANS_ENVIRONMENT,
     });
   } catch (error) {
-    // --- LOGGING #4: Error Detail ---
     console.error("Payment error detail:", error);
-    console.error("Environment:", process.env.MIDTRANS_ENVIRONMENT);
-    // --------------------------------
     return NextResponse.json(
       { success: false, error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

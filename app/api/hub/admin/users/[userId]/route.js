@@ -1,7 +1,7 @@
 // app/api/hub/admin/users/[userId]/route.js
 import { NextResponse } from "next/server";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/users/[userId] - Get single user
 export async function GET(request, { params }) {
@@ -17,7 +17,7 @@ export async function GET(request, { params }) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/users/${userId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users/${userId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -52,7 +52,7 @@ export async function PUT(request, { params }) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/users/${userId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users/${userId}`,
       {
         method: "PUT",
         headers: {
@@ -88,7 +88,7 @@ export async function DELETE(request, { params }) {
     }
 
     const response = await fetch(
-      `${VPS_API_URL}/api/hub/admin/users/${userId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users/${userId}`,
       {
         method: "DELETE",
         headers: {

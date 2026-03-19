@@ -1,7 +1,7 @@
 // app/printers/[printerId]/hooks/usePaymentManagement.js (FRONTEND Next.js)
 import { useState } from "react";
 
-const VPS_API_URL = process.env.VPS_API_URL;
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export const usePaymentManagement = (
   printerId,
@@ -157,11 +157,6 @@ export const usePaymentManagement = (
 
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
-      );
-
-      console.log(
-        "handlePaymentSuccess - pointDivider from localStorage:",
-        pointDivider,
       );
 
       const totalPagesToPrint =
@@ -336,16 +331,19 @@ export const usePaymentManagement = (
         };
 
         if (latestStatus === "settlement") {
-          await fetch(`${VPS_API_URL}/api/transactions/update-status`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: transaction.orderId,
-              phoneNumber: userSession.phone,
-              status: "settlement",
-              midtransStatus: latestStatus,
-            }),
-          });
+          await fetch(
+            `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                orderId: transaction.orderId,
+                phoneNumber: userSession.phone,
+                status: "settlement",
+                midtransStatus: latestStatus,
+              }),
+            },
+          );
 
           setAdvancedSettings(updatedTransaction.settings);
           setTotalPages(updatedTransaction.fileData.pages);
@@ -452,11 +450,6 @@ export const usePaymentManagement = (
 
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
-      );
-
-      console.log(
-        "processSuccessfulPayment - pointDivider from localStorage:",
-        pointDivider,
       );
 
       const totalPagesToPrint =
