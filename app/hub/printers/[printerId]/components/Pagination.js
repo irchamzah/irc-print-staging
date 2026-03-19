@@ -16,6 +16,9 @@ export const Pagination = ({
   endDate,
   loading,
 }) => {
+  console.log(
+    "🥸Pagination /app/hub/printers/[printerId]/components/Pagination.js",
+  );
   // ✅ Panggil semua hooks di bagian ATAS, sebelum conditional return
   const pathname = usePathname();
 

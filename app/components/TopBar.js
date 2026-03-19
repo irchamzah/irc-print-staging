@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import CustomLink from "./CustomLink";
 
 export default function TopBar() {
+  console.log("🥸TopBar /app/components/TopBar.js");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 

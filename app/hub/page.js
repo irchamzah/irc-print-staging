@@ -6,6 +6,7 @@ import { HubLayout } from "./components/HubLayout";
 import CustomLink from "../components/CustomLink";
 
 export default function HubDashboard() {
+  console.log("🥸HubDashboard /app/hub/page.js");
   const { user, isAuthenticated, isSuperAdmin } = useHubAuth();
 
   if (!isAuthenticated()) {

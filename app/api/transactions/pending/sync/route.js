@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function GET(request) {
+  console.log("🌐GET /app/api/transactions/pending/sync/route.js");
   try {
     const { searchParams } = new URL(request.url);
     const phoneNumber = searchParams.get("phoneNumber");

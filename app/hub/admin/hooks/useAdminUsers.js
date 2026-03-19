@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
 export const useAdminUsers = () => {
+  console.log("🥸useAdminUsers /app/hub/admin/hooks/useAdminUsers.js");
   const { token } = useHubAuth();
   const [users, setUsers] = useState([]);
   const [printers, setPrinters] = useState([]);

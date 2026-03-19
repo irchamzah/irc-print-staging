@@ -2,6 +2,7 @@ import BottomBar from "../components/BottomBar";
 import TopBar from "../components/TopBar";
 
 export default function AboutPage() {
+  console.log("💻AboutPage /app/about/page.js");
   return (
     <>
       <TopBar />

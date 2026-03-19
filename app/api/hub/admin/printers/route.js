@@ -4,6 +4,7 @@ const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/printers - Get all printers
 export async function GET(request) {
+  console.log("🌐GET /api/hub/admin/printers");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
 
@@ -37,6 +38,7 @@ export async function GET(request) {
 
 // POST /api/hub/admin/printers - Create new printer
 export async function POST(request) {
+  console.log("🌐POST /api/hub/admin/printers");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
     const body = await request.json();

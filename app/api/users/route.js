@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request) {
+  console.log("🌐POST /app/api/users/route.js");
   try {
     const body = await request.json();
     const { phone, name, printerId } = body; // Tambahkan printerId
@@ -97,6 +98,7 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
+  console.log("🌐GET /app/api/users/route.js");
   try {
     const { searchParams } = new URL(request.url);
     const phone = searchParams.get("phone");

@@ -5,6 +5,7 @@ import { useHubAuth } from "../../auth/hooks/useHubAuth";
 // Tidak perlu API_URL karena kita pakai internal API
 
 export const useAdminData = () => {
+  console.log("🥸useAdminData /app/hub/admin/hooks/useAdminData.js");
   const { token, user } = useHubAuth();
   const isSuperAdmin = user?.role === "super_admin";
 

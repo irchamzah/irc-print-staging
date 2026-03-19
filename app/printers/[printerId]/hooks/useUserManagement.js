@@ -3,6 +3,9 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 
 export const useUserManagement = () => {
+  console.log(
+    "💻 useUserManagement /app/printers/[printerId]/hooks/useUserManagement.js",
+  );
   const params = useParams();
   const printerId = params?.printerId;
 

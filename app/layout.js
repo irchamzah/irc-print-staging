@@ -1,7 +1,5 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import TopBar from "@/app/components/TopBar";
-import BottomBar from "./components/BottomBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,6 +9,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  console.log("💻RootLayout /app/layout.js");
   return (
     <html lang="id">
       <body className={inter.className}>

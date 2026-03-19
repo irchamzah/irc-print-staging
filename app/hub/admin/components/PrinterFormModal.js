@@ -9,6 +9,9 @@ export const PrinterFormModal = ({
   error,
   processing,
 }) => {
+  console.log(
+    "🥸PrinterFormModal /app/hub/admin/components/PrinterFormModal.js",
+  );
   const [formData, setFormData] = useState({
     printerId: "",
     name: "",

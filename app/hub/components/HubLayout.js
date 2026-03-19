@@ -6,6 +6,7 @@ import { FaHome } from "react-icons/fa";
 import CustomLink from "@/app/components/CustomLink";
 
 export const HubLayout = ({ children }) => {
+  console.log("🥸HubLayout /app/hub/components/HubLayout.js");
   const { user, isSuperAdmin, logout } = useHubAuth();
 
   return (

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request, { params }) {
+  console.log("🌐POST /api/hub/admin/paper-refills/[refillId]/pay");
   try {
     const { refillId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];

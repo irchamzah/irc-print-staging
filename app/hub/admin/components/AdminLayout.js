@@ -6,6 +6,7 @@ import { useHubAuth } from "../../auth/hooks/useHubAuth"; // ✅ Import hook aut
 import CustomLink from "@/app/components/CustomLink";
 
 export const AdminLayout = ({ children, tabs, activeTab }) => {
+  console.log("🥸AdminLayout /app/hub/admin/components/AdminLayout.js");
   const { user, logout } = useHubAuth(); // ✅ Ambil fungsi logout
   const [hasError, setHasError] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);

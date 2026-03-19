@@ -4,6 +4,7 @@ const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/paper-refills/stats/summary - Get refill statistics
 export async function GET(request) {
+  console.log("🌐GET /api/hub/admin/paper-refills/stats/summary");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
 

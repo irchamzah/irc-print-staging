@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request) {
+  console.log("🌐POST /api/hub/auth/login");
   try {
     const body = await request.json();
 

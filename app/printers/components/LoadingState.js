@@ -1,4 +1,5 @@
 export default function LoadingState() {
+  console.log("💻 LoadingState /app/printers/components/LoadingState.js");
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="text-center bg-white rounded-2xl shadow-lg p-8 max-w-sm w-full">

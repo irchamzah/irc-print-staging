@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function GET(request, { params }) {
+  console.log("🌐GET /app/api/users/[phone]/points/route.js");
   try {
     const { phone } = await params;
     const { searchParams } = new URL(request.url);
@@ -74,6 +75,7 @@ export async function GET(request, { params }) {
 }
 
 export async function POST(request) {
+  console.log("🌐POST /app/api/users/[phone]/points/route.js");
   try {
     const body = await request.json();
 
@@ -129,6 +131,7 @@ export async function POST(request) {
 
 // Helper function untuk create new user
 async function createNewUser(phone, printerId) {
+  console.log("🌐createNewUser /app/api/users/[phone]/points/route.js");
   try {
     // Dapatkan point divider dari printer
     let pointDivider;

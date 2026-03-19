@@ -1,6 +1,7 @@
 import PrinterCard from "./PrinterCard";
 
 export default function PrintersGrid({ printers, userLocation, onRefresh }) {
+  console.log("💻 PrintersGrid /app/printers/components/PrintersGrid.js");
   if (printers.length === 0) {
     return (
       <div className="text-center py-12">

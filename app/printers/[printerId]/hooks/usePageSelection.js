@@ -7,6 +7,9 @@ export const usePageSelection = (
   onSettingsChange,
   prices,
 ) => {
+  console.log(
+    "💻 usePageSelection /app/printers/[printerId]/hooks/usePageSelection.js",
+  );
   const [selections, setSelections] = useState([]);
   const [selectedPages, setSelectedPages] = useState([]);
   const [visiblePages, setVisiblePages] = useState(6);

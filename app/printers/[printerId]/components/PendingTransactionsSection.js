@@ -13,6 +13,9 @@ export const PendingTransactionsSection = ({
   isPrinterOffline = false,
   isPaperInsufficient = false,
 }) => {
+  console.log(
+    "💻 PendingTransactionsSection /app/printers/[printerId]/components/PendingTransactionsSection.js",
+  );
   // Hanya tampilkan jika user login dan ada transaksi atau sedang loading
   if (
     !userSession ||
@@ -169,40 +172,46 @@ export const PendingTransactionsSection = ({
   );
 };
 
-const EmptyTransactionsState = () => (
-  <div className="text-center py-8">
-    <div className="flex flex-col items-center justify-center">
-      {/* Icon */}
-      <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-        <svg
-          className="w-8 h-8 text-purple-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      </div>
+const EmptyTransactionsState = () => {
+  console.log(
+    "💻 EmptyTransactionsState /app/printers/[printerId]/components/PendingTransactionsSection.js",
+  );
+  return (
+    <div className="text-center py-8">
+      <div className="flex flex-col items-center justify-center">
+        {/* Icon */}
+        <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+          <svg
+            className="w-8 h-8 text-purple-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
 
-      {/* Text */}
-      <h4 className="text-lg font-semibold text-gray-700 mb-2">
-        Tidak ada transaksi tertunda
-      </h4>
-      <p className="text-gray-500 text-sm max-w-xs mx-auto">
-        Semua transaksi Anda sudah selesai atau belum ada transaksi yang dibuat
-      </p>
-
-      {/* Additional Info */}
-      <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100">
-        <p className="text-purple-700 text-xs">
-          💡 Transaksi akan muncul di sini jika pembayaran belum selesai
+        {/* Text */}
+        <h4 className="text-lg font-semibold text-gray-700 mb-2">
+          Tidak ada transaksi tertunda
+        </h4>
+        <p className="text-gray-500 text-sm max-w-xs mx-auto">
+          Semua transaksi Anda sudah selesai atau belum ada transaksi yang
+          dibuat
         </p>
+
+        {/* Additional Info */}
+        <div className="mt-4 p-3 bg-purple-50 rounded-lg border border-purple-100">
+          <p className="text-purple-700 text-xs">
+            💡 Transaksi akan muncul di sini jika pembayaran belum selesai
+          </p>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};

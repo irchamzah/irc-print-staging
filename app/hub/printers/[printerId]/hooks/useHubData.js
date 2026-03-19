@@ -9,6 +9,7 @@ export const useHubData = (
   initialStartDate = null,
   initialEndDate = null,
 ) => {
+  console.log("🥸useHubData /app/hub/printers/[printerId]/hooks/useHubData.js");
   const { token, user } = useHubAuth();
 
   const [printer, setPrinter] = useState(null);

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
 
 export default function AdminRedirect() {
+  console.log("🥸AdminRedirect /app/hub/admin/page.js");
   const router = useRouter();
   const { user } = useHubAuth();
 

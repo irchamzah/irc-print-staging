@@ -12,6 +12,9 @@ export const usePaymentModal = (
   paymentData,
   isRestoredTransaction = false,
 ) => {
+  console.log(
+    "💻 usePaymentModal /app/printers/[printerId]/hooks/usePaymentModal.js",
+  );
   const [snapLoaded, setSnapLoaded] = useState(false);
   const [snapError, setSnapError] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);

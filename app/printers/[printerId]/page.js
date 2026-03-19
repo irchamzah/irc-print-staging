@@ -27,6 +27,7 @@ const PageSelector = dynamic(
 );
 
 export default function PrinterPage() {
+  console.log("🥸 PrinterPage /app/printers/[printerId]/page.js");
   const {
     // States
     printer,

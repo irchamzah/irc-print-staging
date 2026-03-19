@@ -8,6 +8,9 @@ export const SubmitButton = ({
   availablePaper = 0,
   totalPagesNeeded = 0,
 }) => {
+  console.log(
+    "💻 SubmitButton /app/printers/[printerId]/components/SubmitButton.js",
+  );
   if (
     !advancedSettings.cost ||
     advancedSettings.cost <= 0 ||

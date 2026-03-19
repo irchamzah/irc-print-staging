@@ -10,6 +10,7 @@ import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 export default function AdminUsersPage() {
+  console.log("🥸AdminUsersPage /app/hub/admin/users/page.js");
   const router = useRouter();
   const { user, isSuperAdmin } = useHubAuth();
   const {

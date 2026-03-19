@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function POST(request, { params }) {
+  console.log("🌐POST /app/api/printers/[printerId]/paper/route.js");
   try {
     const { printerId } = params;
     const { pagesUsed } = await request.json();

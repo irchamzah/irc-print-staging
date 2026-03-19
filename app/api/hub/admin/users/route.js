@@ -4,6 +4,7 @@ const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/users - Get all users
 export async function GET(request) {
+  console.log("🌐GET /api/hub/admin/users");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
 
@@ -37,6 +38,7 @@ export async function GET(request) {
 
 // POST /api/hub/admin/users - Create new user
 export async function POST(request) {
+  console.log("🌐POST /api/hub/admin/users");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
     const body = await request.json();

@@ -3,6 +3,9 @@ import { useState } from "react";
 import { getPDFPageCount, validatePDFFile } from "../../../../utils/pdfUtils";
 
 export const useFileManagement = () => {
+  console.log(
+    "💻 useFileManagement /app/printers/[printerId]/hooks/useFileManagement.js",
+  );
   const [file, setFile] = useState(null);
   const [advancedSettings, setAdvancedSettings] = useState({
     colorPages: [],
@@ -35,7 +38,7 @@ export const useFileManagement = () => {
       const defaultColorPages = [1];
       const defaultBwPages = Array.from(
         { length: pageCount - 1 },
-        (_, i) => i + 2
+        (_, i) => i + 2,
       );
 
       const initialSettings = {

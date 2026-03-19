@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 export default function LoadingAnimation() {
+  console.log("🥸LoadingAnimation /app/components/LoadingAnimation.js");
   const [useApng, setUseApng] = useState(false);
 
   useEffect(() => {

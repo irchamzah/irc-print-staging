@@ -7,6 +7,9 @@ import { usePaymentManagement } from "./usePaymentManagement";
 import { useRefreshData } from "./useRefreshData";
 
 export const usePrinterPage = () => {
+  console.log(
+    "💻 usePrinterPage /app/printers/[printerId]/hooks/usePrinterPage.js",
+  );
   const params = useParams();
   const printerId = params.printerId;
 

@@ -7,6 +7,9 @@ export const DeleteConfirmModal = ({
   itemName,
   processing,
 }) => {
+  console.log(
+    "🥸DeleteConfirmModal /app/hub/admin/components/DeleteConfirmModal.js",
+  );
   if (!isOpen) return null;
 
   return (

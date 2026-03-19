@@ -4,6 +4,7 @@ const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/printers/[printerId] - Get single printer
 export async function GET(request, { params }) {
+  console.log("🌐GET /api/hub/admin/printers/[printerId]");
   try {
     const { printerId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];
@@ -41,6 +42,7 @@ export async function GET(request, { params }) {
 
 // PUT /api/hub/admin/printers/[printerId] - Update printer
 export async function PUT(request, { params }) {
+  console.log("🌐PUT /api/hub/admin/printers/[printerId]");
   try {
     const { printerId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];
@@ -81,6 +83,7 @@ export async function PUT(request, { params }) {
 
 // DELETE /api/hub/admin/printers/[printerId] - Delete printer
 export async function DELETE(request, { params }) {
+  console.log("🌐DELETE /api/hub/admin/printers/[printerId]");
   try {
     const { printerId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];

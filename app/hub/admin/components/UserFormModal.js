@@ -10,6 +10,7 @@ export const UserFormModal = ({
   error,
   processing,
 }) => {
+  console.log("🥸UserFormModal /app/hub/admin/components/UserFormModal.js");
   const [formData, setFormData] = useState({
     name: user?.name || "",
     phone: user?.phone || "",

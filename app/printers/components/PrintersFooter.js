@@ -1,6 +1,7 @@
 import { FaWhatsapp } from "react-icons/fa";
 
 export default function PrintersFooter() {
+  console.log("💻 PrintersFooter /app/printers/components/PrintersFooter.js");
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="bg-white rounded-2xl shadow-lg p-6 text-center">

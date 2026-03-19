@@ -8,6 +8,7 @@ import { ProofUploadModal } from "../components/ProofUploadModal";
 import CustomLink from "@/app/components/CustomLink";
 
 export default function AdminPaperRefillsPage() {
+  console.log("🥸AdminPaperRefillsPage /app/hub/admin/paper-refills/page.js");
   const { isSuperAdmin, token } = useHubAuth();
   const {
     refills,

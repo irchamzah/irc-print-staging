@@ -10,6 +10,7 @@ import BottomBar from "../components/BottomBar";
 import LoadingAnimation from "../components/LoadingAnimation";
 
 export default function PrintersPage() {
+  console.log("🥸 PrintersPage /app/printers/page.js");
   const { printers, loading, fetchPrinters } = usePrinters();
   const { userLocation } = useUserLocation();
 

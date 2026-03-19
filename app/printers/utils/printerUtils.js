@@ -1,4 +1,5 @@
 export const calculateDistance = (printerLocation, userLocation) => {
+  console.log("💻 calculateDistance /app/printers/utils/printerUtils.js");
   if (!userLocation || !printerLocation) {
     return null;
   }
@@ -48,6 +49,7 @@ export const calculateDistance = (printerLocation, userLocation) => {
 };
 
 export const getStatusIcon = (status) => {
+  console.log("💻 getStatusIcon /app/printers/utils/printerUtils.js");
   switch (status) {
     case "online":
       return "🟢";
@@ -61,6 +63,7 @@ export const getStatusIcon = (status) => {
 };
 
 export const getStatusColor = (status) => {
+  console.log("💻 getStatusColor /app/printers/utils/printerUtils.js");
   switch (status) {
     case "online":
       return "bg-green-500";

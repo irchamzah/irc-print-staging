@@ -14,6 +14,9 @@ export const PointsSection = ({
   onLogout,
   onPhoneNumberChange,
 }) => {
+  console.log(
+    "💻 PointsSection /app/printers/[printerId]/components/PointsSection.js",
+  );
   const [localPhoneNumber, setLocalPhoneNumber] = useState(phoneNumber);
 
   useEffect(() => {

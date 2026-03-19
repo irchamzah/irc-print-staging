@@ -10,6 +10,7 @@ import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 export default function AdminPrintersPage() {
+  console.log("🥸AdminPrintersPage /app/hub/admin/printers/page.js");
   const router = useRouter();
   const { user, isSuperAdmin } = useHubAuth();
   const {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import midtransClient from "midtrans-client";
 
 export async function POST(request) {
+  console.log("🌐POST /app/api/payment/route.js");
   try {
     const { amount, orderId, phoneNumber } = await request.json(); // ← TAMBAH phoneNumber
 

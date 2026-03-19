@@ -7,8 +7,11 @@ export const useRefreshData = (
   setPendingTransactions,
   setRefreshingPoints, // ✅ Ini setter untuk refreshingPoints
   setRefreshingTransactions,
-  setCooldownTimers
+  setCooldownTimers,
 ) => {
+  console.log(
+    "💻 useRefreshData /app/printers/[printerId]/hooks/useRefreshData.js",
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Unified refresh function
@@ -88,7 +91,7 @@ export const useRefreshData = (
       setRefreshingTransactions(true);
 
       const response = await fetch(
-        `/api/transactions/pending/sync?phoneNumber=${userSession.phone}`
+        `/api/transactions/pending/sync?phoneNumber=${userSession.phone}`,
       );
 
       if (!response.ok) {

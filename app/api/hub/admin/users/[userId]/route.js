@@ -5,6 +5,7 @@ const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 // GET /api/hub/admin/users/[userId] - Get single user
 export async function GET(request, { params }) {
+  console.log("🌐GET /api/hub/admin/users/[userId]");
   try {
     const { userId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];
@@ -39,6 +40,7 @@ export async function GET(request, { params }) {
 
 // PUT /api/hub/admin/users/[userId] - Update user
 export async function PUT(request, { params }) {
+  console.log("🌐PUT /api/hub/admin/users/[userId]");
   try {
     const { userId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];
@@ -76,6 +78,7 @@ export async function PUT(request, { params }) {
 
 // DELETE /api/hub/admin/users/[userId] - Delete user
 export async function DELETE(request, { params }) {
+  console.log("🌐DELETE /api/hub/admin/users/[userId]");
   try {
     const { userId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];

@@ -8,6 +8,9 @@ export const usePaymentManagement = (
   setAdvancedSettings,
   setTotalPages,
 ) => {
+  console.log(
+    "💻 usePaymentManagement /app/printers/[printerId]/hooks/usePaymentManagement.js",
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState(null);

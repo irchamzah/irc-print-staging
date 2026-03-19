@@ -11,6 +11,9 @@ export const RefillDetailModal = ({
   formatDate,
   userRole,
 }) => {
+  console.log(
+    "🥸RefillDetailModal /app/hub/printers/[printerId]/components/RefillDetailModal.js",
+  );
   const getStatusBadge = (status) => {
     switch (status) {
       case "active":

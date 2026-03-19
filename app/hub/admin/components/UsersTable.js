@@ -8,6 +8,7 @@ export const UsersTable = ({
   onCreate,
   formatDate,
 }) => {
+  console.log("🥸UsersTable /app/hub/admin/components/UsersTable.js");
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredUsers = users.filter(

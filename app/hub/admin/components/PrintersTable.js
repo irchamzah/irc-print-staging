@@ -8,6 +8,7 @@ export const PrintersTable = ({
   onCreate,
   formatDate,
 }) => {
+  console.log("🥸PrintersTable /app/hub/admin/components/PrintersTable.js");
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredPrinters = printers.filter(

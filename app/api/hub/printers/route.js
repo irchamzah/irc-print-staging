@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export async function GET(request) {
+  console.log("🌐GET /app/api/hub/printers/route.js");
   try {
     // Get token from header
     const token = request.headers.get("authorization")?.split(" ")[1];

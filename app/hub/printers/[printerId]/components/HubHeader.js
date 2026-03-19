@@ -3,6 +3,9 @@ import CustomLink from "@/app/components/CustomLink";
 import Link from "next/link";
 
 export const HubHeader = ({ printerId, printerName }) => {
+  console.log(
+    "🥸HubHeader /app/hub/printers/[printerId]/components/HubHeader.js",
+  );
   return (
     <div className="bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

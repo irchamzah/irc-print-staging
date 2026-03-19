@@ -22,6 +22,7 @@ import LoadingAnimation from "@/app/components/LoadingAnimation";
 import { ProofUploadModal } from "../../admin/components/ProofUploadModal";
 
 export default function PartnerHubPage() {
+  console.log("🥸PartnerHubPage /app/hub/printers/[printerId]/page.js");
   const params = useParams();
   const searchParams = useSearchParams();
   const printerId = params.printerId;

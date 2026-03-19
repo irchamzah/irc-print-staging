@@ -2,6 +2,7 @@
 import { PrinterCard } from "./PrinterCard";
 
 export const PrinterGrid = ({ printers, formatDate, formatNumber }) => {
+  console.log("🥸PrinterGrid /app/hub/printers/components/PrinterGrid.js");
   if (printers.length === 0) {
     return (
       <div className="text-center py-12">

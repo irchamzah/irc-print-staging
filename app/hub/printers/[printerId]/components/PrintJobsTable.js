@@ -21,6 +21,9 @@ export const PrintJobsTable = ({
   endDate,
   loading,
 }) => {
+  console.log(
+    "🥸PrintJobsTable /app/hub/printers/[printerId]/components/PrintJobsTable.js",
+  );
   if (jobs.length === 0 && !loading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
