@@ -7,22 +7,16 @@ import { useAdminData } from "../hooks/useAdminData";
 import { ProofUploadModal } from "../components/ProofUploadModal";
 import CustomLink from "@/app/components/CustomLink";
 
+// 🥸 AdminPaperRefillsPage /app/hub/admin/paper-refills/page.js TERPAKAI
 export default function AdminPaperRefillsPage() {
-  console.log("🥸AdminPaperRefillsPage /app/hub/admin/paper-refills/page.js");
   const { isSuperAdmin, token } = useHubAuth();
-  const {
-    refills,
-    refillStats,
-    markRefillAsPaid,
-    loading,
-    error,
-    refreshData,
-    formatDate,
-  } = useAdminData();
+  const { refills, refillStats, loading, error, refreshData, formatDate } =
+    useAdminData();
   const [processingId, setProcessingId] = useState(null);
   const [showProofModal, setShowProofModal] = useState(false);
   const [selectedRefill, setSelectedRefill] = useState(null);
 
+  // 🌐 formatRupiah /app/hub/admin/paper-refills/page.js TERPAKAI
   const formatRupiah = (amount) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -31,8 +25,8 @@ export default function AdminPaperRefillsPage() {
     }).format(amount);
   };
 
+  // 🌐 handleMarkAsPaid /app/hub/admin/paper-refills/page.js TERPAKAI
   const handleMarkAsPaid = async (refill) => {
-    // Validasi di frontend
     if (refill.status !== "completed") {
       alert('❌ Hanya refill dengan status "Selesai" yang bisa dibayar');
       return;
@@ -48,6 +42,7 @@ export default function AdminPaperRefillsPage() {
     setShowProofModal(true);
   };
 
+  // 🌐 handleConfirmPayment /app/hub/admin/paper-refills/page.js TERPAKAI
   const handleConfirmPayment = async (formData) => {
     if (!selectedRefill) return;
 
@@ -90,6 +85,7 @@ export default function AdminPaperRefillsPage() {
   };
 
   const handleViewProof = (refill) => {
+    console.log("🌐 handleViewProof /app/hub/admin/paper-refills/page.js");
     if (refill.transferProof) {
       const imageUrl = `${process.env.NEXT_PUBLIC_VPS_API_URL}${refill.transferProof.url}`;
       window.open(imageUrl, "_blank");
@@ -97,36 +93,8 @@ export default function AdminPaperRefillsPage() {
   };
 
   const handleRetry = () => {
+    console.log("🌐 handleRetry /app/hub/admin/paper-refills/page.js");
     refreshData();
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "active":
-        return (
-          <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-            Aktif
-          </span>
-        );
-      case "completed":
-        return (
-          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs">
-            Selesai
-          </span>
-        );
-      case "paid":
-        return (
-          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs">
-            Dibayar
-          </span>
-        );
-      default:
-        return (
-          <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded-full text-xs">
-            {status}
-          </span>
-        );
-    }
   };
 
   const tabs = [

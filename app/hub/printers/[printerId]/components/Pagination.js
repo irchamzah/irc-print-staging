@@ -4,6 +4,7 @@ import LoadingAnimation from "@/app/components/LoadingAnimation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Pagination TERPAKAI
 export const Pagination = ({
   currentPage,
   totalPages,
@@ -16,9 +17,6 @@ export const Pagination = ({
   endDate,
   loading,
 }) => {
-  console.log(
-    "🥸Pagination /app/hub/printers/[printerId]/components/Pagination.js",
-  );
   // ✅ Panggil semua hooks di bagian ATAS, sebelum conditional return
   const pathname = usePathname();
 

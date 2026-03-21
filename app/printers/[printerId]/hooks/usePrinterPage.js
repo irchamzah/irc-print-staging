@@ -6,10 +6,8 @@ import { useFileManagement } from "./useFileManagement";
 import { usePaymentManagement } from "./usePaymentManagement";
 import { useRefreshData } from "./useRefreshData";
 
+// usePrinterPage TERPAKAI
 export const usePrinterPage = () => {
-  console.log(
-    "💻 usePrinterPage /app/printers/[printerId]/hooks/usePrinterPage.js",
-  );
   const params = useParams();
   const printerId = params.printerId;
 
@@ -72,6 +70,7 @@ export const usePrinterPage = () => {
     paymentManagement.pendingTransactions,
   ]);
 
+  // 🌐 fetchPrinterDetails /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const fetchPrinterDetails = async () => {
     try {
       const response = await fetch(`/api/printers/${printerId}`);
@@ -100,6 +99,7 @@ export const usePrinterPage = () => {
     }
   };
 
+  // 🌐 checkPaperAvailability /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const checkPaperAvailability = () => {
     if (!printer) return;
 
@@ -138,7 +138,7 @@ export const usePrinterPage = () => {
     setIsPaperInsufficient(isInsufficient);
   };
 
-  // Combined handleFileUpload with isLoading
+  // 🌐 handleFileUpload /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const handleFileUpload = async (selectedFile) => {
     return fileManagement.handleFileUpload(
       selectedFile,
@@ -146,7 +146,7 @@ export const usePrinterPage = () => {
     );
   };
 
-  // Combined handleSubmit with refresh - TAMBAH VALIDASI KERTAS
+  // 🌐 handleSubmit /app/printers/[printerId]/hooks/usePrinterPage.js with refresh TERPAKAI
   const handleSubmit = async (e) => {
     // ✅ TAMBAH VALIDASI USER SESSION
     if (!userManagement.userSession?.phone) {
@@ -179,7 +179,7 @@ export const usePrinterPage = () => {
     );
   };
 
-  // Combined handlePaymentSuccess with refresh
+  // 🌐 handlePaymentSuccess /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const handlePaymentSuccess = async () => {
     return paymentManagement.handlePaymentSuccess(
       paymentManagement.currentJobId,
@@ -192,14 +192,13 @@ export const usePrinterPage = () => {
     );
   };
 
-  // Combined handlePaymentCancelled with refresh
+  // 🌐 handlePaymentCancelled /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const handlePaymentCancelled = () => {
     return paymentManagement.handlePaymentCancelled(refreshData.refreshAllData);
   };
 
-  // TAMBAH VALIDASI KERTAS di continuePendingTransaction
+  // 🌐 handleContinuePendingTransaction /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const handleContinuePendingTransaction = async (transaction) => {
-    // ✅ TAMBAH VALIDASI KERTAS
     if (isPaperInsufficient) {
       alert(
         `❌ Kertas tidak cukup! Butuh ${totalPagesNeeded} halaman, tersedia ${availablePaper} halaman.`,
@@ -213,7 +212,7 @@ export const usePrinterPage = () => {
     );
   };
 
-  // ✅ TAMBAHKAN: Wrapper untuk cancelPendingTransaction
+  // 🌐 handleCancelPendingTransaction /app/printers/[printerId]/hooks/usePrinterPage.js TERPAKAI
   const handleCancelPendingTransaction = async (transaction) => {
     return paymentManagement.cancelPendingTransaction(
       transaction,

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import midtransClient from "midtrans-client";
 
+// 🌐POST /app/api/payment/route.js TERPAKAI
 export async function POST(request) {
-  console.log("🌐POST /app/api/payment/route.js");
   try {
     const { amount, orderId, phoneNumber } = await request.json(); // ← TAMBAH phoneNumber
 

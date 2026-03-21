@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 
+// 🥸UsersTable /app/hub/admin/components/UsersTable.js TERPAKAI
 export const UsersTable = ({
   users,
   onEdit,
@@ -8,7 +9,6 @@ export const UsersTable = ({
   onCreate,
   formatDate,
 }) => {
-  console.log("🥸UsersTable /app/hub/admin/components/UsersTable.js");
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredUsers = users.filter(

@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// 🌐GET /app/api/hub/printers/[printerId]/route.js TERPAKAI
 export async function GET(request, { params }) {
-  console.log("🌐GET /app/api/hub/printers/[printerId]/route.js");
   try {
-    const { printerId } = params;
     const token = request.headers.get("authorization")?.split(" ")[1];
 
     if (!token) {
@@ -14,6 +13,8 @@ export async function GET(request, { params }) {
         { status: 401 },
       );
     }
+
+    const { printerId } = await params;
 
     const response = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/hub/printers/${printerId}`,

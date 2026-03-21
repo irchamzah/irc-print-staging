@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// 🌐 POST /api/hub/auth/logout TERPAKAI
 export async function POST(request) {
-  console.log("🌐POST /api/hub/auth/logout");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
 

@@ -1,5 +1,6 @@
 import { useHubAuth } from "@/app/hub/auth/hooks/useHubAuth";
 
+// 🥸ProfitOverview /app/hub/printers/[printerId]/components/ProfitOverview.js TERPAKAI
 export const ProfitOverview = ({
   totalRevenue,
   profitShare,
@@ -8,9 +9,6 @@ export const ProfitOverview = ({
   formatRupiah,
   dateRange,
 }) => {
-  console.log(
-    "🥸ProfitOverview /app/hub/printers/[printerId]/components/ProfitOverview.js",
-  );
   const { isSuperAdmin } = useHubAuth();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">

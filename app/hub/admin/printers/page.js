@@ -9,8 +9,8 @@ import { PrinterFormModal } from "../components/PrinterFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
 
+// 🥸AdminPrintersPage /app/hub/admin/printers/page.js TERPAKAI
 export default function AdminPrintersPage() {
-  console.log("🥸AdminPrintersPage /app/hub/admin/printers/page.js");
   const router = useRouter();
   const { user, isSuperAdmin } = useHubAuth();
   const {

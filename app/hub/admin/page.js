@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
 
+// 🥸AdminRedirect /app/hub/admin/page.js TERPAKAI
 export default function AdminRedirect() {
-  console.log("🥸AdminRedirect /app/hub/admin/page.js");
   const router = useRouter();
   const { user } = useHubAuth();
 

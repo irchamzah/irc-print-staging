@@ -7,12 +7,12 @@ import { PointsSection } from "./components/PointsSection";
 import { PendingTransactionsSection } from "./components/PendingTransactionsSection";
 import { TotalCostSection } from "./components/TotalCostSection";
 import { SubmitButton } from "./components/SubmitButton";
-import { LoadingSpinner, FullPageLoader } from "./components/LoadingSpinner";
 import dynamic from "next/dynamic";
 import PaymentModal from "@/app/printers/[printerId]/components/PaymentModal";
 import BottomBar from "@/app/components/BottomBar";
 import TopBar from "@/app/components/TopBar";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
+import { FullPageLoader } from "./components/LoadingSpinner";
 
 const PageSelector = dynamic(
   () => import("@/app/printers/[printerId]/components/PageSelector"),
@@ -26,8 +26,8 @@ const PageSelector = dynamic(
   },
 );
 
+// PrinterPage TERPAKAI
 export default function PrinterPage() {
-  console.log("🥸 PrinterPage /app/printers/[printerId]/page.js");
   const {
     // States
     printer,

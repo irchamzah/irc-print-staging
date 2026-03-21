@@ -1,6 +1,7 @@
 // app/printers/[printerId]/components/PointsSection.js (FRONTEND Next.js)
 import { useEffect, useState } from "react";
 
+// PointsSection TERPAKAI
 export const PointsSection = ({
   userSession,
   userPoints,
@@ -14,9 +15,6 @@ export const PointsSection = ({
   onLogout,
   onPhoneNumberChange,
 }) => {
-  console.log(
-    "💻 PointsSection /app/printers/[printerId]/components/PointsSection.js",
-  );
   const [localPhoneNumber, setLocalPhoneNumber] = useState(phoneNumber);
 
   useEffect(() => {

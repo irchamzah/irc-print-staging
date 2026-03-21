@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
+// usePrinters TERPAKAI
 export const usePrinters = () => {
-  console.log("💻 usePrinters /app/printers/hooks/usePrinters.js");
   const [printers, setPrinters] = useState([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
+// useUserLocation TERPAKAI
 export const useUserLocation = () => {
-  console.log("💻 useUserLocation /app/printers/hooks/useUserLocation.js");
   const [userLocation, setUserLocation] = useState(null);
 
   useEffect(() => {

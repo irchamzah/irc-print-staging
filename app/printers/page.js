@@ -1,16 +1,14 @@
 "use client";
 import PrintersHeader from "./components/PrintersHeader";
 import PrintersGrid from "./components/PrintersGrid";
-import PrintersFooter from "./components/PrintersFooter";
-import LoadingState from "./components/LoadingState";
 import { usePrinters } from "./hooks/usePrinters";
 import { useUserLocation } from "./hooks/useUserLocation";
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
 import LoadingAnimation from "../components/LoadingAnimation";
 
+// PrintersPage TERPAKAI
 export default function PrintersPage() {
-  console.log("🥸 PrintersPage /app/printers/page.js");
   const { printers, loading, fetchPrinters } = usePrinters();
   const { userLocation } = useUserLocation();
 
@@ -31,8 +29,6 @@ export default function PrintersPage() {
             onRefresh={fetchPrinters}
           />
         </main>
-
-        {/* <PrintersFooter />s */}
       </div>
       <BottomBar />
     </>

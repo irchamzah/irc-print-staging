@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import midtransClient from "midtrans-client";
 
+// 🌐GET /app/api/payment/status/route.js TERPAKAI
 export async function GET(request) {
-  console.log("🌐GET /app/api/payment/status/route.js");
   try {
     const { searchParams } = new URL(request.url);
     const orderId = searchParams.get("orderId");

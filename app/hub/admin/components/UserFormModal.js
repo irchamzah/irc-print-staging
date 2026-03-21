@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
+// 🥸UserFormModal /app/hub/admin/components/UserFormModal.js TERPAKAI
 export const UserFormModal = ({
   isOpen,
   onClose,
@@ -10,11 +11,10 @@ export const UserFormModal = ({
   error,
   processing,
 }) => {
-  console.log("🥸UserFormModal /app/hub/admin/components/UserFormModal.js");
   const [formData, setFormData] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
-    role: user?.role || "",
+    role: user?.role || "user",
     password: "",
     accessPrinters: user?.accessPrinters || [],
     bankAccount: {
@@ -29,7 +29,7 @@ export const UserFormModal = ({
       setFormData({
         name: user.name || "",
         phone: user.phone || "",
-        role: user.role || "",
+        role: user.role || "user",
         password: "",
         accessPrinters: user.accessPrinters || [],
         bankAccount: {
@@ -43,7 +43,7 @@ export const UserFormModal = ({
       setFormData({
         name: "",
         phone: "",
-        role: "",
+        role: "user",
         password: "",
         accessPrinters: [],
         bankAccount: {

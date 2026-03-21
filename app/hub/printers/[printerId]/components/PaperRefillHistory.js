@@ -3,6 +3,7 @@
 
 import { Pagination } from "./Pagination";
 
+// 🥸PaperRefillHistory /app/hub/printers/[printerId]/components/PaperRefillHistory.js TERPAKAI
 export const PaperRefillHistory = ({
   refills,
   onViewRefill,
@@ -19,9 +20,6 @@ export const PaperRefillHistory = ({
   endDate,
   loading,
 }) => {
-  console.log(
-    "🥸PaperRefillHistory /app/hub/printers/[printerId]/components/PaperRefillHistory.js",
-  );
   // Fungsi untuk mendapatkan badge role
   const getRoleBadge = (role) => {
     if (role === "super_admin") {

@@ -2,8 +2,8 @@
 import CustomLink from "@/app/components/CustomLink";
 import Link from "next/link";
 
+// PrinterCard TERPAKAI
 export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
-  console.log("🥸PrinterCard /app/hub/printers/components/PrinterCard.js");
   const statusColor =
     printer.status === "online" ? "bg-green-500" : "bg-gray-400";
   const statusText = printer.status === "online" ? "Online" : "Offline";

@@ -2,10 +2,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
-// Tidak perlu API_URL karena kita pakai internal API
-
+// 🥸useAdminData /app/hub/admin/hooks/useAdminData.js TERPAKAI
 export const useAdminData = () => {
-  console.log("🥸useAdminData /app/hub/admin/hooks/useAdminData.js");
   const { token, user } = useHubAuth();
   const isSuperAdmin = user?.role === "super_admin";
 

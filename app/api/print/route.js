@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// 🌐POST /app/api/print/route.js TERPAKAI
 export async function POST(request) {
-  console.log("🌐POST /app/api/print/route.js");
   try {
     const contentType = request.headers.get("content-type");
     const url = new URL(request.url);

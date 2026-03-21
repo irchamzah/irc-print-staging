@@ -2,10 +2,8 @@
 import { useState } from "react";
 import { getPDFPageCount, validatePDFFile } from "../../../../utils/pdfUtils";
 
+// useFileManagement TERPAKAI
 export const useFileManagement = () => {
-  console.log(
-    "💻 useFileManagement /app/printers/[printerId]/hooks/useFileManagement.js",
-  );
   const [file, setFile] = useState(null);
   const [advancedSettings, setAdvancedSettings] = useState({
     colorPages: [],
@@ -22,6 +20,7 @@ export const useFileManagement = () => {
   });
   const [totalPages, setTotalPages] = useState(0);
 
+  // 🌐 handleFileUpload /app/printers/[printerId]/hooks/useFileManagement.js TERPAKAI
   const handleFileUpload = async (selectedFile, setIsLoading) => {
     const validation = validatePDFFile(selectedFile);
     if (!validation.isValid) {
@@ -66,6 +65,7 @@ export const useFileManagement = () => {
     }
   };
 
+  // 🌐 handleSettingsChange /app/printers/[printerId]/hooks/useFileManagement.js TERPAKAI
   const handleSettingsChange = (newSettings) => {
     setAdvancedSettings(newSettings);
   };

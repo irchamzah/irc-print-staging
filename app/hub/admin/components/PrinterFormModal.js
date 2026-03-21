@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
+// 🥸PrinterFormModal /app/hub/admin/components/PrinterFormModal.js TERPAKAI
 export const PrinterFormModal = ({
   isOpen,
   onClose,
@@ -9,9 +10,6 @@ export const PrinterFormModal = ({
   error,
   processing,
 }) => {
-  console.log(
-    "🥸PrinterFormModal /app/hub/admin/components/PrinterFormModal.js",
-  );
   const [formData, setFormData] = useState({
     printerId: "",
     name: "",

@@ -1,7 +1,5 @@
+// FileUploadSection TERPAKAI
 export const FileUploadSection = ({ file, onFileUpload, isLoading }) => {
-  console.log(
-    "💻FileUploadSection /app/printers/[printerId]/components/FileUploadSection.js",
-  );
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {

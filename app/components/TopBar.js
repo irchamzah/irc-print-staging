@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import CustomLink from "./CustomLink";
 
+// TopBar TERPAKAI
 export default function TopBar() {
-  console.log("🥸TopBar /app/components/TopBar.js");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 

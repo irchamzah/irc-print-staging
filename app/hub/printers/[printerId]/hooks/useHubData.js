@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useHubAuth } from "../../../auth/hooks/useHubAuth";
 
+// 🥸useHubData /app/hub/printers/[printerId]/hooks/useHubData.js TERPAKAI
 export const useHubData = (
   printerId,
   initialRefillsPage = 1,
@@ -9,7 +10,6 @@ export const useHubData = (
   initialStartDate = null,
   initialEndDate = null,
 ) => {
-  console.log("🥸useHubData /app/hub/printers/[printerId]/hooks/useHubData.js");
   const { token, user } = useHubAuth();
 
   const [printer, setPrinter] = useState(null);

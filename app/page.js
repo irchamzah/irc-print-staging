@@ -2,8 +2,8 @@ import TopBar from "./components/TopBar";
 import BottomBar from "./components/BottomBar";
 import CustomLink from "./components/CustomLink";
 
+// HomePage TERPAKAI
 export default function HomePage() {
-  console.log("💻HomePage /app/page.js");
   return (
     <>
       <TopBar />

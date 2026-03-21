@@ -1,15 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 
+// 🥸DateRangeFilter /app/hub/printers/[printerId]/components/DateRangeFilter.js TERPAKAI
 export const DateRangeFilter = ({
   dateRange,
   onApplyFilter,
   onResetFilter,
   formatDate,
 }) => {
-  console.log(
-    "🥸DateRangeFilter /app/hub/printers/[printerId]/components/DateRangeFilter.js",
-  );
   const [startDate, setStartDate] = useState(dateRange.startDate || "");
   const [endDate, setEndDate] = useState(dateRange.endDate || "");
   const [showCustom, setShowCustom] = useState(

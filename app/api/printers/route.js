@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// 🌐 GET /app/api/printers/route.js TERPAKAI
 export async function GET(request) {
-  console.log("🌐GET /app/api/printers/route.js");
   try {
     const { searchParams } = new URL(request.url);
     const printerId = searchParams.get("id");
@@ -17,11 +17,11 @@ export async function GET(request) {
     }
 
     // Jika ada location params, get nearby printers
-    const lat = searchParams.get("lat");
-    const lng = searchParams.get("lng");
-    if (lat && lng) {
-      apiUrl = `${NEXT_PUBLIC_VPS_API_URL}/api/printers/nearby/location?lat=${lat}&lng=${lng}`;
-    }
+    // const lat = searchParams.get("lat");
+    // const lng = searchParams.get("lng");
+    // if (lat && lng) {
+    //   apiUrl = `${NEXT_PUBLIC_VPS_API_URL}/api/printers/nearby/location?lat=${lat}&lng=${lng}`;
+    // }
 
     const response = await fetch(apiUrl);
     const data = await response.json();

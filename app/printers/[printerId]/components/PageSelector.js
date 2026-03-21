@@ -13,6 +13,7 @@ const PDFPreview = dynamic(() => import("./PDFPreview"), {
   ),
 });
 
+// PageSelector TERPAKAI
 const PageSelector = ({
   totalPages,
   onSettingsChange,
@@ -20,9 +21,6 @@ const PageSelector = ({
   file,
   prices,
 }) => {
-  console.log(
-    "🥸PageSelector /app/printers/[printerId]/components/PageSelector.js",
-  );
   const {
     pagesToShow,
     hasMorePages,
@@ -194,11 +192,8 @@ const PageSelector = ({
   );
 };
 
-// Sub-components for better organization
+// BulkActionButton TERPAKAI
 const BulkActionButton = ({ type, label, onClick }) => {
-  console.log(
-    "🥸BulkActionButton /app/printers/[printerId]/components/BulkActionButton.js",
-  );
   const isColor = type === "color";
   const bgClass = isColor
     ? "bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
@@ -248,17 +243,17 @@ const BulkActionButton = ({ type, label, onClick }) => {
   );
 };
 
+// PageCard TERPAKAI
 const PageCard = ({
   page,
   type,
-  selected, // Tambah prop ini
+  selected,
   file,
   renderError,
   onTypeChange,
-  onSelectionChange, // Tambah prop ini
+  onSelectionChange,
   onRenderError,
 }) => {
-  console.log("🥸PageCard /app/printers/[printerId]/components/PageCard.js");
   return (
     <div
       className={`bg-white rounded-xl border-2 transition-all duration-200 p-4 relative ${
@@ -361,10 +356,8 @@ const PageCard = ({
   );
 };
 
+// ErrorPreview TERPAKAI
 const ErrorPreview = () => {
-  console.log(
-    "🥸ErrorPreview /app/printers/[printerId]/components/ErrorPreview.js",
-  );
   return (
     <div className="w-full h-32 sm:h-36 bg-red-50 flex items-center justify-center rounded-lg border-2 border-dashed border-red-200">
       <div className="text-center">
@@ -387,13 +380,12 @@ const ErrorPreview = () => {
   );
 };
 
+// 🥸LoadMoreButton /app/printers/[printerId]/components/LoadMoreButton.js TERPAKAI
 const LoadMoreButton = ({ remaining, onLoadMore }) => {
-  console.log(
-    "🥸LoadMoreButton /app/printers/[printerId]/components/LoadMoreButton.js",
-  );
   return (
     <div className="text-center pt-4">
       <button
+        type="button"
         onClick={onLoadMore}
         className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
       >
@@ -417,15 +409,13 @@ const LoadMoreButton = ({ remaining, onLoadMore }) => {
   );
 };
 
+// AdvancedSettings TERPAKAI
 const AdvancedSettings = ({
   printSettings,
   copies,
   onPrintSettingsChange,
   onCopiesChange,
 }) => {
-  console.log(
-    "🥸AdvancedSettings /app/printers/[printerId]/components/AdvancedSettings.js",
-  );
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
       <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 flex items-center">
@@ -444,10 +434,8 @@ const AdvancedSettings = ({
   );
 };
 
+// SettingsIcon TERPAKAI
 const SettingsIcon = () => {
-  console.log(
-    "🥸SettingsIcon /app/printers/[printerId]/components/PageSelector.js",
-  );
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -472,10 +460,8 @@ const SettingsIcon = () => {
   );
 };
 
+// PaperSizeSetting TERPAKAI
 const PaperSizeSetting = ({ value, onChange }) => {
-  console.log(
-    "🥸PaperSizeSetting /app/printers/[printerId]/components/PageSelector.js",
-  );
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
@@ -496,10 +482,8 @@ const PaperSizeSetting = ({ value, onChange }) => {
   );
 };
 
+// CopiesSetting TERPAKAI
 const CopiesSetting = ({ value, onChange }) => {
-  console.log(
-    "🥸CopiesSetting /app/printers/[printerId]/components/PageSelector.js",
-  );
   const handleDecrement = () => {
     const newValue = Math.max(1, value - 1);
     onChange(newValue);

@@ -1,7 +1,7 @@
 import { FaWhatsapp } from "react-icons/fa";
 
+// BottomBar TERPAKAI
 const BottomBar = () => {
-  console.log("💻BottomBar /app/components/BottomBar.js");
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

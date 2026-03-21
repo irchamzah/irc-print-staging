@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// 🌐 POST /api/hub/admin/paper-refills/[refillId]/pay TERPAKAI
 export async function POST(request, { params }) {
-  console.log("🌐POST /api/hub/admin/paper-refills/[refillId]/pay");
   try {
-    const { refillId } = params;
+    const { refillId } = await params;
     const token = request.headers.get("authorization")?.split(" ")[1];
 
     if (!token) {
@@ -34,9 +34,8 @@ export async function POST(request, { params }) {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          // JANGAN set Content-Type, biarkan browser set dengan boundary
         },
-        body: vpsFormData, // ✅ Kirim FormData, bukan JSON
+        body: vpsFormData,
       },
     );
 

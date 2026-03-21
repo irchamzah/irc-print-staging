@@ -5,8 +5,8 @@ import Link from "next/link";
 import { HubLayout } from "./components/HubLayout";
 import CustomLink from "../components/CustomLink";
 
+// HubDashboard TERPAKAI
 export default function HubDashboard() {
-  console.log("🥸HubDashboard /app/hub/page.js");
   const { user, isAuthenticated, isSuperAdmin } = useHubAuth();
 
   if (!isAuthenticated()) {

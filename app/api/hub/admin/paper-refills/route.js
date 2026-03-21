@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// GET /api/hub/admin/paper-refills - Get all refills
+// 🌐GET /api/hub/admin/paper-refills - Get all refills TERPAKAI
 export async function GET(request) {
-  console.log("🌐GET /api/hub/admin/paper-refills");
   try {
     const token = request.headers.get("authorization")?.split(" ")[1];
     const { searchParams } = new URL(request.url);

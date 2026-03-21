@@ -7,8 +7,8 @@ import TopBar from "@/app/components/TopBar";
 import BottomBar from "@/app/components/BottomBar";
 import CustomLink from "@/app/components/CustomLink";
 
+// 🥸HubLoginPage /app/hub/auth/page.js TERPAKAI
 export default function HubLoginPage() {
-  console.log("🥸HubLoginPage /app/hub/auth/page.js");
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");

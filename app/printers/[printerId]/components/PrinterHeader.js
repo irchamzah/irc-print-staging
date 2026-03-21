@@ -1,9 +1,7 @@
 import Link from "next/link";
 
+// PrinterHeader TERPAKAI
 export const PrinterHeader = ({ printer }) => {
-  console.log(
-    "💻 PrinterHeader /app/printers/[printerId]/components/PrinterHeader.js",
-  );
   if (!printer) return null;
 
   const getStatusInfo = (status) => {

@@ -5,10 +5,8 @@ import * as pdfjsLib from "pdfjs-dist";
 // Setup PDF.js worker - pastikan sama dengan pdfUtils
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
 
+// PDFPreview TERPAKAI
 const PDFPreview = ({ file, pageNumber, onRender }) => {
-  console.log(
-    "🥸 PDFPreview /app/printers/[printerId]/components/PDFPreview.js",
-  );
   const canvasRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);

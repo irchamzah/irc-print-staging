@@ -7,14 +7,12 @@ const NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SANDBOX =
 const NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_PRODUCTION =
   process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_PRODUCTION;
 
+// usePaymentModal TERPAKAI
 export const usePaymentModal = (
   isOpen,
   paymentData,
   isRestoredTransaction = false,
 ) => {
-  console.log(
-    "💻 usePaymentModal /app/printers/[printerId]/hooks/usePaymentModal.js",
-  );
   const [snapLoaded, setSnapLoaded] = useState(false);
   const [snapError, setSnapError] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -54,7 +52,7 @@ export const usePaymentModal = (
     };
   }, []);
 
-  // Open Snap payment
+  // 🌐 openSnapPayment /app/printers/[printerId]/hooks/usePaymentModal.js TERPAKAI
   const openSnapPayment = (onSuccess, onError) => {
     if (isSnapOpenRef.current || !paymentData?.token || !window.snap) {
       return;
@@ -167,37 +165,6 @@ export const usePaymentModal = (
     };
   }, [isOpen, paymentData?.token, isRestoredTransaction]);
 
-  // Cancel transaction
-  const cancelTransaction = async (userSession) => {
-    if (!paymentData?.orderId || !userSession?.phone) {
-      return { success: false, error: "Missing data" };
-    }
-
-    setIsCancelling(true);
-    try {
-      const response = await fetch("/api/transactions/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId: paymentData.orderId,
-          phoneNumber: userSession.phone,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        return { success: true };
-      } else {
-        throw new Error(result.error || "Gagal membatalkan transaksi");
-      }
-    } catch (error) {
-      return { success: false, error: error.message };
-    } finally {
-      setIsCancelling(false);
-    }
-  };
-
   return {
     // State
     snapLoaded,
@@ -207,7 +174,6 @@ export const usePaymentModal = (
 
     // Actions
     openSnapPayment,
-    cancelTransaction,
 
     // Manual open control
     setHasAttemptedOpen: (value) => {

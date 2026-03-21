@@ -1,5 +1,6 @@
 import { TransactionItem } from "./TransactionItem";
 
+// PendingTransactionsSection TERPAKAI
 export const PendingTransactionsSection = ({
   userSession,
   pendingTransactions,
@@ -13,9 +14,6 @@ export const PendingTransactionsSection = ({
   isPrinterOffline = false,
   isPaperInsufficient = false,
 }) => {
-  console.log(
-    "💻 PendingTransactionsSection /app/printers/[printerId]/components/PendingTransactionsSection.js",
-  );
   // Hanya tampilkan jika user login dan ada transaksi atau sedang loading
   if (
     !userSession ||
@@ -172,10 +170,8 @@ export const PendingTransactionsSection = ({
   );
 };
 
+// EmptyTransactionsState TERPAKAI
 const EmptyTransactionsState = () => {
-  console.log(
-    "💻 EmptyTransactionsState /app/printers/[printerId]/components/PendingTransactionsSection.js",
-  );
   return (
     <div className="text-center py-8">
       <div className="flex flex-col items-center justify-center">

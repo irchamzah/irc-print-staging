@@ -1,5 +1,5 @@
+// calculateDistance TERPAKAI
 export const calculateDistance = (printerLocation, userLocation) => {
-  console.log("💻 calculateDistance /app/printers/utils/printerUtils.js");
   if (!userLocation || !printerLocation) {
     return null;
   }
@@ -48,8 +48,8 @@ export const calculateDistance = (printerLocation, userLocation) => {
   return distance < 1 ? distance.toFixed(2) : distance.toFixed(1);
 };
 
+// getStatusIcon TERPAKAI
 export const getStatusIcon = (status) => {
-  console.log("💻 getStatusIcon /app/printers/utils/printerUtils.js");
   switch (status) {
     case "online":
       return "🟢";
@@ -62,8 +62,8 @@ export const getStatusIcon = (status) => {
   }
 };
 
+// getStatusColor TERPAKAI
 export const getStatusColor = (status) => {
-  console.log("💻 getStatusColor /app/printers/utils/printerUtils.js");
   switch (status) {
     case "online":
       return "bg-green-500";

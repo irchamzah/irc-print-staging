@@ -1,3 +1,4 @@
+// TransactionItem TERPAKAI
 export const TransactionItem = ({
   transaction,
   onContinue,
@@ -5,11 +6,8 @@ export const TransactionItem = ({
   isLoading,
   cooldownTimers,
   isPrinterOffline = false,
-  isPaperInsufficient = false, // ✅ TAMBAH INI
+  isPaperInsufficient = false,
 }) => {
-  console.log(
-    "💻 TransactionItem /app/printers/[printerId]/components/TransactionItem.js",
-  );
   const getStatusBadge = (status) => {
     switch (status) {
       case "settlement":
@@ -89,7 +87,7 @@ export const TransactionItem = ({
               isLoading={isLoading}
               cooldownTimers={cooldownTimers}
               isPrinterOffline={isPrinterOffline}
-              isPaperInsufficient={isPaperInsufficient} // ✅ TAMBAH INI
+              isPaperInsufficient={isPaperInsufficient}
             />
           ) : transaction.status === "pending" ? (
             <PendingButtons
@@ -99,7 +97,7 @@ export const TransactionItem = ({
               isLoading={isLoading}
               cooldownTimers={cooldownTimers}
               isPrinterOffline={isPrinterOffline}
-              isPaperInsufficient={isPaperInsufficient} // ✅ TAMBAH INI
+              isPaperInsufficient={isPaperInsufficient}
             />
           ) : (
             <CancelButton onCancel={onCancel} transaction={transaction} />
@@ -110,6 +108,7 @@ export const TransactionItem = ({
   );
 };
 
+// SettlementButton TERPAKAI
 const SettlementButton = ({
   transaction,
   onContinue,
@@ -118,10 +117,6 @@ const SettlementButton = ({
   isPrinterOffline,
   isPaperInsufficient,
 }) => {
-  console.log(
-    "💻 SettlementButton /app/printers/[printerId]/components/TransactionItem.js",
-  );
-  // ✅ FUNCTION BARU: Handle print dengan warning
   const handlePrintWithWarning = () => {
     const confirmationMessage =
       "🚨 PERINGATAN!!!\n\n" +
@@ -180,6 +175,7 @@ const SettlementButton = ({
   );
 };
 
+// PendingButtons TERPAKAI
 const PendingButtons = ({
   transaction,
   onContinue,
@@ -189,9 +185,6 @@ const PendingButtons = ({
   isPrinterOffline,
   isPaperInsufficient,
 }) => {
-  console.log(
-    "💻 PendingButtons /app/printers/[printerId]/components/TransactionItem.js",
-  );
   // ✅ FUNCTION BARU: Handle continue dengan warning
   const handleContinueWithWarning = () => {
     const confirmationMessage =
@@ -280,11 +273,8 @@ const PendingButtons = ({
   );
 };
 
-// CancelButton tetap sama
+// CancelButton TERPAKAI
 const CancelButton = ({ onCancel, transaction }) => {
-  console.log(
-    "💻 CancelButton /app/printers/[printerId]/components/TransactionItem.js",
-  );
   return (
     <button
       onClick={() => onCancel(transaction)}

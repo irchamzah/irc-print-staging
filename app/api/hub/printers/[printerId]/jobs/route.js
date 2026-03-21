@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// 🌐GET /app/api/hub/printers/[printerId]/jobs TERPAKAI
 export async function GET(request, { params }) {
-  console.log("🌐GET /app/api/hub/printers/[printerId]/jobs");
   try {
     const { printerId } = await params;
     const token = request.headers.get("authorization")?.split(" ")[1];

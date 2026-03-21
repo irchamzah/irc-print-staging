@@ -2,10 +2,8 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 
+// useUserManagement TERPAKAI
 export const useUserManagement = () => {
-  console.log(
-    "💻 useUserManagement /app/printers/[printerId]/hooks/useUserManagement.js",
-  );
   const params = useParams();
   const printerId = params?.printerId;
 
@@ -15,10 +13,9 @@ export const useUserManagement = () => {
   const [refreshingPoints, setRefreshingPoints] = useState(false);
   const [userSession, setUserSession] = useState(null);
 
-  // Fungsi untuk mendapatkan point divider dari printer
+  // 🌐 getPrinterPointDivider /app/printers/[printerId]/hooks/useUserManagement.js TERPAKAI
   const getPrinterPointDivider = async () => {
     try {
-      // Coba ambil dari localStorage dulu (untuk caching)
       const cached = localStorage.getItem(`printer_${printerId}_pointDivider`);
 
       if (cached) {
@@ -51,10 +48,12 @@ export const useUserManagement = () => {
     }
   };
 
+  // 🌐 handlePhoneNumberChange /app/printers/[printerId]/hooks/useUserManagement.js TERPAKAI
   const handlePhoneNumberChange = (newPhoneNumber) => {
     setPhoneNumber(newPhoneNumber);
   };
 
+  // 🌐 loadUserSession /app/printers/[printerId]/hooks/useUserManagement.js TERPAKAI
   const loadUserSession = () => {
     const savedSession = localStorage.getItem("userSession");
     if (savedSession) {
@@ -69,6 +68,7 @@ export const useUserManagement = () => {
     }
   };
 
+  // 🌐 checkUserPoints /app/printers/[printerId]/hooks/useUserManagement.js TERPAKAI
   const checkUserPoints = async () => {
     if (!phoneNumber.trim()) {
       alert("Silakan masukkan nomor HP terlebih dahulu");
@@ -124,6 +124,7 @@ export const useUserManagement = () => {
     }
   };
 
+  // 🌐 createNewUserDirect /app/printers/[printerId]/hooks/useUserManagement.js TERPAKAI
   const createNewUserDirect = async (phone, isFallback = false) => {
     try {
       // Dapatkan point divider dari printer
@@ -178,6 +179,7 @@ export const useUserManagement = () => {
     }
   };
 
+  // 🌐 logoutUser /app/printers/[printerId]/hooks/useUserManagement.js TERPAKAI
   const logoutUser = () => {
     setUserSession(null);
     setUserPoints(null);

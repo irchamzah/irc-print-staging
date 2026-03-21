@@ -6,8 +6,8 @@ import {
 } from "../utils/printerUtils";
 import CustomLink from "@/app/components/CustomLink";
 
+// PrinterCard TERPAKAI
 export default function PrinterCard({ printer, userLocation }) {
-  console.log("💻 PrinterCard /app/printers/components/PrinterCard.js");
   const router = useRouter();
 
   const normalizedPrinter = {
@@ -32,10 +32,6 @@ export default function PrinterCard({ printer, userLocation }) {
     normalizedPrinter.location?.coordinates,
     userLocation,
   );
-
-  const handlePrinterSelect = () => {
-    router.push(`/printers/${normalizedPrinter.id}`);
-  };
 
   const handleMapsClick = (e) => {
     e.stopPropagation();

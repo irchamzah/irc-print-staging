@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// GET /api/users/[phone]/points/route.js TERPAKAI
 export async function GET(request, { params }) {
-  console.log("🌐GET /app/api/users/[phone]/points/route.js");
   try {
     const { phone } = await params;
     const { searchParams } = new URL(request.url);
@@ -74,71 +74,70 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function POST(request) {
-  console.log("🌐POST /app/api/users/[phone]/points/route.js");
-  try {
-    const body = await request.json();
+// export async function POST(request) {
+//   console.log("🌐POST /app/api/users/[phone]/points/route.js");
+//   try {
+//     const body = await request.json();
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+//     const controller = new AbortController();
+//     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const response = await fetch(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/users/points`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      },
-    );
+//     const response = await fetch(
+//       `${NEXT_PUBLIC_VPS_API_URL}/api/users/points`,
+//       {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify(body),
+//         signal: controller.signal,
+//       },
+//     );
 
-    clearTimeout(timeoutId);
+//     clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ [FRONTEND] VPS POST failed:", errorText);
-      throw new Error(`VPS API error: ${response.status}`);
-    }
+//     if (!response.ok) {
+//       const errorText = await response.text();
+//       console.error("❌ [FRONTEND] VPS POST failed:", errorText);
+//       throw new Error(`VPS API error: ${response.status}`);
+//     }
 
-    const result = await response.json();
+//     const result = await response.json();
 
-    return NextResponse.json(result);
-  } catch (error) {
-    if (error.name === "AbortError") {
-      console.error("⏰ Request timeout");
-      return NextResponse.json(
-        { success: false, error: "Request timeout" },
-        { status: 408 },
-      );
-    }
+//     return NextResponse.json(result);
+//   } catch (error) {
+//     if (error.name === "AbortError") {
+//       console.error("⏰ Request timeout");
+//       return NextResponse.json(
+//         { success: false, error: "Request timeout" },
+//         { status: 408 },
+//       );
+//     }
 
-    console.error(
-      "❌ [FRONTEND] Error in POST /api/users/points:",
-      error.message,
-    );
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Service sedang tidak tersedia",
-        details: error.message,
-      },
-      { status: 503 },
-    );
-  }
-}
+//     console.error(
+//       "❌ [FRONTEND] Error in POST /api/users/points:",
+//       error.message,
+//     );
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         error: "Service sedang tidak tersedia",
+//         details: error.message,
+//       },
+//       { status: 503 },
+//     );
+//   }
+// }
 
-// Helper function untuk create new user
+// 🌐createNewUser /app/api/users/[phone]/points/route.js TERPAKAI
 async function createNewUser(phone, printerId) {
-  console.log("🌐createNewUser /app/api/users/[phone]/points/route.js");
   try {
     // Dapatkan point divider dari printer
     let pointDivider;
     if (printerId) {
       try {
         const printerResponse = await fetch(
-          `${NEXT_PUBLIC_VPS_API_URL}/api/printers/${printerId}/point-divider`,
+          `${NEXT_PUBLIC_VPS_API_URL}/api/hub/printers/${printerId}/point-divider`,
         );
         if (printerResponse.ok) {
           const printerData = await printerResponse.json();

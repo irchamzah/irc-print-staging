@@ -1,9 +1,7 @@
 // app/printers/[printerId]/components/TotalCostSection.js
 
+// TotalCostSection TERPAKAI
 export const TotalCostSection = ({ advancedSettings, totalPages, prices }) => {
-  console.log(
-    "💻 TotalCostSection /app/printers/[printerId]/components/TotalCostSection.js",
-  );
   if (!advancedSettings.cost || advancedSettings.cost <= 0) {
     return null;
   }

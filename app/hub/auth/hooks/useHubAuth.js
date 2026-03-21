@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
+// useHubAuth TERPAKAI
 export const useHubAuth = () => {
-  console.log("🥸useHubAuth /app/hub/auth/hooks/useHubAuth.js");
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);

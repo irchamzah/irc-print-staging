@@ -1,9 +1,7 @@
 "use client";
 
+// InfoCard TERPAKAI
 export const InfoCard = ({ profitShare }) => {
-  console.log(
-    "🥸InfoCard /app/hub/printers/[printerId]/components/InfoCard.js",
-  );
   return (
     <div className="mt-6 bg-blue-50 rounded-xl border border-blue-200 p-4">
       <div className="flex items-start gap-3">

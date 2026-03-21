@@ -1,5 +1,6 @@
 "use client";
 
+// 🥸PaperStatusCard /app/hub/printers/[printerId]/components/PaperStatusCard.js
 export const PaperStatusCard = ({
   paperCount,
   lastRefill,
@@ -8,9 +9,6 @@ export const PaperStatusCard = ({
   showSuccess,
   formatDate,
 }) => {
-  console.log(
-    "🥸PaperStatusCard /app/hub/printers/[printerId]/components/PaperStatusCard.js",
-  );
   // Constants
   const MAX_PAPER = 100;
   const REFILL_AMOUNT = 80;

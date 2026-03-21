@@ -3,6 +3,7 @@
 "use client";
 import { usePaymentModal } from "../hooks/usePaymentModal";
 
+// PaymentModal TERPAKAI
 const PaymentModal = ({
   isOpen,
   onClose,
@@ -12,19 +13,16 @@ const PaymentModal = ({
   userSession = null,
   isRestoredTransaction = false,
 }) => {
-  console.log(
-    "🥸PaymentModal /app/printers/[printerId]/components/PaymentModal.js",
-  );
   const {
     snapLoaded,
     snapError,
     isCancelling,
     isSnapOpen,
     openSnapPayment,
-    cancelTransaction,
     setHasAttemptedOpen,
   } = usePaymentModal(isOpen, paymentData, isRestoredTransaction);
 
+  // 🌐 handleManualOpenSnap /app/printers/[printerId]/components/PaymentModal.js TERPAKAI
   const handleManualOpenSnap = () => {
     if (snapLoaded && !isSnapOpen) {
       setHasAttemptedOpen(true);
@@ -32,20 +30,7 @@ const PaymentModal = ({
     }
   };
 
-  const handleCancelTransaction = async () => {
-    if (!window.confirm("Apakah Anda yakin ingin membatalkan transaksi ini?")) {
-      return;
-    }
-
-    const result = await cancelTransaction(userSession);
-    if (result.success) {
-      alert("❌ Transaksi berhasil dibatalkan");
-      onClose();
-    } else {
-      alert("❌ Gagal membatalkan transaksi: " + result.error);
-    }
-  };
-
+  // 🌐 handleManualClose /app/printers/[printerId]/components/PaymentModal.js TERPAKAI
   const handleManualClose = () => {
     setTimeout(() => {
       onClose();
@@ -71,39 +56,39 @@ const PaymentModal = ({
           isLoading={isLoading}
           isCancelling={isCancelling}
           onManualOpenSnap={handleManualOpenSnap}
-          onCancelTransaction={handleCancelTransaction}
         />
       </div>
     </div>
   );
 };
 
-// Sub-components
-const CloseButton = ({ onClose, disabled }) =>
-  console.log(
-    "🥸CloseButton /app/printers/[printerId]/components/PaymentModal.js",
+// CloseButton TERPAKAI
+const CloseButton = ({ onClose, disabled }) => {
+  return (
+    <button
+      onClick={onClose}
+      disabled={disabled}
+      className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+      title="Tutup modal pembayaran"
+    >
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M6 18L18 6M6 6l12 12"
+        />
+      </svg>
+    </button>
   );
-<button
-  onClick={onClose}
-  disabled={disabled}
-  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
-  title="Tutup modal pembayaran"
->
-  <svg
-    className="w-6 h-6"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M6 18L18 6M6 6l12 12"
-    />
-  </svg>
-</button>;
+};
 
+// ModalContent TERPAKAI
 const ModalContent = ({
   snapLoaded,
   snapError,
@@ -113,11 +98,7 @@ const ModalContent = ({
   isLoading,
   isCancelling,
   onManualOpenSnap,
-  onCancelTransaction,
 }) => {
-  console.log(
-    "🥸 ModalContent /app/printers/[printerId]/components/PaymentModal.js",
-  );
   if (!snapLoaded && !snapError) {
     return <LoadingState isRestoredTransaction={isRestoredTransaction} />;
   }
@@ -143,13 +124,6 @@ const ModalContent = ({
 
       {isSnapOpen && <SnapOpenState />}
 
-      {/* {!isSnapOpen && (
-        <CancelButton
-          isCancelling={isCancelling}
-          onClick={onCancelTransaction}
-        />
-      )} */}
-
       {isLoading && <LoadingFileState />}
 
       <HelpText />
@@ -157,10 +131,8 @@ const ModalContent = ({
   );
 };
 
+// LoadingState TERPAKAI
 const LoadingState = ({ isRestoredTransaction }) => {
-  console.log(
-    "🥸LoadingState /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <>
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -176,10 +148,8 @@ const LoadingState = ({ isRestoredTransaction }) => {
   );
 };
 
+// ErrorState TERPAKAI
 const ErrorState = () => {
-  console.log(
-    "🥸ErrorState /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <>
       <div className="mx-auto mb-4 text-orange-500">
@@ -205,10 +175,8 @@ const ErrorState = () => {
   );
 };
 
+// OrderInfo TERPAKAI
 const OrderInfo = ({ paymentData, isRestoredTransaction }) => {
-  console.log(
-    "🥸OrderInfo /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <div className="bg-gray-50 rounded-lg p-3 mb-4">
       <p className="text-sm text-gray-600">Order ID:</p>
@@ -227,10 +195,8 @@ const OrderInfo = ({ paymentData, isRestoredTransaction }) => {
   );
 };
 
+// OpenSnapButton TERPAKAI
 const OpenSnapButton = ({ isRestoredTransaction, disabled, onClick }) => {
-  console.log(
-    "🥸OpenSnapButton /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <button
       onClick={onClick}
@@ -259,10 +225,8 @@ const OpenSnapButton = ({ isRestoredTransaction, disabled, onClick }) => {
   );
 };
 
+// SnapOpenState TERPAKAI
 const SnapOpenState = () => {
-  console.log(
-    "🥸SnapOpenState /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <div className="w-full mb-3 bg-blue-100 border border-blue-300 text-blue-800 py-3 px-4 rounded-lg flex items-center justify-center space-x-2">
       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -271,42 +235,8 @@ const SnapOpenState = () => {
   );
 };
 
-const CancelButton = ({ isCancelling, onClick }) => {
-  console.log(
-    "🥸CancelButton /app/printers/[printerId]/components/PaymentModal.js",
-  );
-  return (
-    <button
-      onClick={onClick}
-      disabled={isCancelling}
-      className="w-full mb-3 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 disabled:bg-gray-300 transition-colors text-sm cursor-pointer flex items-center justify-center space-x-2"
-    >
-      {isCancelling ? (
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-      ) : (
-        <svg
-          className="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      )}
-      <span>{isCancelling ? "Membatalkan..." : "Batalkan Transaksi"}</span>
-    </button>
-  );
-};
-
+// LoadingFileState TERPAKAI
 const LoadingFileState = () => {
-  console.log(
-    "🥸LoadingFileState /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
       <div className="flex items-center justify-center space-x-2">
@@ -319,10 +249,8 @@ const LoadingFileState = () => {
   );
 };
 
+// HelpText TERPAKAI
 const HelpText = () => {
-  console.log(
-    "🥸HelpText /app/printers/[printerId]/components/PaymentModal.js",
-  );
   return (
     <div className="text-xs text-gray-500 mt-3 space-y-1">
       <p>• Jika pop-up tidak terbuka, pastikan pop-up tidak diblokir</p>

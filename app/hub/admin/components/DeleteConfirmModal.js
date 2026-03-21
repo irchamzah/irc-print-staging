@@ -1,5 +1,6 @@
 "use client";
 
+// 🥸DeleteConfirmModal /app/hub/admin/components/DeleteConfirmModal.js TERPAKAI
 export const DeleteConfirmModal = ({
   isOpen,
   onClose,
@@ -7,9 +8,6 @@ export const DeleteConfirmModal = ({
   itemName,
   processing,
 }) => {
-  console.log(
-    "🥸DeleteConfirmModal /app/hub/admin/components/DeleteConfirmModal.js",
-  );
   if (!isOpen) return null;
 
   return (

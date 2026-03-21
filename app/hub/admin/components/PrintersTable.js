@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 
+// 🥸PrintersTable /app/hub/admin/components/PrintersTable.js TERPAKAI
 export const PrintersTable = ({
   printers,
   onEdit,
@@ -8,7 +9,6 @@ export const PrintersTable = ({
   onCreate,
   formatDate,
 }) => {
-  console.log("🥸PrintersTable /app/hub/admin/components/PrintersTable.js");
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredPrinters = printers.filter(

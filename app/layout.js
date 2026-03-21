@@ -8,8 +8,8 @@ export const metadata = {
   description: "Print dokumen Anda dengan mudah dan cepat",
 };
 
+// RootLayout TERPAKAI
 export default function RootLayout({ children }) {
-  console.log("💻RootLayout /app/layout.js");
   return (
     <html lang="id">
       <body className={inter.className}>

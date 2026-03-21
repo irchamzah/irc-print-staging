@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 
+// ProofUploadModal TERPAKAI
 export const ProofUploadModal = ({
   isOpen,
   onClose,
@@ -10,9 +11,6 @@ export const ProofUploadModal = ({
   processing,
   formatRupiah,
 }) => {
-  console.log(
-    "🥸ProofUploadModal /app/hub/admin/components/ProofUploadModal.js",
-  );
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [notes, setNotes] = useState("");
