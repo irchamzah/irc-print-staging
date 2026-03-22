@@ -2,23 +2,24 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// GET /api/hub/admin/paper-refills - Get all refills with filters & pagination
+// GET /api/hub/admin/paper-refills/stats/status - Get status statistics
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    // Build VPS URL
     const vpsUrl = new URL(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/paper-refills`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/paper-refills/stats/status`,
     );
 
-    // Forward ALL query params to VPS
-    // Ini akan meneruskan semua parameter yang ada di URL
+    // Forward all query params
     searchParams.forEach((value, key) => {
       vpsUrl.searchParams.set(key, value);
     });
 
-    console.log("📡 [Next.js] Forwarding to VPS:", vpsUrl.toString());
+    console.log(
+      "📡 [Next.js] Forwarding status stats to VPS:",
+      vpsUrl.toString(),
+    );
 
     const response = await fetch(vpsUrl.toString(), {
       method: "GET",
@@ -42,41 +43,13 @@ export async function GET(request) {
     const result = await response.json();
     return NextResponse.json(result);
   } catch (error) {
-    console.error("❌ Error fetching paper refills:", error);
+    console.error("❌ Error fetching status stats:", error);
     return NextResponse.json(
       {
         success: false,
         error: "Internal server error",
         details: error.message,
       },
-      { status: 500 },
-    );
-  }
-}
-
-// POST /api/hub/admin/paper-refills - Create new refill (if needed)
-export async function POST(request) {
-  try {
-    const body = await request.json();
-
-    const response = await fetch(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/paper-refills`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: request.headers.get("authorization"),
-        },
-        body: JSON.stringify(body),
-      },
-    );
-
-    const result = await response.json();
-    return NextResponse.json(result, { status: response.status });
-  } catch (error) {
-    console.error("❌ Error creating refill:", error);
-    return NextResponse.json(
-      { success: false, error: "Internal server error" },
       { status: 500 },
     );
   }

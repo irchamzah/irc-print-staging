@@ -3,35 +3,41 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
-export const useAdminUsers = () => {
+export const useAdminPaperRefills = () => {
   const { token } = useHubAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
 
   // State
-  const [users, setUsers] = useState([]);
+  const [refills, setRefills] = useState([]);
   const [stats, setStats] = useState({
-    total: 0,
-    super_admin: 0,
-    partner: 0,
-    user: 0,
-    hasBankAccount: 0,
-    totalPoints: 0,
+    total: { totalRefills: 0, totalRevenue: 0, totalProfit: 0, totalSheets: 0 },
+    pending: { count: 0, amount: 0 },
+    completed: { count: 0, amount: 0 },
+    paid: { count: 0, amount: 0 },
+  });
+  const [filterOptions, setFilterOptions] = useState({
+    printers: [],
+    partners: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Filter state
+  // Filter state - DIPERLUAS
   const [filters, setFilters] = useState({
-    role: searchParams.get("role") || "",
-    search: searchParams.get("search") || "",
-    minPoints: searchParams.get("minPoints") || "",
-    maxPoints: searchParams.get("maxPoints") || "",
-    minTotalSpent: searchParams.get("minTotalSpent") || "",
-    maxTotalSpent: searchParams.get("maxTotalSpent") || "",
-    hasBankAccount: searchParams.get("hasBankAccount") || "",
+    status: searchParams.get("status") || "",
+    printerId: searchParams.get("printerId") || "",
+    partnerName: searchParams.get("partnerName") || "",
     startDate: searchParams.get("startDate") || "",
     endDate: searchParams.get("endDate") || "",
+    startCompletedDate: searchParams.get("startCompletedDate") || "",
+    endCompletedDate: searchParams.get("endCompletedDate") || "",
+    startPaidDate: searchParams.get("startPaidDate") || "",
+    endPaidDate: searchParams.get("endPaidDate") || "",
+    minProfit: searchParams.get("minProfit") || "",
+    maxProfit: searchParams.get("maxProfit") || "",
+    minSheets: searchParams.get("minSheets") || "",
+    maxSheets: searchParams.get("maxSheets") || "",
     sortBy: searchParams.get("sortBy") || "createdAt",
     sortOrder: searchParams.get("sortOrder") || "desc",
   });
@@ -66,36 +72,34 @@ export const useAdminUsers = () => {
     }).format(amount || 0);
   };
 
-  // Helper: Format poin
-  const formatPoints = (points) => {
-    return new Intl.NumberFormat("id-ID", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(points || 0);
+  // Helper: Format number
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat("id-ID").format(num || 0);
   };
 
   // Helper: Build query params
   const buildQueryParams = useCallback(
     (extraParams = {}) => {
       const params = new URLSearchParams();
-
-      // Pagination
       params.set("page", extraParams.page || pagination.page.toString());
       params.set("limit", extraParams.limit || pagination.limit.toString());
 
-      // Filters
-      if (filters.role) params.set("role", filters.role);
-      if (filters.search) params.set("search", filters.search);
-      if (filters.minPoints) params.set("minPoints", filters.minPoints);
-      if (filters.maxPoints) params.set("maxPoints", filters.maxPoints);
-      if (filters.minTotalSpent)
-        params.set("minTotalSpent", filters.minTotalSpent);
-      if (filters.maxTotalSpent)
-        params.set("maxTotalSpent", filters.maxTotalSpent);
-      if (filters.hasBankAccount)
-        params.set("hasBankAccount", filters.hasBankAccount);
+      if (filters.status) params.set("status", filters.status);
+      if (filters.printerId) params.set("printerId", filters.printerId);
+      if (filters.partnerName) params.set("partnerName", filters.partnerName);
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
+      if (filters.startCompletedDate)
+        params.set("startCompletedDate", filters.startCompletedDate);
+      if (filters.endCompletedDate)
+        params.set("endCompletedDate", filters.endCompletedDate);
+      if (filters.startPaidDate)
+        params.set("startPaidDate", filters.startPaidDate);
+      if (filters.endPaidDate) params.set("endPaidDate", filters.endPaidDate);
+      if (filters.minProfit) params.set("minProfit", filters.minProfit);
+      if (filters.maxProfit) params.set("maxProfit", filters.maxProfit);
+      if (filters.minSheets) params.set("minSheets", filters.minSheets);
+      if (filters.maxSheets) params.set("maxSheets", filters.maxSheets);
       if (filters.sortBy) params.set("sortBy", filters.sortBy);
       if (filters.sortOrder) params.set("sortOrder", filters.sortOrder);
 
@@ -111,34 +115,40 @@ export const useAdminUsers = () => {
       params.set("page", newPage.toString());
       params.set("limit", newLimit.toString());
 
-      if (newFilters.role) params.set("role", newFilters.role);
-      if (newFilters.search) params.set("search", newFilters.search);
-      if (newFilters.minPoints) params.set("minPoints", newFilters.minPoints);
-      if (newFilters.maxPoints) params.set("maxPoints", newFilters.maxPoints);
-      if (newFilters.minTotalSpent)
-        params.set("minTotalSpent", newFilters.minTotalSpent);
-      if (newFilters.maxTotalSpent)
-        params.set("maxTotalSpent", newFilters.maxTotalSpent);
-      if (newFilters.hasBankAccount)
-        params.set("hasBankAccount", newFilters.hasBankAccount);
+      if (newFilters.status) params.set("status", newFilters.status);
+      if (newFilters.printerId) params.set("printerId", newFilters.printerId);
+      if (newFilters.partnerName)
+        params.set("partnerName", newFilters.partnerName);
       if (newFilters.startDate) params.set("startDate", newFilters.startDate);
       if (newFilters.endDate) params.set("endDate", newFilters.endDate);
+      if (newFilters.startCompletedDate)
+        params.set("startCompletedDate", newFilters.startCompletedDate);
+      if (newFilters.endCompletedDate)
+        params.set("endCompletedDate", newFilters.endCompletedDate);
+      if (newFilters.startPaidDate)
+        params.set("startPaidDate", newFilters.startPaidDate);
+      if (newFilters.endPaidDate)
+        params.set("endPaidDate", newFilters.endPaidDate);
+      if (newFilters.minProfit) params.set("minProfit", newFilters.minProfit);
+      if (newFilters.maxProfit) params.set("maxProfit", newFilters.maxProfit);
+      if (newFilters.minSheets) params.set("minSheets", newFilters.minSheets);
+      if (newFilters.maxSheets) params.set("maxSheets", newFilters.maxSheets);
       if (newFilters.sortBy) params.set("sortBy", newFilters.sortBy);
       if (newFilters.sortOrder) params.set("sortOrder", newFilters.sortOrder);
 
-      router.push(`/hub/admin/users?${params.toString()}`);
+      router.push(`/hub/admin/paper-refills?${params.toString()}`);
     },
     [router],
   );
 
-  // Fetch users data
-  const fetchUsers = useCallback(async () => {
+  // Fetch refills data
+  const fetchRefills = useCallback(async () => {
     if (!token) return;
 
     setLoading(true);
     try {
       const params = buildQueryParams();
-      const url = `/api/hub/admin/users?${params.toString()}`;
+      const url = `/api/hub/admin/paper-refills?${params.toString()}`;
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -148,17 +158,21 @@ export const useAdminUsers = () => {
 
       const data = await response.json();
       if (data.success) {
-        setUsers(data.data || []);
+        setRefills(data.data || []);
         setStats(
           data.stats || {
-            total: 0,
-            super_admin: 0,
-            partner: 0,
-            user: 0,
-            hasBankAccount: 0,
-            totalPoints: 0,
+            total: {
+              totalRefills: 0,
+              totalRevenue: 0,
+              totalProfit: 0,
+              totalSheets: 0,
+            },
+            pending: { count: 0, amount: 0 },
+            completed: { count: 0, amount: 0 },
+            paid: { count: 0, amount: 0 },
           },
         );
+        setFilterOptions(data.filters || { printers: [], partners: [] });
         setPagination((prev) => ({
           ...prev,
           total: data.pagination?.total || 0,
@@ -166,7 +180,7 @@ export const useAdminUsers = () => {
         }));
       }
     } catch (err) {
-      console.error("❌ Error fetching users:", err);
+      console.error("❌ Error fetching refills:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -180,28 +194,40 @@ export const useAdminUsers = () => {
       setFilters(updatedFilters);
       setPagination((prev) => ({ ...prev, page: 1 }));
       updateUrl(1, pagination.limit, updatedFilters);
+
+      // setTimeout(() => {
+      //   fetchRefills();
+      // }, 100);
     },
-    [filters, pagination.limit, updateUrl],
+    [filters, pagination.limit, updateUrl, fetchRefills],
   );
 
   // Reset all filters
   const resetFilters = useCallback(async () => {
     const emptyFilters = {
-      role: "",
-      search: "",
-      minPoints: "",
-      maxPoints: "",
-      minTotalSpent: "",
-      maxTotalSpent: "",
-      hasBankAccount: "",
+      status: "",
+      printerId: "",
+      partnerName: "",
       startDate: "",
       endDate: "",
+      startCompletedDate: "",
+      endCompletedDate: "",
+      startPaidDate: "",
+      endPaidDate: "",
+      minProfit: "",
+      maxProfit: "",
+      minSheets: "",
+      maxSheets: "",
       sortBy: "createdAt",
       sortOrder: "desc",
     };
     setFilters(emptyFilters);
     setPagination((prev) => ({ ...prev, page: 1 }));
     updateUrl(1, pagination.limit, emptyFilters);
+
+    // setTimeout(() => {
+    //   fetchRefills();
+    // }, 100);
   }, [pagination.limit, updateUrl]);
 
   // Change page
@@ -231,127 +257,80 @@ export const useAdminUsers = () => {
       setFilters(updatedFilters);
       setPagination((prev) => ({ ...prev, page: 1 }));
       updateUrl(1, pagination.limit, updatedFilters);
+
+      // setTimeout(() => {
+      //   fetchRefills();
+      // }, 100);
     },
     [filters, pagination.limit, updateUrl],
   );
 
-  // Create user
-  const createUser = useCallback(
-    async (userData) => {
+  // Mark refill as paid
+  const markAsPaid = useCallback(
+    async (refillId, formData) => {
       try {
-        const response = await fetch(`/api/hub/admin/users`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `/api/hub/admin/paper-refills/${refillId}/pay`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
           },
-          body: JSON.stringify(userData),
-        });
+        );
 
         const result = await response.json();
         if (result.success) {
-          await fetchUsers();
+          await fetchRefills(); // Refresh setelah update
         }
         return result;
       } catch (err) {
-        console.error("❌ Error creating user:", err);
+        console.error("❌ Error marking as paid:", err);
         return { success: false, error: err.message };
       }
     },
-    [token, fetchUsers],
-  );
-
-  // Update user
-  const updateUser = useCallback(
-    async (userId, userData) => {
-      try {
-        const response = await fetch(`/api/hub/admin/users/${userId}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(userData),
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          await fetchUsers();
-        }
-        return result;
-      } catch (err) {
-        console.error("❌ Error updating user:", err);
-        return { success: false, error: err.message };
-      }
-    },
-    [token, fetchUsers],
-  );
-
-  // Delete user
-  const deleteUser = useCallback(
-    async (userId) => {
-      try {
-        const response = await fetch(`/api/hub/admin/users/${userId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const result = await response.json();
-        if (result.success) {
-          await fetchUsers();
-        }
-        return result;
-      } catch (err) {
-        console.error("❌ Error deleting user:", err);
-        return { success: false, error: err.message };
-      }
-    },
-    [token, fetchUsers],
+    [token, fetchRefills],
   );
 
   // Initial load
   useEffect(() => {
     if (token) {
-      fetchUsers();
+      fetchRefills();
     }
   }, [token]);
 
-  // Re-fetch when pagination changes
+  // ✅ FIX: Re-fetch when filters change
   useEffect(() => {
-    if (token && pagination.page && pagination.limit) {
-      fetchUsers();
+    if (token && filters) {
+      // Gunakan debounce untuk menghindari multiple fetch
+      const timeoutId = setTimeout(() => {
+        fetchRefills();
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-  }, [pagination.page, pagination.limit]);
+  }, [token, filters, pagination.page, pagination.limit]);
 
   return {
-    // Data
-    users,
+    refills,
     stats,
+    filterOptions,
     loading,
     error,
     pagination,
-
-    // Filters
     filters,
     applyFilters,
     resetFilters,
-
-    // Pagination actions
     changePage,
     changeLimit,
-
-    // Sort actions
     changeSort,
-
-    // CRUD actions
-    createUser,
-    updateUser,
-    deleteUser,
-
-    // Helpers
-    formatDate,
-    formatRupiah,
-    formatPoints,
-    refresh: fetchUsers,
+    markAsPaid,
+    formatDate: (date) =>
+      date ? new Date(date).toLocaleDateString("id-ID") : "-",
+    formatRupiah: (amount) =>
+      new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(amount || 0),
+    formatNumber: (num) => new Intl.NumberFormat("id-ID").format(num || 0),
+    refresh: fetchRefills,
   };
 };

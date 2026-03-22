@@ -77,7 +77,6 @@ export default function PartnerHubPage() {
   const [showProofModal, setShowProofModal] = useState(false);
   const [processingId, setProcessingId] = useState(null);
 
-  // ✅ Effect untuk menentukan section target dari URL
   useEffect(() => {
     if (!initialLoading) {
       const activeSection = searchParams.get("refillsPage")
