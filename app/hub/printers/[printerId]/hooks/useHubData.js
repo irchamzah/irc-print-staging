@@ -1,3 +1,4 @@
+// app/hub/printers/[printerId]/hooks/useHubData.js
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useHubAuth } from "../../../auth/hooks/useHubAuth";
@@ -214,10 +215,11 @@ export const useHubData = (
 
   const handleRefillPaper = async () => {
     try {
-      if (printer?.paperStatus?.paperCount > 20) {
+      // ✅ Validasi stok
+      if (printer?.paperStatus?.paperCount > 100) {
         return {
           success: false,
-          error: "Kapasitas hampir penuh. Tidak bisa menambah kertas.",
+          error: "Stok kertas sudah penuh (lebih dari 100 lembar).",
         };
       }
 
@@ -230,17 +232,40 @@ export const useHubData = (
         body: JSON.stringify({ sheetsAdded: 80 }),
       });
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`,
+        );
+      }
 
       const result = await response.json();
 
       if (result.success) {
-        await fetchAllData();
+        // ✅ Update paperCount secara langsung di state
+        const sheetsAdded = 80;
+        const currentCount = printer?.paperStatus?.paperCount || 0;
+        const newCount = currentCount + sheetsAdded;
+
+        setPrinter((prev) => ({
+          ...prev,
+          paperStatus: {
+            ...prev?.paperStatus,
+            paperCount: newCount,
+            lastRefill: new Date().toISOString(),
+            available: newCount > 0,
+            estimatedPages: newCount,
+          },
+        }));
+
+        // ✅ Opsional: refresh data lain jika diperlukan
+        // await fetchAllData(); // Hapus komentar jika perlu refresh data lain
+
         return { success: true, data: result.data };
       }
       return { success: false, error: result.error };
     } catch (error) {
+      console.error("❌ Error in handleRefillPaper:", error);
       return { success: false, error: error.message };
     }
   };

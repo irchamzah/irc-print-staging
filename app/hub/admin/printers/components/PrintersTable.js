@@ -1,136 +1,233 @@
+"use client";
 import CustomLink from "@/app/components/CustomLink";
+import { useState } from "react";
 
-// Printers Table Component
-export const PrintersTable = ({ printers, onEdit, onDelete, formatDate }) => {
-  const formatStatus = (status) => {
-    const statusMap = {
-      online: { label: "Online", className: "bg-green-100 text-green-700" },
-      offline: { label: "Offline", className: "bg-gray-100 text-gray-700" },
-      maintenance: {
-        label: "Maintenance",
-        className: "bg-yellow-100 text-yellow-700",
-      },
-    };
-    const s = statusMap[status] || {
-      label: status,
-      className: "bg-gray-100 text-gray-700",
-    };
+// 🥸PrintersTable /app/hub/admin/components/PrintersTable.js TERPAKAI
+export const PrintersTable = ({
+  printers,
+  onEdit,
+  onDelete,
+  onCreate,
+  formatDate,
+  pagination,
+}) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredPrinters = printers.filter(
+    (printer) =>
+      printer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      printer.printerId?.includes(searchTerm) ||
+      printer.location?.city?.includes(searchTerm),
+  );
+
+  const getStatusBadge = (status) => {
+    if (status === "online") {
+      return (
+        <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+          Online
+        </span>
+      );
+    }
     return (
-      <span className={`px-2 py-1 rounded-full text-xs ${s.className}`}>
-        {s.label}
+      <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+        Offline
       </span>
     );
   };
 
-  const formatPaperStatus = (paperStatus) => {
-    if (!paperStatus.available) {
-      return <span className="text-red-600 font-medium">Habis</span>;
-    }
-    const count = paperStatus.paperCount || 0;
-    if (count <= 20) {
-      return (
-        <span className="text-yellow-600 font-medium">
-          {count} lembar (Kritis)
-        </span>
-      );
-    }
-    return <span className="text-green-600">{count} lembar</span>;
-  };
-
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Nama
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Model
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Lokasi
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Status
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Kertas
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Total Job
-            </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-              Aksi
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {printers.length === 0 ? (
+    <div className="bg-white">
+      {/* Header */}
+      <div className="p-4 sm:p-6 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">
+              🖨️ Daftar Printer
+            </h2>
+            {pagination.total > 0 && (
+              <p className="text-sm text-gray-500 mt-1">
+                Menampilkan {(pagination.page - 1) * pagination.limit + 1} -{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                dari {pagination.total} printer
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search Input Container - akan mengambil sisa ruang */}
+            <div className="flex-1 min-w-0">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Cari printer..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+                <svg
+                  className="w-4 h-4 text-gray-400 absolute left-3 top-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Tombol Container */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={onCreate}
+                className="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <span className="sm:inline">Tambah Printer</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
             <tr>
-              <td colSpan={7} className="text-center py-8 text-gray-500">
-                Tidak ada data printer
-              </td>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nama Printer
+              </th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Lokasi
+              </th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Sisa Kertas
+              </th>
+              <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Total Jobs
+              </th>
+              <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Aksi
+              </th>
             </tr>
-          ) : (
-            printers.map((printer) => (
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {filteredPrinters.map((printer) => (
               <tr key={printer.printerId} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div>
-                    <CustomLink
-                      className="text-sm font-medium text-blue-500 hover:underline"
-                      href={`/hub/printers/${printer.printerId}`}
-                    >
-                      {printer.name}
-                    </CustomLink>
-                    <p className="text-xs text-gray-500">{printer.printerId}</p>
+                <td className="px-4 sm:px-6 py-3">
+                  <CustomLink
+                    href={`/hub/printers/${printer.printerId}`}
+                    className="text-sm font-medium text-blue-500 hover:underline"
+                  >
+                    {printer.name}
+                  </CustomLink>
+                </td>
+                <td className="px-4 sm:px-6 py-3">
+                  <div className="text-xs text-gray-500 font-mono">
+                    {printer.printerId}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {printer.model || "-"}
+                <td className="px-4 sm:px-6 py-3 text-sm text-gray-600">
+                  {printer.location?.city || "-"}
                 </td>
-                <td className="px-4 py-3">
-                  <p className="text-sm text-gray-600">
-                    {printer.location?.city || "-"}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {printer.location?.province || "-"}
-                  </p>
+                <td className="px-4 sm:px-6 py-3">
+                  {getStatusBadge(printer.status)}
                 </td>
-                <td className="px-4 py-3">{formatStatus(printer.status)}</td>
-                <td className="px-4 py-3 text-sm">
-                  {formatPaperStatus(printer.paperStatus)}
+                <td className="px-4 sm:px-6 py-3 text-sm text-gray-600">
+                  {printer.paperStatus?.paperCount || 0} lembar
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {printer.statistics?.totalJobs || 0} job
-                  <br />
-                  <span className="text-xs text-gray-400">
-                    {printer.statistics?.totalPagesPrinted || 0} halaman
-                  </span>
+                <td className="px-4 sm:px-6 py-3 text-sm text-gray-600">
+                  {printer.statistics?.totalJobs || 0}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 sm:px-6 py-3 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onEdit(printer)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                       title="Edit"
                     >
-                      Edit
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
                     </button>
                     <button
                       onClick={() => onDelete(printer)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="p-1 text-red-600 hover:bg-red-50 rounded"
                       title="Hapus"
                     >
-                      Hapus
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
                     </button>
                   </div>
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredPrinters.length === 0 && (
+        <div className="text-center py-12">
+          <svg
+            className="w-16 h-16 text-gray-300 mx-auto mb-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <p className="text-gray-500">Tidak ada printer ditemukan</p>
+        </div>
+      )}
     </div>
   );
 };

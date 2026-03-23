@@ -1,3 +1,4 @@
+// app/hub/printers/[printerId]/components/PaperStatusCard.js
 "use client";
 
 // 🥸PaperStatusCard /app/hub/printers/[printerId]/components/PaperStatusCard.js

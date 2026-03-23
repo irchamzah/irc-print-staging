@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 import { AdminLayout } from "../components/AdminLayout";
 import { useAdminPaperRefills } from "../hooks/useAdminPaperRefills";
-import { ProofUploadModal } from "../components/ProofUploadModal";
+import { ProofUploadModal } from "./components/ProofUploadModal";
 import { StatsCards } from "./components/StatsCards";
 import { StatusStatsCards } from "./components/StatusStatsCards";
 import { FilterSection } from "./components/FilterSection";

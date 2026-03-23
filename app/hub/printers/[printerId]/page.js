@@ -1,3 +1,4 @@
+// app/hub/printers/[printerId]/page.js
 "use client";
 import { useState, useRef, useEffect } from "react";
 import {
@@ -18,7 +19,7 @@ import { useHubAuth } from "../../auth/hooks/useHubAuth";
 import { HubLayout } from "../../components/HubLayout";
 import CustomLink from "@/app/components/CustomLink";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
-import { ProofUploadModal } from "../../admin/components/ProofUploadModal";
+import { ProofUploadModal } from "../../admin/paper-refills/components/ProofUploadModal";
 
 // 🥸PartnerHubPage /app/hub/printers/[printerId]/page.js TERPAKAI
 export default function PartnerHubPage() {

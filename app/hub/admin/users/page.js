@@ -3,12 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 import { AdminLayout } from "../components/AdminLayout";
 import { useAdminUsers } from "../hooks/useAdminUsers";
-import { UserFormModal } from "../components/UserFormModal";
+import { UserFormModal } from "./components/UserFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 import { StatsCards } from "./components/StatsCards";
 import { FilterSection } from "./components/FilterSection";
 import { SortSection } from "./components/SortSection";
-import { UsersTable } from "../components/UsersTable";
+import { UsersTable } from "./components/UsersTable";
 import { Pagination } from "./components/Pagination";
 
 // Main Page
@@ -157,25 +157,6 @@ export default function AdminUsersPage() {
               Kelola semua user, partner, dan admin
             </p>
           </div>
-          <button
-            onClick={handleAddNew}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 flex items-center gap-2"
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Tambah User
-          </button>
         </div>
 
         {/* Stats Cards */}
@@ -197,17 +178,6 @@ export default function AdminUsersPage() {
 
         {/* Table */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800">Daftar User</h2>
-            {pagination.total > 0 && (
-              <p className="text-xs text-gray-400 mt-1">
-                Menampilkan {(pagination.page - 1) * pagination.limit + 1} -{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-                dari {pagination.total} user
-              </p>
-            )}
-          </div>
-
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -219,9 +189,11 @@ export default function AdminUsersPage() {
                 users={users}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onCreate={handleAddNew}
                 formatDate={formatDate}
                 formatRupiah={formatRupiah}
                 formatPoints={formatPoints}
+                pagination={pagination}
               />
               {pagination.totalPages > 0 && (
                 <Pagination
