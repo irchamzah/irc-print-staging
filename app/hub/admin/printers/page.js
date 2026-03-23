@@ -5,6 +5,7 @@ import { AdminLayout } from "../components/AdminLayout";
 import { useAdminPrinters } from "../hooks/useAdminPrinters";
 import { PrinterFormModal } from "../components/PrinterFormModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
+import CustomLink from "@/app/components/CustomLink";
 
 // Stats Cards Component
 const StatsCards = ({ stats, loading }) => {
@@ -431,9 +432,12 @@ const PrintersTable = ({ printers, onEdit, onDelete, formatDate }) => {
               <tr key={printer.printerId} className="hover:bg-gray-50">
                 <td className="px-4 py-3">
                   <div>
-                    <p className="text-sm font-medium text-gray-800">
+                    <CustomLink
+                      className="text-sm font-medium text-blue-500 hover:underline"
+                      href={`/hub/printers/${printer.printerId}`}
+                    >
                       {printer.name}
-                    </p>
+                    </CustomLink>
                     <p className="text-xs text-gray-500">{printer.printerId}</p>
                   </div>
                 </td>

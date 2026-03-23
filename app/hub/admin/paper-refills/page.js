@@ -223,6 +223,7 @@ const FilterSection = ({ filters, onApply, onReset, options, isLoading }) => {
             <option value="">Semua Printer</option>
             {options.printers?.map((printer) => (
               <option key={printer} value={printer}>
+                {/* {console.log("🚀 ~ printer:", options)} */}
                 {printer}
               </option>
             ))}
