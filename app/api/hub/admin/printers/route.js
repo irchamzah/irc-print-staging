@@ -15,8 +15,6 @@ export async function GET(request) {
       vpsUrl.searchParams.set(key, value);
     });
 
-    console.log("📡 Forwarding to VPS:", vpsUrl.toString());
-
     const response = await fetch(vpsUrl.toString(), {
       method: "GET",
       headers: {

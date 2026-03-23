@@ -16,11 +16,6 @@ export async function GET(request) {
       vpsUrl.searchParams.set(key, value);
     });
 
-    console.log(
-      "📡 [Next.js] Forwarding revenue stats to VPS:",
-      vpsUrl.toString(),
-    );
-
     const response = await fetch(vpsUrl.toString(), {
       method: "GET",
       headers: {

@@ -172,7 +172,6 @@ export const useAdminPaperRefills = () => {
             paid: { count: 0, amount: 0 },
           },
         );
-        console.log("data.filters:>>>>>>", data);
         setFilterOptions(data.filters || { printers: [], partners: [] });
         setPagination((prev) => ({
           ...prev,
