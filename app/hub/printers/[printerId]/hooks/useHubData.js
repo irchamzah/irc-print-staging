@@ -335,12 +335,12 @@ export const useHubData = (
   const filteredRefills = filterRefillsByDateRange(paperRefills);
 
   // ✅ Data yang sudah difilter untuk total (semua record dalam periode)
-  const filteredAllJobs = filterJobsByDateRange(allPrintJobs);
+  // const filteredAllJobs = filterJobsByDateRange(allPrintJobs);
   const filteredAllRefills = filterRefillsByDateRange(allPaperRefills);
 
   // ✅ Hitung profit dari data semua periode terfilter, tidak bergantung pada halaman sekarang
-  const totalRevenue = filteredAllJobs.reduce(
-    (sum, job) => sum + (job.totalCost || 0),
+  const totalRevenue = filteredAllRefills.reduce(
+    (sum, refill) => sum + (refill.totalRevenue || 0),
     0,
   );
 
