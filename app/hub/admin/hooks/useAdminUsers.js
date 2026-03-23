@@ -181,7 +181,7 @@ export const useAdminUsers = () => {
       setPagination((prev) => ({ ...prev, page: 1 }));
       updateUrl(1, pagination.limit, updatedFilters);
     },
-    [filters, pagination.limit, updateUrl],
+    [filters, pagination.limit, updateUrl, fetchUsers],
   );
 
   // Reset all filters
@@ -321,7 +321,7 @@ export const useAdminUsers = () => {
     if (token && pagination.page && pagination.limit) {
       fetchUsers();
     }
-  }, [pagination.page, pagination.limit]);
+  }, [token, filters, pagination.page, pagination.limit]);
 
   return {
     // Data

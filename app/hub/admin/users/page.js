@@ -529,12 +529,22 @@ export default function AdminUsersPage() {
     },
   ];
 
+  const saveScrollPosition = () => {
+    if (scrollRef.current) {
+      const position = scrollRef.current.scrollTop;
+      sessionStorage.setItem("paperRefillsScrollPos", position);
+      console.log("💾 Saved scroll position:", position);
+    }
+  };
+
   // Fetch printers for partner access
   useEffect(() => {
     const fetchPrinters = async () => {
       try {
         const response = await fetch(`/api/hub/admin/printers?limit=1000`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("hubToken")}`,
+          },
         });
         const data = await response.json();
         if (data.success) {
@@ -546,6 +556,16 @@ export default function AdminUsersPage() {
     };
     fetchPrinters();
   }, []);
+
+  const handleApplyFilters = async (newFilters) => {
+    saveScrollPosition();
+    await applyFilters(newFilters);
+  };
+
+  const handleResetFilters = async () => {
+    saveScrollPosition();
+    await resetFilters();
+  };
 
   const handleAddNew = () => {
     setSelectedUser(null);
@@ -643,8 +663,8 @@ export default function AdminUsersPage() {
         {/* Filter Section */}
         <FilterSection
           filters={filters}
-          onApply={applyFilters}
-          onReset={resetFilters}
+          onApply={handleApplyFilters}
+          onReset={handleResetFilters}
           isLoading={loading}
         />
 

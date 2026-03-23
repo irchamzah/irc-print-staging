@@ -167,7 +167,7 @@ export const useAdminPrinters = () => {
       setPagination((prev) => ({ ...prev, page: 1 }));
       updateUrl(1, pagination.limit, updatedFilters);
     },
-    [filters, pagination.limit, updateUrl],
+    [filters, pagination.limit, updateUrl, fetchPrinters],
   );
 
   // Reset all filters
@@ -307,7 +307,7 @@ export const useAdminPrinters = () => {
     if (token && pagination.page && pagination.limit) {
       fetchPrinters();
     }
-  }, [pagination.page, pagination.limit]);
+  }, [token, filters, pagination.page, pagination.limit]);
 
   return {
     // Data

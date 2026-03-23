@@ -568,6 +568,24 @@ export default function AdminPrintersPage() {
     },
   ];
 
+  const saveScrollPosition = () => {
+    if (scrollRef.current) {
+      const position = scrollRef.current.scrollTop;
+      sessionStorage.setItem("paperRefillsScrollPos", position);
+      console.log("💾 Saved scroll position:", position);
+    }
+  };
+
+  const handleApplyFilters = async (newFilters) => {
+    saveScrollPosition();
+    await applyFilters(newFilters);
+  };
+
+  const handleResetFilters = async () => {
+    saveScrollPosition();
+    await resetFilters();
+  };
+
   const handleAddNew = () => {
     setSelectedPrinter(null);
     setFormError(null);
@@ -664,8 +682,8 @@ export default function AdminPrintersPage() {
         {/* Filter Section */}
         <FilterSection
           filters={filters}
-          onApply={applyFilters}
-          onReset={resetFilters}
+          onApply={handleApplyFilters}
+          onReset={handleResetFilters}
           options={filterOptions}
           isLoading={loading}
         />
