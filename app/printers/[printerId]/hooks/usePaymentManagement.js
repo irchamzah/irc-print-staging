@@ -198,7 +198,6 @@ export const usePaymentManagement = (
 
         response = await fetch("/api/print", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: formData,
         });
       }
