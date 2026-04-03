@@ -198,6 +198,7 @@ export const usePaymentManagement = (
 
         response = await fetch("/api/print", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: formData,
         });
       }
@@ -314,6 +315,8 @@ export const usePaymentManagement = (
           signal: AbortSignal.timeout(10000),
         },
       );
+
+      console.log(`SYNC RESPONSE >>>>>>>`, syncResponse);
 
       if (!syncResponse.ok) {
         const errorText = await syncResponse.text();
@@ -518,9 +521,9 @@ export const usePaymentManagement = (
             `Job ID: ${result.jobId}\n\nHalaman akan direfresh...`,
         );
 
-        // setTimeout(() => {
-        //   window.location.reload();
-        // }, 2000);
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } else {
         throw new Error(result.error || "Gagal mengirim print job");
       }
