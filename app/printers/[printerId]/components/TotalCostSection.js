@@ -1,7 +1,9 @@
-// app/printers/[printerId]/components/TotalCostSection.js
-
-// TotalCostSection TERPAKAI
-export const TotalCostSection = ({ advancedSettings, totalPages, prices }) => {
+// TotalCostSection - UPDATED dengan finalPrices
+export const TotalCostSection = ({
+  advancedSettings,
+  totalPages,
+  finalPrices,
+}) => {
   if (!advancedSettings.cost || advancedSettings.cost <= 0) {
     return null;
   }
@@ -10,22 +12,27 @@ export const TotalCostSection = ({ advancedSettings, totalPages, prices }) => {
   const bwPages = advancedSettings.bwPages?.length || 0;
   const copies = advancedSettings.copies || 1;
   const colorPages = advancedSettings.colorPages?.length || 0;
+  const paperSize = advancedSettings.paperSize || "A4";
 
   const totalSheets = (colorPages + bwPages) * copies;
-  const colorPrice = prices?.color?.A4 || 1500;
 
-  // Cari harga BW dan tier selanjutnya
-  let bwPrice = 500;
+  // ✅ UPDATE: Gunakan finalPrices dari struktur baru
+  const colorPrice = finalPrices?.color?.[paperSize] || 1500;
+  const bwPrice = finalPrices?.monochrome?.[paperSize] || 500;
+
+  // ✅ UPDATE: Volume discounts dari printer (jika ada)
+  const volumeDiscounts = advancedSettings.volumeDiscounts || [];
+  let effectiveBwPrice = bwPrice;
   let nextTier = null;
 
-  if (prices?.bwTiers) {
-    const sortedTiers = [...prices.bwTiers].sort(
+  if (volumeDiscounts.length > 0) {
+    const sortedTiers = [...volumeDiscounts].sort(
       (a, b) => a.minSheets - b.minSheets,
     );
 
     for (let i = 0; i < sortedTiers.length; i++) {
       if (totalSheets >= sortedTiers[i].minSheets) {
-        bwPrice = sortedTiers[i].price;
+        effectiveBwPrice = sortedTiers[i].price;
         nextTier = sortedTiers[i + 1];
       }
     }
@@ -51,15 +58,15 @@ export const TotalCostSection = ({ advancedSettings, totalPages, prices }) => {
       {/* Harga per lembar */}
       <div className="space-y-2 text-sm mb-3">
         <div className="flex justify-between">
-          <span>🟡 Warna</span>
+          <span>🟡 Warna ({paperSize})</span>
           <span>Rp {colorPrice.toLocaleString()}/lbr</span>
         </div>
 
         <div className="flex justify-between items-start">
-          <span>⚫ Hitam Putih</span>
+          <span>⚫ Hitam Putih ({paperSize})</span>
           <div className="text-right">
             <span className="font-medium">
-              Rp {bwPrice.toLocaleString()}/lbr
+              Rp {effectiveBwPrice.toLocaleString()}/lbr
             </span>
             {nextTier && (
               <p className="text-xs text-blue-600">

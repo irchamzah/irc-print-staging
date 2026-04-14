@@ -1,9 +1,8 @@
-// app/hub/printers/[printerId]/components/PaperRefillHistory.js
 "use client";
 
 import { Pagination } from "./Pagination";
 
-// 🥸PaperRefillHistory /app/hub/printers/[printerId]/components/PaperRefillHistory.js TERPAKAI
+// PaperRefillHistory - UPDATED dengan struktur baru
 export const PaperRefillHistory = ({
   refills,
   onViewRefill,
@@ -20,7 +19,7 @@ export const PaperRefillHistory = ({
   endDate,
   loading,
 }) => {
-  // Fungsi untuk mendapatkan badge role
+  // Fungsi untuk mendapatkan badge role (tidak berubah)
   const getRoleBadge = (role) => {
     if (role === "super_admin") {
       return (
@@ -182,13 +181,11 @@ export const PaperRefillHistory = ({
                       {formatShortDate(refill.createdAt)}
                     </p>
                     {getRoleBadge(refill.filledByRole)}
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                      {refill.profitShare}% share
-                    </span>
+                    {/* ✅ HAPUS profitShare karena sudah tidak ada di struktur baru */}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     {refill.filledByName} • {refill.sheetsAdded} lembar •{" "}
-                    {refill.jobsCovered?.length || 0} print jobs
+                    {refill.associatedJobIds?.length || 0} print jobs
                   </p>
                 </div>
               </div>
@@ -201,9 +198,16 @@ export const PaperRefillHistory = ({
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500">Profit</p>
+                  <p className="text-xs text-gray-500">Profit Partner</p>
                   <p className="text-sm font-medium text-green-600">
                     {formatRupiah(refill.partnerProfit)}
+                  </p>
+                </div>
+                {/* ✅ TAMBAH Platform Profit (opsional) */}
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Profit Platform</p>
+                  <p className="text-sm font-medium text-blue-600">
+                    {formatRupiah(refill.platformProfit)}
                   </p>
                 </div>
                 <div className="w-20">
@@ -330,11 +334,11 @@ export const PaperRefillHistory = ({
                   <div className="bg-gray-50 p-2 rounded-lg">
                     <p className="text-gray-500">Jobs</p>
                     <p className="font-medium text-gray-800">
-                      {refill.jobsCovered?.length || 0}
+                      {refill.associatedJobIds?.length || 0}
                     </p>
                   </div>
                   <div className="bg-gray-50 p-2 rounded-lg">
-                    <p className="text-gray-500">Profit</p>
+                    <p className="text-gray-500">Profit Partner</p>
                     <p className="font-medium text-green-600">
                       {formatRupiah(refill.partnerProfit)
                         .replace("Rp", "")
@@ -342,9 +346,11 @@ export const PaperRefillHistory = ({
                     </p>
                   </div>
                   <div className="bg-gray-50 p-2 rounded-lg">
-                    <p className="text-gray-500">Share</p>
-                    <p className="font-medium text-gray-800">
-                      {refill.profitShare}%
+                    <p className="text-gray-500">Profit Platform</p>
+                    <p className="font-medium text-blue-600">
+                      {formatRupiah(refill.platformProfit)
+                        .replace("Rp", "")
+                        .trim()}
                     </p>
                   </div>
                 </div>
@@ -366,7 +372,7 @@ export const PaperRefillHistory = ({
           </div>
         ))}
 
-        {/* ✅ Pagination Component */}
+        {/* Pagination Component */}
         {totalPages > 1 && (
           <div className="border-t border-gray-200">
             <Pagination

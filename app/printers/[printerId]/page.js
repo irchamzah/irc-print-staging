@@ -26,7 +26,7 @@ const PageSelector = dynamic(
   },
 );
 
-// PrinterPage TERPAKAI
+// PrinterPage - UPDATED dengan finalPrices
 export default function PrinterPage() {
   const {
     // States
@@ -50,7 +50,9 @@ export default function PrinterPage() {
     isPaperInsufficient,
     availablePaper,
     totalPagesNeeded,
-    prices,
+    finalPrices, // ✅ Ganti prices → finalPrices
+    enabledFeatures, // ✅ Tambah enabledFeatures
+    volumeDiscounts, // ✅ Tambah volumeDiscounts
 
     // Functions
     handleFileUpload,
@@ -71,7 +73,8 @@ export default function PrinterPage() {
     return <LoadingAnimation />;
   }
 
-  if (!prices) {
+  // ✅ UPDATE: Gunakan finalPrices untuk validasi loading
+  if (!finalPrices) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
@@ -105,7 +108,9 @@ export default function PrinterPage() {
                       initialSettings={advancedSettings}
                       onSettingsChange={handleSettingsChange}
                       file={file}
-                      prices={prices}
+                      finalPrices={finalPrices} // ✅ Ganti prices → finalPrices
+                      enabledFeatures={enabledFeatures} // ✅ Tambah
+                      volumeDiscounts={volumeDiscounts} // ✅ Tambah
                     />
                   </div>
                 )}
@@ -136,12 +141,13 @@ export default function PrinterPage() {
                   isLoading={isLoading}
                   isPrinterOffline={isPrinterOffline}
                   isPaperInsufficient={isPaperInsufficient}
+                  paperMode={printer?.paperMode || "limited"}
                 />
 
                 <TotalCostSection
                   advancedSettings={advancedSettings}
                   totalPages={totalPages}
-                  prices={prices}
+                  finalPrices={finalPrices} // ✅ Ganti prices → finalPrices
                 />
 
                 <SubmitButton
@@ -153,6 +159,7 @@ export default function PrinterPage() {
                   isPaperInsufficient={isPaperInsufficient}
                   availablePaper={availablePaper}
                   totalPagesNeeded={totalPagesNeeded}
+                  paperMode={printer?.paperMode || "limited"}
                 />
               </form>
             </div>

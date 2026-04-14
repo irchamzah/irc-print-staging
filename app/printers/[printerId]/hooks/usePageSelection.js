@@ -1,12 +1,12 @@
-// app/printers/[printerId]/hooks/usePageSelection.js
 import { useEffect, useState } from "react";
 
-// usePageSelection TERPAKAI
+// usePageSelection - UPDATED dengan finalPrices
 export const usePageSelection = (
   totalPages,
   initialSettings,
   onSettingsChange,
-  prices,
+  finalPrices, // ✅ Ganti prices → finalPrices
+  volumeDiscounts, // ✅ Tambah parameter untuk diskon volume
 ) => {
   const [selections, setSelections] = useState([]);
   const [selectedPages, setSelectedPages] = useState([]);
@@ -16,15 +16,111 @@ export const usePageSelection = (
     initialSettings.printSettings || {
       paperSize: "A4",
       orientation: "PORTRAIT",
-      quality: "NORMAL",
-      margins: "NORMAL",
+      quality: "normal", // ✅ Lowercase
+      margins: "normal",
       duplex: false,
     },
   );
 
+  // ============================================
+  // Helper: Hitung harga BW berdasarkan volume discounts
+  // ============================================
+  const calculateBwPriceFromDiscounts = (totalSheets, discounts) => {
+    if (!discounts || discounts.length === 0) {
+      return null; // Tidak ada diskon, gunakan harga normal
+    }
+
+    // Urutkan dari minSheets terbesar ke terkecil
+    const sortedTiers = [...discounts].sort(
+      (a, b) => b.minSheets - a.minSheets,
+    );
+
+    // Cari tier yang memenuhi syarat
+    for (const tier of sortedTiers) {
+      if (totalSheets >= tier.minSheets) {
+        return tier.price;
+      }
+    }
+
+    return null; // Tidak ada tier yang memenuhi
+  };
+
+  // ============================================
+  // Helper: Hitung total biaya
+  // ============================================
+  const calculateCostWithSettings = (
+    selections,
+    copies,
+    settings,
+    finalPrices,
+    discounts,
+  ) => {
+    if (!finalPrices) return 0;
+
+    const selectedSelections = selections.filter((sel) => sel.selected);
+    const colorPages = selectedSelections.filter(
+      (s) => s.type === "color",
+    ).length;
+    const bwPages = selectedSelections.filter((s) => s.type === "bw").length;
+
+    const paperSize = settings.paperSize || "A4";
+    const quality = settings.quality || "NORMAL";
+
+    // Total lembar yang akan dicetak
+    const totalSheets = (colorPages + bwPages) * copies;
+
+    // Ambil harga dari finalPrices
+    const colorPricePerSheet = finalPrices?.color?.[paperSize] || 1500;
+    let bwPricePerSheet = finalPrices?.monochrome?.[paperSize] || 500;
+
+    // ✅ Terapkan volume discounts jika ada
+    const discountedPrice = calculateBwPriceFromDiscounts(
+      totalSheets,
+      discounts,
+    );
+    if (discountedPrice !== null) {
+      bwPricePerSheet = discountedPrice;
+    }
+
+    // ✅ Quality surcharge (jika ada)
+    const qualitySurcharge = 0; // Bisa ditambahkan nanti dari extraFees
+
+    const totalColorCost = colorPages * (colorPricePerSheet + qualitySurcharge);
+    const totalBwCost = bwPages * (bwPricePerSheet + qualitySurcharge);
+
+    return (totalColorCost + totalBwCost) * copies;
+  };
+
+  // ============================================
+  // Helper: Notify parent dengan data terbaru
+  // ============================================
+  const notifyParent = (selections, copies, settings, cost) => {
+    const selectedSelections = selections.filter((sel) => sel.selected);
+    const colorPages = selectedSelections
+      .filter((s) => s.type === "color")
+      .map((s) => s.page);
+    const bwPages = selectedSelections
+      .filter((s) => s.type === "bw")
+      .map((s) => s.page);
+    const selectedPagesList = selectedSelections.map((s) => s.page);
+
+    onSettingsChange({
+      colorPages,
+      bwPages,
+      copies,
+      printSettings: settings,
+      cost,
+      selectedPages: selectedPagesList,
+      paperSize: settings.paperSize,
+      quality: settings.quality,
+    });
+  };
+
+  // ============================================
   // Initialize selections
+  // ============================================
   useEffect(() => {
-    if (!prices) {
+    if (!finalPrices) {
       return;
     }
 
@@ -45,7 +141,8 @@ export const usePageSelection = (
         initialSelections,
         initialSettings.copies || 1,
         printSettings,
-        prices,
+        finalPrices,
+        volumeDiscounts,
       );
       notifyParent(
         initialSelections,
@@ -54,11 +151,13 @@ export const usePageSelection = (
         initialCost,
       );
     }
-  }, [totalPages, prices]);
+  }, [totalPages, finalPrices, volumeDiscounts]);
 
-  // 🌐 handlePageSelection /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // handlePageSelection
+  // ============================================
   const handlePageSelection = (pageNumber, isSelected) => {
-    if (!prices) return;
+    if (!finalPrices) return;
 
     const newSelections = selections.map((sel) =>
       sel.page === pageNumber ? { ...sel, selected: isSelected } : sel,
@@ -70,15 +169,14 @@ export const usePageSelection = (
       .map((sel) => sel.page);
     setSelectedPages(updatedSelectedPages);
 
-    // Hitung ulang cost hanya untuk halaman yang terpilih
     const cost = calculateCostWithSettings(
       newSelections.filter((sel) => sel.selected),
       initialSettings.copies || 1,
       printSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
-    // Notify parent hanya dengan halaman yang terpilih
     const selectedColorPages = newSelections
       .filter((sel) => sel.selected && sel.type === "color")
       .map((sel) => sel.page);
@@ -93,12 +191,16 @@ export const usePageSelection = (
       printSettings,
       cost,
       selectedPages: updatedSelectedPages,
+      paperSize: printSettings.paperSize,
+      quality: printSettings.quality,
     });
   };
 
-  // 🌐 selectAllPages /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // selectAllPages
+  // ============================================
   const selectAllPages = () => {
-    if (!prices) return;
+    if (!finalPrices) return;
 
     const newSelections = selections.map((sel) => ({ ...sel, selected: true }));
     setSelections(newSelections);
@@ -108,7 +210,8 @@ export const usePageSelection = (
       newSelections.filter((sel) => sel.selected),
       initialSettings.copies || 1,
       printSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
     const selectedColorPages = newSelections
@@ -125,16 +228,20 @@ export const usePageSelection = (
       printSettings,
       cost,
       selectedPages: Array.from({ length: totalPages }, (_, i) => i + 1),
+      paperSize: printSettings.paperSize,
+      quality: printSettings.quality,
     });
   };
 
-  // 🌐 deselectAllPages /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // deselectAllPages
+  // ============================================
   const deselectAllPages = () => {
     const newSelections = selections.map((sel) => ({
       ...sel,
       selected: false,
     }));
-    if (!prices) return;
+    if (!finalPrices) return;
 
     setSelections(newSelections);
     setSelectedPages([]);
@@ -143,7 +250,8 @@ export const usePageSelection = (
       newSelections.filter((sel) => sel.selected),
       initialSettings.copies || 1,
       printSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
     onSettingsChange({
@@ -153,92 +261,16 @@ export const usePageSelection = (
       printSettings,
       cost: 0,
       selectedPages: [],
+      paperSize: printSettings.paperSize,
+      quality: printSettings.quality,
     });
   };
 
-  // 🌐 calculateBwPriceFromTiers /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
-  const calculateBwPriceFromTiers = (totalSheets, bwTiers) => {
-    if (!bwTiers || bwTiers.length === 0) {
-      return 500; // Default
-    }
-
-    // Urutkan tiers dari minSheets terbesar ke terkecil
-    const sortedTiers = [...bwTiers].sort((a, b) => b.minSheets - a.minSheets);
-
-    // Cari tier dengan minSheets yang paling besar tapi masih <= totalSheets
-    for (const tier of sortedTiers) {
-      if (totalSheets >= tier.minSheets) {
-        return tier.price;
-      }
-    }
-
-    // Fallback ke tier pertama (paling kecil)
-    return bwTiers[0]?.price || 500;
-  };
-
-  // 🌐 calculateCostWithSettings /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
-  const calculateCostWithSettings = (selections, copies, settings, prices) => {
-    if (!prices) return 0;
-
-    const selectedSelections = selections.filter((sel) => sel.selected);
-    const colorPages = selectedSelections.filter(
-      (s) => s.type === "color",
-    ).length;
-    const bwPages = selectedSelections.filter((s) => s.type === "bw").length;
-
-    const paperSize = settings.paperSize || "A4";
-    const quality = settings.quality || "NORMAL";
-
-    // Hitung TOTAL LEMBAR (warna + BW)
-    const totalSheets = (colorPages + bwPages) * copies;
-
-    const colorCostPerPage = prices?.color?.[paperSize] || 1500;
-
-    let bwCostPerPage;
-    if (paperSize === "A4") {
-      // Gunakan totalSheets untuk menentukan harga BW
-      if (prices?.bwTiers) {
-        bwCostPerPage = calculateBwPriceFromTiers(totalSheets, prices.bwTiers);
-      } else {
-        bwCostPerPage = prices?.bw?.[paperSize] || 500;
-      }
-    } else {
-      bwCostPerPage = prices?.bw?.[paperSize] || 500;
-    }
-
-    const qualitySurcharge = prices?.additionalFees?.highQuality || 0;
-
-    const totalColorCost = colorPages * (colorCostPerPage + qualitySurcharge);
-    const totalBwCost = bwPages * (bwCostPerPage + qualitySurcharge);
-
-    return (totalColorCost + totalBwCost) * copies;
-  };
-
-  // 🌐 notifyParent /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
-  const notifyParent = (selections, copies, settings, cost) => {
-    const selectedSelections = selections.filter((sel) => sel.selected);
-    const colorPages = selectedSelections
-      .filter((s) => s.type === "color")
-      .map((s) => s.page);
-    const bwPages = selectedSelections
-      .filter((s) => s.type === "bw")
-      .map((s) => s.page);
-
-    const selectedPages = selectedSelections.map((s) => s.page);
-
-    onSettingsChange({
-      colorPages,
-      bwPages,
-      copies,
-      printSettings: settings,
-      cost,
-      selectedPages,
-    });
-  };
-
-  // 🌐 handlePageTypeChange /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // handlePageTypeChange
+  // ============================================
   const handlePageTypeChange = (pageNumber, type) => {
-    if (!prices) return;
+    if (!finalPrices) return;
 
     const newSelections = selections.map((sel) =>
       sel.page === pageNumber ? { ...sel, type } : sel,
@@ -250,7 +282,8 @@ export const usePageSelection = (
       selectedSelections,
       initialSettings.copies || 1,
       printSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
     notifyParent(
@@ -261,13 +294,15 @@ export const usePageSelection = (
     );
   };
 
-  // 🌐 setAllPages /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // setAllPages
+  // ============================================
   const setAllPages = (type) => {
     const newSelections = selections.map((sel) => ({
       ...sel,
       type: type,
     }));
-    if (!prices) return;
+    if (!finalPrices) return;
 
     setSelections(newSelections);
 
@@ -276,7 +311,8 @@ export const usePageSelection = (
       selectedSelections,
       initialSettings.copies || 1,
       printSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
     notifyParent(
@@ -287,21 +323,19 @@ export const usePageSelection = (
     );
   };
 
-  // 🌐 handleRenderError /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
-  const handleRenderError = (pageNumber) => {
-    setRenderErrors((prev) => ({ ...prev, [pageNumber]: true }));
-  };
-
-  // 🌐 loadMorePages /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
-  const loadMorePages = () => {
-    setVisiblePages((prev) => Math.min(prev + 20, totalPages));
-  };
-
-  // 🌐 handlePrintSettingsChange /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // handlePrintSettingsChange
+  // ============================================
   const handlePrintSettingsChange = (newSettings) => {
-    if (!prices) return;
+    if (!finalPrices) return;
 
-    const updatedSettings = { ...printSettings, ...newSettings };
+    // ✅ Konversi quality ke lowercase jika ada
+    let processedSettings = { ...newSettings };
+    if (processedSettings.quality) {
+      processedSettings.quality = processedSettings.quality.toLowerCase();
+    }
+
+    const updatedSettings = { ...printSettings, ...processedSettings };
     setPrintSettings(updatedSettings);
 
     const selectedSelections = selections.filter((sel) => sel.selected);
@@ -309,7 +343,8 @@ export const usePageSelection = (
       selectedSelections,
       initialSettings.copies || 1,
       updatedSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
     notifyParent(
@@ -320,9 +355,11 @@ export const usePageSelection = (
     );
   };
 
-  // 🌐 handleCopiesChange /app/printers/[printerId]/hooks/usePageSelection.js TERPAKAI
+  // ============================================
+  // handleCopiesChange
+  // ============================================
   const handleCopiesChange = (copies) => {
-    if (!prices) return;
+    if (!finalPrices) return;
 
     const validatedCopies = Math.max(1, Math.min(50, copies || 1));
 
@@ -331,18 +368,34 @@ export const usePageSelection = (
       selectedSelections,
       validatedCopies,
       printSettings,
-      prices,
+      finalPrices,
+      volumeDiscounts,
     );
 
     notifyParent(selections, validatedCopies, printSettings, cost);
   };
 
-  const currentCost = prices
+  // ============================================
+  // Helper functions (tidak berubah)
+  // ============================================
+  const handleRenderError = (pageNumber) => {
+    setRenderErrors((prev) => ({ ...prev, [pageNumber]: true }));
+  };
+
+  const loadMorePages = () => {
+    setVisiblePages((prev) => Math.min(prev + 20, totalPages));
+  };
+
+  // ============================================
+  // Current cost calculation
+  // ============================================
+  const currentCost = finalPrices
     ? calculateCostWithSettings(
         selections.filter((sel) => sel.selected),
         initialSettings.copies || 1,
         printSettings,
-        prices,
+        finalPrices,
+        volumeDiscounts,
       )
     : 0;
 

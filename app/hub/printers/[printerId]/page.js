@@ -1,3 +1,4 @@
+// app/hub/printers/[printerId]/page.js
 "use client";
 import { Suspense } from "react";
 import { useState, useRef, useEffect } from "react";
@@ -210,6 +211,19 @@ function PartnerHubContent() {
     router.push(query ? `${pathname}?${query}` : pathname);
   };
 
+  const handleRefillWithAmount = async (amount) => {
+    setRefillLoading(true);
+    const result = await handleRefillPaper(amount);
+    setRefillLoading(false);
+
+    if (result.success) {
+      setShowRefillSuccess(true);
+      setTimeout(() => setShowRefillSuccess(false), 3000);
+    } else {
+      alert("Gagal mengisi kertas: " + result.error);
+    }
+  };
+
   if (!user || !token) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
@@ -300,10 +314,12 @@ function PartnerHubContent() {
         <PaperStatusCard
           paperCount={printer.paperStatus?.paperCount || 0}
           lastRefill={printer.paperStatus?.lastRefill}
-          onRefill={handleRefill}
+          onRefill={handleRefillPaper}
           loading={refillLoading}
           showSuccess={showRefillSuccess}
           formatDate={formatDate}
+          paperMode={printer.paperMode || "limited"}
+          paperPackSizes={[10, 20, 40, 80, 100]}
         />
 
         <DateRangeFilter
@@ -344,7 +360,7 @@ function PartnerHubContent() {
         </div>
 
         {/* ✅ Tambahkan ref ke section jobs */}
-        <div ref={jobsSectionRef} className="mt-8">
+        {/* <div ref={jobsSectionRef} className="mt-8">
           <PrintJobsTable
             jobs={filteredJobs}
             refills={filteredRefills}
@@ -364,7 +380,7 @@ function PartnerHubContent() {
             endDate={endDate}
             loading={loadingJobsPage}
           />
-        </div>
+        </div> */}
 
         <InfoCard profitShare={profit.profitShare} />
       </div>

@@ -213,59 +213,34 @@ export const useHubData = (
     setJobsCurrentPage(1);
   }, [printerId]);
 
-  const handleRefillPaper = async () => {
+  const handleRefillPaper = async (sheetsAdded = 80) => {
     try {
-      // ✅ Validasi stok
-      if (printer?.paperStatus?.paperCount > 100) {
-        return {
-          success: false,
-          error: "Stok kertas sudah penuh (lebih dari 100 lembar).",
-        };
-      }
-
-      const response = await fetch(`/api/hub/printers/${printerId}/refills`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_VPS_API_URL}/api/hub/printers/${printerId}/refills`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ sheetsAdded }),
         },
-        body: JSON.stringify({ sheetsAdded: 80 }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP error! status: ${response.status}`,
-        );
-      }
+      );
 
       const result = await response.json();
 
       if (result.success) {
-        // ✅ Update paperCount secara langsung di state
-        const sheetsAdded = 80;
-        const currentCount = printer?.paperStatus?.paperCount || 0;
-        const newCount = currentCount + sheetsAdded;
-
-        setPrinter((prev) => ({
-          ...prev,
-          paperStatus: {
-            ...prev?.paperStatus,
-            paperCount: newCount,
-            lastRefill: new Date().toISOString(),
-            available: newCount > 0,
-            estimatedPages: newCount,
-          },
-        }));
-
-        // ✅ Opsional: refresh data lain jika diperlukan
-        // await fetchAllData(); // Hapus komentar jika perlu refresh data lain
-
-        return { success: true, data: result.data };
+        // ✅ SIMPLE: Refresh halaman saja
+        window.location.reload();
+        return { success: true };
+      } else {
+        return {
+          success: false,
+          error: result.error || "Gagal mengisi kertas",
+        };
       }
-      return { success: false, error: result.error };
     } catch (error) {
-      console.error("❌ Error in handleRefillPaper:", error);
+      console.error("Error refilling paper:", error);
       return { success: false, error: error.message };
     }
   };

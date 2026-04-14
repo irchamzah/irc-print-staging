@@ -93,7 +93,15 @@ export const usePaymentManagement = (
             type: file.type,
           },
           fileContent: fileBase64,
-          settings: advancedSettings,
+          settings: {
+            ...advancedSettings,
+            printSettings: {
+              ...advancedSettings.printSettings,
+              quality: (
+                advancedSettings.printSettings?.quality || "normal"
+              ).toLowerCase(), // ✅ Tambah ini
+            },
+          },
           cost: finalCost,
           paymentToken: paymentResult.token,
           status: "pending",
@@ -298,7 +306,6 @@ export const usePaymentManagement = (
 
   // 🌐 continuePendingTransaction /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
   const continuePendingTransaction = async (transaction, userSession) => {
-    // ✅ Add userSession parameter
     if (cooldownTimers[transaction.orderId]) {
       return;
     }
@@ -329,15 +336,18 @@ export const usePaymentManagement = (
 
       if (syncResult.success) {
         const latestStatus = syncResult.status;
+
+        // ✅ UPDATE: Gunakan paymentStatus dari transaksi
+        const currentStatus = transaction.paymentStatus || transaction.status;
         const updatedTransaction = {
           ...transaction,
           midtransStatus: latestStatus,
-          status:
-            latestStatus === "settlement" ? "settlement" : transaction.status,
+          paymentStatus:
+            latestStatus === "settlement" ? "settlement" : currentStatus,
         };
 
         if (latestStatus === "settlement") {
-          // TANDAI
+          // Update status di backend
           await fetch(`/api/transactions/update-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -349,9 +359,20 @@ export const usePaymentManagement = (
             }),
           });
 
-          setAdvancedSettings(updatedTransaction.settings);
-          setTotalPages(updatedTransaction.fileData.pages);
-          setCurrentJobId(updatedTransaction.orderId);
+          // ✅ UPDATE: Ambil settings dari transaction (bukan dari fileData)
+          if (transaction.settings) {
+            setAdvancedSettings(transaction.settings);
+          }
+
+          // ✅ UPDATE: Hitung total pages dari settings
+          const totalPagesFromSettings =
+            transaction.settings?.totalPages ||
+            transaction.settings?.selectedPages?.length ||
+            transaction.fileData?.pages ||
+            0;
+          setTotalPages(totalPagesFromSettings);
+
+          setCurrentJobId(transaction.orderId);
           await processSuccessfulPayment(updatedTransaction, userSession);
 
           setTimeout(() => {
@@ -363,7 +384,11 @@ export const usePaymentManagement = (
           return;
         }
 
-        if (!updatedTransaction.fileData?.hasFile) {
+        // ✅ UPDATE: Cek keberadaan file (gunakan filePath sebagai indikator)
+        const hasFile =
+          !!transaction.filePath || !!transaction.fileData?.hasFile;
+
+        if (!hasFile) {
           alert(
             "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru.",
           );
@@ -374,15 +399,28 @@ export const usePaymentManagement = (
           return;
         }
 
-        setAdvancedSettings(updatedTransaction.settings);
-        setTotalPages(updatedTransaction.fileData.pages);
-        setCurrentJobId(updatedTransaction.orderId);
+        // ✅ UPDATE: Ambil settings dari transaction
+        if (transaction.settings) {
+          setAdvancedSettings(transaction.settings);
+        }
+
+        const totalPagesFromSettings =
+          transaction.settings?.totalPages ||
+          transaction.settings?.selectedPages?.length ||
+          transaction.fileData?.pages ||
+          0;
+        setTotalPages(totalPagesFromSettings);
+        setCurrentJobId(transaction.orderId);
 
         setPaymentData({
-          token: updatedTransaction.paymentToken,
-          redirectUrl: updatedTransaction.redirectUrl,
-          amount: updatedTransaction.cost,
-          orderId: updatedTransaction.orderId,
+          token:
+            transaction.paymentToken ||
+            transaction.midtransResponse?.paymentToken,
+          redirectUrl:
+            transaction.redirectUrl ||
+            transaction.midtransResponse?.redirectUrl,
+          amount: transaction.amount || transaction.cost,
+          orderId: transaction.orderId,
           isRestored: true,
         });
 
@@ -532,7 +570,10 @@ export const usePaymentManagement = (
 
   // 🌐 openPaymentModalWithoutSync /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
   const openPaymentModalWithoutSync = async (transaction, userSession) => {
-    if (!transaction.fileData?.hasFile) {
+    // ✅ UPDATE: Cek keberadaan file (gunakan filePath sebagai indikator)
+    const hasFile = !!transaction.filePath || !!transaction.fileData?.hasFile;
+
+    if (!hasFile) {
       alert(
         "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru.",
       );
@@ -543,14 +584,25 @@ export const usePaymentManagement = (
       return;
     }
 
-    setAdvancedSettings(transaction.settings);
-    setTotalPages(transaction.fileData.pages);
+    // ✅ UPDATE: Ambil settings dari transaction
+    if (transaction.settings) {
+      setAdvancedSettings(transaction.settings);
+    }
+
+    const totalPagesFromSettings =
+      transaction.settings?.totalPages ||
+      transaction.settings?.selectedPages?.length ||
+      transaction.fileData?.pages ||
+      0;
+    setTotalPages(totalPagesFromSettings);
     setCurrentJobId(transaction.orderId);
 
     setPaymentData({
-      token: transaction.paymentToken,
-      redirectUrl: transaction.redirectUrl,
-      amount: transaction.cost,
+      token:
+        transaction.paymentToken || transaction.midtransResponse?.paymentToken,
+      redirectUrl:
+        transaction.redirectUrl || transaction.midtransResponse?.redirectUrl,
+      amount: transaction.amount || transaction.cost,
       orderId: transaction.orderId,
       isRestored: true,
     });

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-// 🥸PrinterFormModal /app/hub/admin/components/PrinterFormModal.js TERPAKAI
+// PrinterFormModal - UPDATED dengan struktur baru
 export const PrinterFormModal = ({
   isOpen,
   onClose,
@@ -10,9 +10,27 @@ export const PrinterFormModal = ({
   error,
   processing,
 }) => {
+  // Default paper sizes yang didukung
+  const ALL_PAPER_SIZES = [
+    "A4",
+    "F4",
+    "Letter",
+    "Legal",
+    "A5",
+    "B5",
+    "4x6",
+    "5x7",
+    "8x10",
+    "10x15",
+    "A3",
+  ];
+  const ALL_QUALITIES = ["draft", "normal", "high"];
+  const ALL_COLOR_MODES = ["color", "monochrome"];
+
   const [formData, setFormData] = useState({
     printerId: "",
     name: "",
+    modelId: "model_canon_g1010", // Default model ID
     model: "",
     location: {
       address: "",
@@ -24,40 +42,40 @@ export const PrinterFormModal = ({
       },
       mapsUrl: "",
     },
-    capabilities: {
-      color: true,
-      duplex: false,
-      paperSizes: ["A4"],
-      maxCopies: 100,
-      quality: ["draft", "normal"],
-    },
-    pricing: {
-      color: 1500,
-      bw: 500,
-      additionalFees: {
-        highQuality: 0,
-        specialPaper: 0,
-        duplex: 0,
+    paperMode: "limited", // "limited" atau "unlimited"
+    enabledFeatures: {
+      paperSizes: ["A4", "F4"],
+      colorModes: ["color", "monochrome"],
+      qualities: ["normal", "high"],
+      borderlessSizes: [],
+      duplex: {
+        enabled: false,
+        type: null, // null, "manual", "automatic"
       },
-      bwTiers: [
-        { minSheets: 1, maxSheets: 4, price: 500 },
-        { minSheets: 5, maxSheets: 9, price: 400 },
-        { minSheets: 10, maxSheets: 14, price: 360 },
-        { minSheets: 15, maxSheets: 19, price: 333 },
-        { minSheets: 20, maxSheets: null, price: 300 },
-      ],
     },
-    profitSettings: {
-      defaultShare: 20,
-      partnerShare: 30,
-      paperPackSize: 80,
+    ownerPrices: {
+      monochrome: {},
+      color: {},
     },
-    pointDivider: printer?.pointDivider ?? "",
+    markup: {
+      monochrome: {},
+      color: {},
+    },
+    volumeDiscounts: [
+      { minSheets: 5, maxSheets: 9, discountPercent: 10 },
+      { minSheets: 10, maxSheets: 14, discountPercent: 20 },
+      { minSheets: 15, maxSheets: null, discountPercent: 30 },
+    ],
+    extraFees: {
+      highQuality: { enabled: false, feePercent: 0 },
+    },
+    pointDivider: 4000,
     paperStatus: {
       available: true,
       paperCount: 0,
-      lastRefill: null,
-      estimatedPages: 0,
+      activePaperSize: "A4",
+      lastRefillDate: null,
+      lastPrintDate: null,
     },
     operatingHours: {
       open: "00:00",
@@ -66,8 +84,8 @@ export const PrinterFormModal = ({
       is24Hours: true,
     },
     contact: {
-      phone: printer?.contact?.phone || [],
-      email: printer?.contact?.email || "",
+      phone: [],
+      email: "",
     },
     status: "offline",
   });
@@ -75,9 +93,22 @@ export const PrinterFormModal = ({
   // Update formData ketika printer berubah (untuk edit)
   useEffect(() => {
     if (printer) {
+      // Inisialisasi ownerPrices dan markup untuk semua ukuran jika belum ada
+      const initPrices = (pricesObj, defaultPrice) => {
+        const result = { ...pricesObj };
+        for (const size of ALL_PAPER_SIZES) {
+          if (!result[size]) result[size] = defaultPrice;
+        }
+        return result;
+      };
+
+      const ownerPrices = printer.ownerPrices || { monochrome: {}, color: {} };
+      const markup = printer.markup || { monochrome: {}, color: {} };
+
       setFormData({
         printerId: printer.printerId || "",
         name: printer.name || "",
+        modelId: printer.modelId || "model_canon_g1010",
         model: printer.model || "",
         location: {
           address: printer.location?.address || "",
@@ -89,40 +120,37 @@ export const PrinterFormModal = ({
           },
           mapsUrl: printer.location?.mapsUrl || "",
         },
-        capabilities: printer.capabilities || {
-          color: true,
-          duplex: false,
-          paperSizes: ["A4"],
-          maxCopies: 100,
-          quality: ["draft", "normal"],
+        paperMode: printer.paperMode || "limited",
+        enabledFeatures: printer.enabledFeatures || {
+          paperSizes: ["A4", "F4"],
+          colorModes: ["color", "monochrome"],
+          qualities: ["normal", "high"],
+          borderlessSizes: [],
+          duplex: { enabled: false, type: null },
         },
-        pricing: printer.pricing || {
-          color: 1500,
-          bw: 500,
-          additionalFees: {
-            highQuality: 0,
-            specialPaper: 0,
-            duplex: 0,
-          },
-          bwTiers: [
-            { minSheets: 1, maxSheets: 4, price: 500 },
-            { minSheets: 5, maxSheets: 9, price: 400 },
-            { minSheets: 10, maxSheets: 14, price: 360 },
-            { minSheets: 15, maxSheets: 19, price: 333 },
-            { minSheets: 20, maxSheets: null, price: 300 },
-          ],
+        ownerPrices: {
+          monochrome: initPrices(ownerPrices.monochrome, 400),
+          color: initPrices(ownerPrices.color, 1400),
         },
-        profitSettings: printer.profitSettings || {
-          defaultShare: 20,
-          partnerShare: 30,
-          paperPackSize: 80,
+        markup: {
+          monochrome: initPrices(markup.monochrome, 100),
+          color: initPrices(markup.color, 100),
         },
-        pointDivider: printer.pointDivider || "",
+        volumeDiscounts: printer.volumeDiscounts || [
+          { minSheets: 5, maxSheets: 9, discountPercent: 10 },
+          { minSheets: 10, maxSheets: 14, discountPercent: 20 },
+          { minSheets: 15, maxSheets: null, discountPercent: 30 },
+        ],
+        extraFees: printer.extraFees || {
+          highQuality: { enabled: false, feePercent: 0 },
+        },
+        pointDivider: printer.pointDivider || 4000,
         paperStatus: printer.paperStatus || {
           available: true,
           paperCount: 0,
-          lastRefill: null,
-          estimatedPages: 0,
+          activePaperSize: "A4",
+          lastRefillDate: null,
+          lastPrintDate: null,
         },
         operatingHours: printer.operatingHours || {
           open: "00:00",
@@ -130,17 +158,30 @@ export const PrinterFormModal = ({
           timezone: "Asia/Jakarta",
           is24Hours: true,
         },
-        contact: printer.contact || {
-          phone: "",
-          email: "",
+        contact: {
+          phone: printer.contact?.phone || [],
+          email: printer.contact?.email || "",
         },
         status: printer.status || "offline",
       });
     } else {
       // Reset ke default untuk create new
+      const defaultMonochrome = {};
+      const defaultColor = {};
+      const defaultMarkupMonochrome = {};
+      const defaultMarkupColor = {};
+
+      for (const size of ALL_PAPER_SIZES) {
+        defaultMonochrome[size] = 400;
+        defaultColor[size] = 1400;
+        defaultMarkupMonochrome[size] = 100;
+        defaultMarkupColor[size] = 100;
+      }
+
       setFormData({
         printerId: "",
         name: "",
+        modelId: "model_canon_g1010",
         model: "",
         location: {
           address: "",
@@ -152,40 +193,37 @@ export const PrinterFormModal = ({
           },
           mapsUrl: "",
         },
-        capabilities: {
-          color: true,
-          duplex: false,
-          paperSizes: ["A4"],
-          maxCopies: 100,
-          quality: ["draft", "normal"],
+        paperMode: "limited",
+        enabledFeatures: {
+          paperSizes: ["A4", "F4"],
+          colorModes: ["color", "monochrome"],
+          qualities: ["normal", "high"],
+          borderlessSizes: [],
+          duplex: { enabled: false, type: null },
         },
-        pricing: {
-          color: 1500,
-          bw: 500,
-          additionalFees: {
-            highQuality: 0,
-            specialPaper: 0,
-            duplex: 0,
-          },
-          bwTiers: [
-            { minSheets: 1, maxSheets: 4, price: 500 },
-            { minSheets: 5, maxSheets: 9, price: 400 },
-            { minSheets: 10, maxSheets: 14, price: 360 },
-            { minSheets: 15, maxSheets: 19, price: 333 },
-            { minSheets: 20, maxSheets: null, price: 300 },
-          ],
+        ownerPrices: {
+          monochrome: defaultMonochrome,
+          color: defaultColor,
         },
-        profitSettings: {
-          defaultShare: 20,
-          partnerShare: 30,
-          paperPackSize: 80,
+        markup: {
+          monochrome: defaultMarkupMonochrome,
+          color: defaultMarkupColor,
         },
-        pointDivider: "",
+        volumeDiscounts: [
+          { minSheets: 5, maxSheets: 9, discountPercent: 10 },
+          { minSheets: 10, maxSheets: 14, discountPercent: 20 },
+          { minSheets: 15, maxSheets: null, discountPercent: 30 },
+        ],
+        extraFees: {
+          highQuality: { enabled: false, feePercent: 0 },
+        },
+        pointDivider: 4000,
         paperStatus: {
           available: true,
           paperCount: 0,
-          lastRefill: null,
-          estimatedPages: 0,
+          activePaperSize: "A4",
+          lastRefillDate: null,
+          lastPrintDate: null,
         },
         operatingHours: {
           open: "00:00",
@@ -194,8 +232,8 @@ export const PrinterFormModal = ({
           is24Hours: true,
         },
         contact: {
-          phone: printer?.contact?.phone || [],
-          email: printer?.contact?.email || "",
+          phone: [],
+          email: "",
         },
         status: "offline",
       });
@@ -209,58 +247,103 @@ export const PrinterFormModal = ({
     onSubmit(formData);
   };
 
-  const updateBwTier = (index, field, value) => {
-    const newTiers = [...formData.pricing.bwTiers];
-    newTiers[index] = { ...newTiers[index], [field]: value };
+  // Helper untuk update owner price per ukuran
+  const updateOwnerPrice = (colorMode, paperSize, value) => {
     setFormData({
       ...formData,
-      pricing: { ...formData.pricing, bwTiers: newTiers },
+      ownerPrices: {
+        ...formData.ownerPrices,
+        [colorMode]: {
+          ...formData.ownerPrices[colorMode],
+          [paperSize]: parseInt(value) || 0,
+        },
+      },
     });
   };
 
+  // Helper untuk update markup per ukuran
+  const updateMarkup = (colorMode, paperSize, value) => {
+    setFormData({
+      ...formData,
+      markup: {
+        ...formData.markup,
+        [colorMode]: {
+          ...formData.markup[colorMode],
+          [paperSize]: parseInt(value) || 0,
+        },
+      },
+    });
+  };
+
+  // Toggle paper size di enabledFeatures
   const togglePaperSize = (size) => {
-    const currentSizes = [...formData.capabilities.paperSizes];
+    const currentSizes = [...formData.enabledFeatures.paperSizes];
     if (currentSizes.includes(size)) {
       setFormData({
         ...formData,
-        capabilities: {
-          ...formData.capabilities,
+        enabledFeatures: {
+          ...formData.enabledFeatures,
           paperSizes: currentSizes.filter((s) => s !== size),
         },
       });
     } else {
       setFormData({
         ...formData,
-        capabilities: {
-          ...formData.capabilities,
+        enabledFeatures: {
+          ...formData.enabledFeatures,
           paperSizes: [...currentSizes, size],
         },
       });
     }
   };
 
+  // Toggle quality di enabledFeatures
   const toggleQuality = (quality) => {
-    const currentQuality = [...formData.capabilities.quality];
+    const currentQuality = [...formData.enabledFeatures.qualities];
     if (currentQuality.includes(quality)) {
       setFormData({
         ...formData,
-        capabilities: {
-          ...formData.capabilities,
-          quality: currentQuality.filter((q) => q !== quality),
+        enabledFeatures: {
+          ...formData.enabledFeatures,
+          qualities: currentQuality.filter((q) => q !== quality),
         },
       });
     } else {
       setFormData({
         ...formData,
-        capabilities: {
-          ...formData.capabilities,
-          quality: [...currentQuality, quality],
+        enabledFeatures: {
+          ...formData.enabledFeatures,
+          qualities: [...currentQuality, quality],
         },
       });
     }
   };
 
-  // Fungsi untuk menambah field nomor telepon baru
+  // Update volume discount
+  const updateVolumeDiscount = (index, field, value) => {
+    const newDiscounts = [...formData.volumeDiscounts];
+    newDiscounts[index] = { ...newDiscounts[index], [field]: value };
+    setFormData({ ...formData, volumeDiscounts: newDiscounts });
+  };
+
+  // Tambah volume discount
+  const addVolumeDiscount = () => {
+    setFormData({
+      ...formData,
+      volumeDiscounts: [
+        ...formData.volumeDiscounts,
+        { minSheets: 0, maxSheets: null, discountPercent: 0 },
+      ],
+    });
+  };
+
+  // Hapus volume discount
+  const removeVolumeDiscount = (index) => {
+    const newDiscounts = formData.volumeDiscounts.filter((_, i) => i !== index);
+    setFormData({ ...formData, volumeDiscounts: newDiscounts });
+  };
+
+  // Fungsi untuk menambah field nomor telepon
   const addPhoneField = () => {
     setFormData({
       ...formData,
@@ -271,7 +354,6 @@ export const PrinterFormModal = ({
     });
   };
 
-  // Fungsi untuk menghapus field nomor telepon
   const removePhoneField = (index) => {
     const newPhones = formData.contact.phone.filter((_, i) => i !== index);
     setFormData({
@@ -283,7 +365,6 @@ export const PrinterFormModal = ({
     });
   };
 
-  // Fungsi untuk update nomor telepon tertentu
   const updatePhoneField = (index, value) => {
     const newPhones = [...formData.contact.phone];
     newPhones[index] = value;
@@ -298,7 +379,7 @@ export const PrinterFormModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-800">
@@ -335,21 +416,8 @@ export const PrinterFormModal = ({
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Informasi Dasar
+              <h4 className="font-medium text-gray-800 mb-3">
+                📋 Informasi Dasar
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -362,7 +430,7 @@ export const PrinterFormModal = ({
                     onChange={(e) =>
                       setFormData({ ...formData, printerId: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     required
                     disabled={!!printer}
                   />
@@ -382,13 +450,27 @@ export const PrinterFormModal = ({
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Model
+                    Model ID
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.modelId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, modelId: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="model_canon_g1010"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Model Name
                   </label>
                   <input
                     type="text"
@@ -399,6 +481,23 @@ export const PrinterFormModal = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     placeholder="Canon G1010 series"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Paper Mode
+                  </label>
+                  <select
+                    value={formData.paperMode}
+                    onChange={(e) =>
+                      setFormData({ ...formData, paperMode: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="limited">Limited (Perlu Isi Kertas)</option>
+                    <option value="unlimited">
+                      Unlimited (Tidak Perlu Isi Kertas)
+                    </option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -419,30 +518,9 @@ export const PrinterFormModal = ({
               </div>
             </div>
 
-            {/* Location */}
+            {/* Location (singkat) */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-                Lokasi
-              </h4>
+              <h4 className="font-medium text-gray-800 mb-3">📍 Lokasi</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -501,520 +579,291 @@ export const PrinterFormModal = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Maps URL
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.location.mapsUrl}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        location: {
-                          ...formData.location,
-                          mapsUrl: e.target.value,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="https://maps.app.goo.gl/..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Latitude
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.location.coordinates.coordinates[1]}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        location: {
-                          ...formData.location,
-                          coordinates: {
-                            ...formData.location.coordinates,
-                            coordinates: [
-                              formData.location.coordinates.coordinates[0],
-                              parseFloat(e.target.value) || 0,
-                            ],
-                          },
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Longitude
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={formData.location.coordinates.coordinates[0]}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        location: {
-                          ...formData.location,
-                          coordinates: {
-                            ...formData.location.coordinates,
-                            coordinates: [
-                              parseFloat(e.target.value) || 0,
-                              formData.location.coordinates.coordinates[1],
-                            ],
-                          },
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
               </div>
             </div>
 
-            {/* Capabilities */}
+            {/* Enabled Features - Paper Sizes */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
-                  />
-                </svg>
-                Kemampuan Printer
+              <h4 className="font-medium text-gray-800 mb-3">
+                📄 Ukuran Kertas (yang diaktifkan)
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                {ALL_PAPER_SIZES.map((size) => (
+                  <label key={size} className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={formData.enabledFeatures.paperSizes.includes(
+                        size,
+                      )}
+                      onChange={() => togglePaperSize(size)}
+                      className="rounded text-purple-600"
+                    />
+                    <span className="text-sm">{size}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Enabled Features - Qualities */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                🎨 Kualitas Print (yang diaktifkan)
+              </h4>
+              <div className="flex gap-3">
+                {ALL_QUALITIES.map((quality) => (
+                  <label key={quality} className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={formData.enabledFeatures.qualities.includes(
+                        quality,
+                      )}
+                      onChange={() => toggleQuality(quality)}
+                      className="rounded text-purple-600"
+                    />
+                    <span className="text-sm capitalize">{quality}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Duplex Settings */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                🔄 Cetak 2 Sisi (Duplex)
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      checked={formData.capabilities.color}
+                      checked={formData.enabledFeatures.duplex.enabled}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          capabilities: {
-                            ...formData.capabilities,
-                            color: e.target.checked,
-                          },
-                        })
-                      }
-                      className="rounded text-purple-600"
-                    />
-                    <span className="text-sm text-gray-700">Warna</span>
-                  </label>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.capabilities.duplex}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          capabilities: {
-                            ...formData.capabilities,
-                            duplex: e.target.checked,
+                          enabledFeatures: {
+                            ...formData.enabledFeatures,
+                            duplex: {
+                              ...formData.enabledFeatures.duplex,
+                              enabled: e.target.checked,
+                            },
                           },
                         })
                       }
                       className="rounded text-purple-600"
                     />
                     <span className="text-sm text-gray-700">
-                      Duplex (2 sisi)
+                      Aktifkan Duplex
                     </span>
                   </label>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Max Copies
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.capabilities.maxCopies}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        capabilities: {
-                          ...formData.capabilities,
-                          maxCopies: parseInt(e.target.value) || 1,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Ukuran Kertas
-                </label>
-                <div className="flex gap-3">
-                  {["A4", "A5", "LETTER", "LEGAL"].map((size) => (
-                    <label key={size} className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        checked={formData.capabilities.paperSizes.includes(
-                          size,
-                        )}
-                        onChange={() => togglePaperSize(size)}
-                        className="rounded text-purple-600"
-                      />
-                      <span className="text-sm">{size}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Kualitas Print
-                </label>
-                <div className="flex gap-3">
-                  {["draft", "normal", "high"].map((quality) => (
-                    <label key={quality} className="flex items-center gap-1">
-                      <input
-                        type="checkbox"
-                        checked={formData.capabilities.quality.includes(
-                          quality,
-                        )}
-                        onChange={() => toggleQuality(quality)}
-                        className="rounded text-purple-600"
-                      />
-                      <span className="text-sm capitalize">{quality}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Pricing */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Harga
-              </h4>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Harga Warna (A4)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.pricing.color}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pricing: {
-                          ...formData.pricing,
-                          color: parseInt(e.target.value) || 0,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Harga BW (A4)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.pricing.bw}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pricing: {
-                          ...formData.pricing,
-                          bw: parseInt(e.target.value) || 0,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <h5 className="text-sm font-medium text-gray-700 mb-2">
-                BW Tiers
-              </h5>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                {formData.pricing.bwTiers.map((tier, index) => (
-                  <div key={index} className="flex gap-2 items-center">
-                    <input
-                      type="number"
-                      value={tier.minSheets}
-                      onChange={(e) =>
-                        updateBwTier(
-                          index,
-                          "minSheets",
-                          parseInt(e.target.value) || 0,
-                        )
-                      }
-                      className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Min"
-                    />
-                    <span>-</span>
-                    <input
-                      type="number"
-                      value={tier.maxSheets === null ? "" : tier.maxSheets}
-                      onChange={(e) =>
-                        updateBwTier(
-                          index,
-                          "maxSheets",
-                          e.target.value ? parseInt(e.target.value) : null,
-                        )
-                      }
-                      className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Max"
-                    />
-                    <span>:</span>
-                    <input
-                      type="number"
-                      value={tier.price}
-                      onChange={(e) =>
-                        updateBwTier(
-                          index,
-                          "price",
-                          parseInt(e.target.value) || 0,
-                        )
-                      }
-                      className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                      placeholder="Price"
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <h5 className="text-sm font-medium text-gray-700 mb-2">
-                Additional Fees
-              </h5>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    High Quality
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.pricing.additionalFees.highQuality}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pricing: {
-                          ...formData.pricing,
-                          additionalFees: {
-                            ...formData.pricing.additionalFees,
-                            highQuality: parseInt(e.target.value) || 0,
-                          },
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Special Paper
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.pricing.additionalFees.specialPaper}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pricing: {
-                          ...formData.pricing,
-                          additionalFees: {
-                            ...formData.pricing.additionalFees,
-                            specialPaper: parseInt(e.target.value) || 0,
-                          },
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Duplex
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.pricing.additionalFees.duplex}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        pricing: {
-                          ...formData.pricing,
-                          additionalFees: {
-                            ...formData.pricing.additionalFees,
-                            duplex: parseInt(e.target.value) || 0,
-                          },
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Profit Settings */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                  />
-                </svg>
-                Profit Settings
-              </h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Default Share (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.profitSettings.defaultShare}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        profitSettings: {
-                          ...formData.profitSettings,
-                          defaultShare: parseInt(e.target.value) || 0,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Partner Share (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.profitSettings.partnerShare}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        profitSettings: {
-                          ...formData.profitSettings,
-                          partnerShare: parseInt(e.target.value) || 0,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Paper Pack Size
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.profitSettings.paperPackSize}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        profitSettings: {
-                          ...formData.profitSettings,
-                          paperPackSize: parseInt(e.target.value) || 0,
-                        },
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">
-                  🎯 Point Settings
-                </h5>
-                <div className="grid grid-cols-1 gap-4">
+                {formData.enabledFeatures.duplex.enabled && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Point Divider (Rp per point)
+                      Tipe Duplex
                     </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={formData.pointDivider}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            pointDivider: parseInt(e.target.value),
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                        min="100"
-                        step="100"
-                      />
-                      <span className="text-sm text-gray-500">
-                        Rp = 1 point
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Contoh: Jika diisi 2000, maka setiap Rp 2.000 = 1 point
-                    </p>
+                    <select
+                      value={formData.enabledFeatures.duplex.type || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          enabledFeatures: {
+                            ...formData.enabledFeatures,
+                            duplex: {
+                              ...formData.enabledFeatures.duplex,
+                              type: e.target.value || null,
+                            },
+                          },
+                        })
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Pilih Tipe</option>
+                      <option value="manual">
+                        Manual (Balik Kertas Sendiri)
+                      </option>
+                      <option value="automatic">Otomatis</option>
+                    </select>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Harga (Owner Prices + Markup) */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                💰 Harga (per lembar)
+              </h4>
+              <p className="text-xs text-gray-500 mb-3">
+                Harga Asli (Partner) + Markup (Platform) = Harga Final Pelanggan
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2">Ukuran</th>
+                      <th className="text-left py-2">BW (Partner)</th>
+                      <th className="text-left py-2">BW (Markup)</th>
+                      <th className="text-left py-2">Color (Partner)</th>
+                      <th className="text-left py-2">Color (Markup)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.enabledFeatures.paperSizes.map((size) => (
+                      <tr key={size} className="border-b border-gray-100">
+                        <td className="py-2 font-medium">{size}</td>
+                        <td className="py-2">
+                          <input
+                            type="number"
+                            value={formData.ownerPrices.monochrome?.[size] ?? 0}
+                            onChange={(e) =>
+                              updateOwnerPrice(
+                                "monochrome",
+                                size,
+                                e.target.value,
+                              )
+                            }
+                            className="w-24 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </td>
+                        <td className="py-2">
+                          <input
+                            type="number"
+                            value={formData.markup.monochrome?.[size] ?? 0}
+                            onChange={(e) =>
+                              updateMarkup("monochrome", size, e.target.value)
+                            }
+                            className="w-24 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </td>
+                        <td className="py-2">
+                          <input
+                            type="number"
+                            value={formData.ownerPrices.color?.[size] ?? 0}
+                            onChange={(e) =>
+                              updateOwnerPrice("color", size, e.target.value)
+                            }
+                            className="w-24 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </td>
+                        <td className="py-2">
+                          <input
+                            type="number"
+                            value={formData.markup.color?.[size] ?? 0}
+                            onChange={(e) =>
+                              updateMarkup("color", size, e.target.value)
+                            }
+                            className="w-24 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Volume Discounts */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                📊 Diskon Volume (BW)
+              </h4>
+              {formData.volumeDiscounts.map((discount, index) => (
+                <div key={index} className="flex gap-2 mb-2 items-center">
+                  <input
+                    type="number"
+                    value={discount.minSheets}
+                    onChange={(e) =>
+                      updateVolumeDiscount(
+                        index,
+                        "minSheets",
+                        parseInt(e.target.value) || 0,
+                      )
+                    }
+                    className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                    placeholder="Min"
+                  />
+                  <span>-</span>
+                  <input
+                    type="number"
+                    value={
+                      discount.maxSheets === null ? "" : discount.maxSheets
+                    }
+                    onChange={(e) =>
+                      updateVolumeDiscount(
+                        index,
+                        "maxSheets",
+                        e.target.value ? parseInt(e.target.value) : null,
+                      )
+                    }
+                    className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                    placeholder="Max"
+                  />
+                  <span>→</span>
+                  <input
+                    type="number"
+                    value={discount.discountPercent}
+                    onChange={(e) =>
+                      updateVolumeDiscount(
+                        index,
+                        "discountPercent",
+                        parseInt(e.target.value) || 0,
+                      )
+                    }
+                    className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
+                    placeholder="%"
+                  />
+                  {formData.volumeDiscounts.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeVolumeDiscount(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
+              ))}
+              <button
+                type="button"
+                onClick={addVolumeDiscount}
+                className="mt-2 text-sm text-purple-600 hover:text-purple-700"
+              >
+                + Tambah Tier
+              </button>
+            </div>
+
+            {/* Point Settings */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                🎯 Point Settings
+              </h4>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Point Divider (Rp per point)
+                </label>
+                <input
+                  type="number"
+                  value={formData.pointDivider}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      pointDivider: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  min="100"
+                  step="100"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Contoh: 4000 → setiap Rp 4.000 = 1 point
+                </p>
               </div>
             </div>
 
             {/* Contact */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
-                Kontak
-              </h4>
-
-              {/* Email */}
-              <div className="mb-4">
+              <h4 className="font-medium text-gray-800 mb-3">📞 Kontak</h4>
+              <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
@@ -1028,16 +877,12 @@ export const PrinterFormModal = ({
                     })
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  placeholder="irccc.store@gmail.com"
                 />
               </div>
-
-              {/* Multiple Phone Numbers */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nomor Telepon (bisa lebih dari satu)
+                  Nomor Telepon
                 </label>
-
                 {formData.contact.phone.map((phone, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
@@ -1053,71 +898,29 @@ export const PrinterFormModal = ({
                         onClick={() => removePhoneField(index)}
                         className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
                       >
-                        <svg
-                          className="w-5 h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
+                        ✕
                       </button>
                     )}
                   </div>
                 ))}
-
                 <button
                   type="button"
                   onClick={addPhoneField}
                   className="mt-2 px-4 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 flex items-center gap-2"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Tambah Nomor Telepon
+                  + Tambah Nomor Telepon
                 </button>
-                <p className="text-xs text-gray-400 mt-2">
-                  * Nomor telepon akan digunakan untuk notifikasi kertas habis
-                </p>
               </div>
             </div>
 
             {/* Paper Status */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                Status Kertas
+              <h4 className="font-medium text-gray-800 mb-3">
+                📄 Status Kertas
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="flex items-center gap-2 mb-2">
+                  <label className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={formData.paperStatus.available}
@@ -1150,12 +953,35 @@ export const PrinterFormModal = ({
                         paperStatus: {
                           ...formData.paperStatus,
                           paperCount: parseInt(e.target.value) || 0,
-                          estimatedPages: parseInt(e.target.value) || 0,
                         },
                       })
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Kertas Aktif
+                  </label>
+                  <select
+                    value={formData.paperStatus.activePaperSize}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        paperStatus: {
+                          ...formData.paperStatus,
+                          activePaperSize: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    {formData.enabledFeatures.paperSizes.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
@@ -1174,18 +1000,13 @@ export const PrinterFormModal = ({
           <button
             onClick={handleSubmit}
             disabled={processing}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
           >
-            {processing ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Memproses...</span>
-              </div>
-            ) : printer ? (
-              "Update Printer"
-            ) : (
-              "Tambah Printer"
-            )}
+            {processing
+              ? "Memproses..."
+              : printer
+                ? "Update Printer"
+                : "Tambah Printer"}
           </button>
         </div>
       </div>
