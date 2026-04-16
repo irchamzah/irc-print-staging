@@ -38,13 +38,9 @@ export async function POST(request) {
         );
       }
 
-      // ✅ Rebuild FormData untuk dikirim ke VPS
-      // Next.js FormData tidak bisa langsung di-forward,
-      // harus rebuild dengan field yang sama
       const vpsFormData = new FormData();
-      vpsFormData.append("pdf", pdfFile); // File object langsung
+      vpsFormData.append("pdf", pdfFile);
 
-      // Forward semua field lain kecuali "pdf"
       for (const [key, value] of formData.entries()) {
         if (key !== "pdf") {
           vpsFormData.append(key, value);
@@ -56,7 +52,6 @@ export async function POST(request) {
 
       const response = await fetch(`${NEXT_PUBLIC_VPS_API_URL}/api/print`, {
         method: "POST",
-        // ✅ JANGAN set Content-Type - biarkan fetch set multipart boundary otomatis
         body: vpsFormData,
         signal: controller.signal,
       });

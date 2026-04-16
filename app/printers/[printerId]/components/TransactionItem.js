@@ -11,6 +11,13 @@ export const TransactionItem = ({
   // ✅ Gunakan paymentStatus (bukan status) untuk menentukan badge
   const getStatusBadge = (paymentStatus) => {
     switch (paymentStatus) {
+      case "printed":
+        return { class: "bg-gray-100 text-gray-600", text: "✅ Selesai" };
+      case "paid":
+        return {
+          class: "bg-blue-100 text-blue-700",
+          text: "💳 Menunggu Print",
+        };
       case "settlement":
         return { class: "bg-green-100 text-green-700", text: "✅ Lunas" };
       case "expired":
@@ -110,7 +117,11 @@ export const TransactionItem = ({
 
         {/* Action Buttons - Right Side */}
         <div className="flex flex-col sm:flex-row lg:flex-col gap-2 min-w-[140px]">
-          {currentStatus === "settlement" ? (
+          {currentStatus === "printed" ? (
+            <div className="text-center text-gray-500 text-sm py-2">
+              ✅ Selesai
+            </div>
+          ) : currentStatus === "settlement" ? (
             <SettlementButton
               transaction={transaction}
               onContinue={onContinue}
@@ -120,7 +131,7 @@ export const TransactionItem = ({
               isPaperInsufficient={showPaperWarning}
               isUnlimitedMode={isUnlimitedMode}
             />
-          ) : currentStatus === "pending" ? (
+          ) : currentStatus === "pending" || currentStatus === "paid" ? (
             <PendingButtons
               transaction={transaction}
               onContinue={onContinue}
@@ -130,9 +141,15 @@ export const TransactionItem = ({
               isPrinterOffline={isPrinterOffline}
               isPaperInsufficient={showPaperWarning}
               isUnlimitedMode={isUnlimitedMode}
+              currentStatus={currentStatus}
             />
           ) : (
-            <CancelButton onCancel={onCancel} transaction={transaction} />
+            <CancelButton
+              onCancel={onCancel}
+              transaction={transaction}
+              currentStatus={currentStatus}
+              isLoading={isLoading}
+            />
           )}
         </div>
       </div>
@@ -224,13 +241,25 @@ const PendingButtons = ({
   isPrinterOffline,
   isPaperInsufficient,
   isUnlimitedMode = false,
+  currentStatus,
 }) => {
   const handleContinueWithWarning = () => {
-    const confirmationMessage =
-      "🚨 PERINGATAN!!!\n\n" +
-      "SETELAH MEMBAYAR, PRINTER AKAN MULAI MENCETAK!\n" +
-      "HARAP KERTAS SEGERA DIAMBIL!\n\n" +
-      "Apakah Anda yakin ingin melanjutkan pembayaran?";
+    // ✅ Sesuaikan pesan peringatan berdasarkan status
+    let confirmationMessage = "";
+
+    if (currentStatus === "paid") {
+      confirmationMessage =
+        "🚨 PERINGATAN!!!\n\n" +
+        "PRINTER AKAN MULAI MENCETAK SEKARANG!\n" +
+        "HARAP KERTAS SEGERA DIAMBIL!\n\n" +
+        "Apakah Anda yakin ingin melanjutkan print?";
+    } else {
+      confirmationMessage =
+        "🚨 PERINGATAN!!!\n\n" +
+        "SETELAH MEMBAYAR, PRINTER AKAN MULAI MENCETAK!\n" +
+        "HARAP KERTAS SEGERA DIAMBIL!\n\n" +
+        "Apakah Anda yakin ingin melanjutkan pembayaran?";
+    }
 
     if (window.confirm(confirmationMessage)) {
       onContinue(transaction);
@@ -246,10 +275,29 @@ const PendingButtons = ({
     isPrinterOffline ||
     (!isUnlimitedMode && isPaperInsufficient);
 
+  // ✅ Tentukan teks tombol berdasarkan status
   const getButtonText = () => {
     if (isPrinterOffline) return "Printer Sedang Offline";
     if (!isUnlimitedMode && isPaperInsufficient) return "Kertas Tidak Cukup";
-    return "Lanjutkan Bayar";
+
+    // ✅ Jika status paid, tampilkan "Mulai Print"
+    if (currentStatus === "paid") return "🖨️ Mulai Print";
+
+    // Default untuk status pending
+    return "💳 Lanjutkan Bayar";
+  };
+
+  // ✅ Tentukan warna tombol berdasarkan status
+  const getButtonClass = () => {
+    if (isPrinterOffline || (!isUnlimitedMode && isPaperInsufficient)) {
+      return "bg-gray-400 cursor-not-allowed opacity-75";
+    }
+    // Jika status paid, gunakan warna hijau
+    if (currentStatus === "paid") {
+      return "bg-green-600 hover:bg-green-700 disabled:bg-green-300 shadow-sm hover:shadow-md cursor-pointer";
+    }
+    // Default untuk pending
+    return "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 shadow-sm hover:shadow-md cursor-pointer";
   };
 
   return (
@@ -259,11 +307,7 @@ const PendingButtons = ({
         onClick={handleContinueWithWarning}
         disabled={isDisabled}
         type="button"
-        className={`w-full sm:flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-          isPrinterOffline || (!isUnlimitedMode && isPaperInsufficient)
-            ? "bg-gray-400 cursor-not-allowed opacity-75"
-            : "bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 shadow-sm hover:shadow-md cursor-pointer"
-        }`}
+        className={`w-full sm:flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${getButtonClass()}`}
       >
         {cooldownTimers[orderId] ? (
           <>
@@ -272,56 +316,73 @@ const PendingButtons = ({
           </>
         ) : (
           <>
-            <svg
-              className="w-4 h-4 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-              />
-            </svg>
+            {currentStatus === "paid" ? (
+              <svg
+                className="w-4 h-4 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-4 h-4 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+              </svg>
+            )}
             <span className="whitespace-nowrap">{getButtonText()}</span>
           </>
         )}
       </button>
 
       {/* Cancel Button */}
-      <button
-        onClick={() => onCancel(transaction)}
-        disabled={isLoading}
-        type="button"
-        className="w-full sm:flex-1 px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:bg-red-300 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer"
-      >
-        <svg
-          className="w-4 h-4 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-        <span className="whitespace-nowrap">Batalkan</span>
-      </button>
+      <CancelButton
+        onCancel={onCancel}
+        transaction={transaction}
+        currentStatus={currentStatus}
+        isLoading={isLoading}
+      />
     </div>
   );
 };
 
 // CancelButton (tidak berubah)
-const CancelButton = ({ onCancel, transaction }) => {
+const CancelButton = ({ onCancel, transaction, currentStatus, isLoading }) => {
+  // ✅ Tentukan teks tombol cancel berdasarkan status
+  const getCancelText = () => {
+    if (currentStatus === "paid") return "Batalkan (Dana Hangus)";
+    return "Batalkan";
+  };
+
+  // ✅ Tentukan warna tombol cancel berdasarkan status
+  const getCancelClass = () => {
+    if (currentStatus === "paid") {
+      return "bg-red-700 hover:bg-red-800";
+    }
+    return "bg-red-600 hover:bg-red-700";
+  };
+
   return (
     <button
       onClick={() => onCancel(transaction)}
-      className="w-full px-4 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2"
+      disabled={isLoading}
+      type="button"
+      className={`w-full sm:flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${getCancelClass()}`}
     >
       <svg
         className="w-4 h-4 flex-shrink-0"
@@ -333,10 +394,10 @@ const CancelButton = ({ onCancel, transaction }) => {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={2}
-          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          d="M6 18L18 6M6 6l12 12"
         />
       </svg>
-      <span className="whitespace-nowrap">Hapus</span>
+      <span className="whitespace-nowrap">{getCancelText()}</span>
     </button>
   );
 };

@@ -147,7 +147,26 @@ export const usePaymentManagement = (
     try {
       setIsLoading(true);
 
-      // Verify payment status
+      // ✅ STEP 1: Sinkronkan status transaksi terlebih dahulu
+      const syncResponse = await fetch(
+        `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
+      );
+
+      if (syncResponse.ok) {
+        const syncResult = await syncResponse.json();
+        console.log("🔄 Sync result:", syncResult);
+
+        // Cari transaksi yang sudah settlement
+        const updatedTx = syncResult.updatedTransactions?.find(
+          (tx) => tx.orderId === currentJobId,
+        );
+
+        if (updatedTx && updatedTx.newStatus === "settlement") {
+          console.log(`✅ Transaction ${currentJobId} synced to settlement`);
+        }
+      }
+
+      // ✅ STEP 2: Cek status pembayaran ke Midtrans
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${currentJobId}`,
       );
@@ -160,16 +179,15 @@ export const usePaymentManagement = (
 
       const statusResult = await statusResponse.json();
 
-      // JANGAN THROW ERROR JIKA STATUS BUKAN SETTLEMENT - USER MUNGKIN HANYA CLOSE MODAL
       if (!statusResult.success || statusResult.status !== "settlement") {
         setIsLoading(false);
-        return; // Keluar tanpa error
+        return;
       }
 
+      // ✅ STEP 3: Kirim print job ke VPS
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
       );
-
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
         advancedSettings.copies;
@@ -221,19 +239,9 @@ export const usePaymentManagement = (
       const result = await response.json();
 
       if (result.success) {
-        // Cleanup pending transaction
-        if (userSession) {
-          await fetch("/api/transactions/complete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: currentJobId,
-              phoneNumber: userSession.phone,
-            }),
-          });
-        }
-
-        // Refresh all data
+        // ✅ STEP 4: JANGAN LANGSUNG HAPUS TRANSAKSI DI SINI
+        // Biarkan Raspberry Pi yang akan menandai sebagai completed setelah print sukses
+        // Hanya refresh data
         if (userSession) {
           setTimeout(() => {
             refreshAllData();
@@ -257,17 +265,7 @@ export const usePaymentManagement = (
       }
     } catch (error) {
       console.error("❌ Error after payment:", error);
-
-      // Hanya tampilkan alert untuk error yang benar-benar critical
-      if (
-        !error.message.includes("Payment belum sukses") &&
-        !error.message.includes("pending") &&
-        !error.message.includes("expire")
-      ) {
-        alert(`❌ Error setelah pembayaran: ${error.message}`);
-      } else {
-        alert(`❌ Error setelah pembayaran: ${error.message}`);
-      }
+      alert(`❌ Error setelah pembayaran: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -489,14 +487,41 @@ export const usePaymentManagement = (
 
   // 🌐 processSuccessfulPayment /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
   const processSuccessfulPayment = async (transaction, userSession) => {
-    // ✅ Add userSession parameter
     try {
       setIsLoading(true);
+
+      // ✅ STEP 1: Sinkronkan status transaksi terlebih dahulu
+      const syncResponse = await fetch(
+        `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
+      );
+
+      if (syncResponse.ok) {
+        const syncResult = await syncResponse.json();
+        console.log("🔄 Sync result:", syncResult);
+      }
+
+      // ✅ STEP 2: Cek status pembayaran ke Midtrans
+      const statusResponse = await fetch(
+        `/api/payment/status?orderId=${transaction.orderId}`,
+      );
+
+      if (!statusResponse.ok) {
+        throw new Error(
+          `Payment status check failed: ${statusResponse.status}`,
+        );
+      }
+
+      const statusResult = await statusResponse.json();
+
+      if (!statusResult.success || statusResult.status !== "settlement") {
+        setIsLoading(false);
+        alert("❌ Pembayaran belum sukses. Silakan coba lagi.");
+        return;
+      }
 
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
       );
-
       const totalPagesToPrint =
         (transaction.settings.colorPages.length +
           transaction.settings.bwPages.length) *
@@ -534,16 +559,8 @@ export const usePaymentManagement = (
       const result = await response.json();
 
       if (result.success) {
-        if (userSession) {
-          await fetch("/api/transactions/complete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: transaction.orderId,
-              phoneNumber: userSession.phone, // ✅ Use parameter
-            }),
-          });
-        }
+        // ✅ JANGAN PANGGIL /complete DI SINI
+        // Biarkan Raspberry Pi yang menandai sebagai completed setelah print sukses
 
         alert(
           `✅ Print job berhasil dikirim!\n` +

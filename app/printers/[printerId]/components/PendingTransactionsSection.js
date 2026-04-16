@@ -1,3 +1,4 @@
+// app/printers/[printerId]/components/PendingTransactionsSection.js
 import { TransactionItem } from "./TransactionItem";
 
 // PendingTransactionsSection - UPDATED dengan paperMode

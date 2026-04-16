@@ -173,6 +173,17 @@ export const usePrinterPage = () => {
   };
 
   // ============================================
+  // formatRupiah - Helper untuk format mata uang
+  // ============================================
+  const formatRupiah = (amount) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(amount || 0);
+  };
+
+  // ============================================
   // handleFileUpload
   // ============================================
   const handleFileUpload = async (selectedFile) => {
@@ -299,6 +310,56 @@ export const usePrinterPage = () => {
   // handleCancelPendingTransaction
   // ============================================
   const handleCancelPendingTransaction = async (transaction) => {
+    const transactionStatus = transaction.paymentStatus || transaction.status;
+    let confirmMessage = "";
+    let isHighRisk = false;
+
+    switch (transactionStatus) {
+      case "paid":
+        isHighRisk = true;
+        confirmMessage =
+          "🔴 PERINGATAN BERAT! 🔴\n\n" +
+          "Transaksi ini sudah dibayar sebesar " +
+          formatRupiah(transaction.amount || transaction.cost) +
+          "\n\n" +
+          "KONSEKUENSI PEMBATALAN:\n" +
+          "• Uang TIDAK AKAN DIKEMBALIKAN\n" +
+          "• File print akan dihapus\n" +
+          "• Anda harus membuat transaksi baru untuk print ulang\n\n" +
+          "Apakah Anda YAKIN ingin membatalkan transaksi ini?";
+        break;
+
+      case "pending":
+        confirmMessage =
+          "⚠️ Peringatan!\n\n" +
+          "Transaksi ini belum dibayar.\n" +
+          "Pembatalan akan menghapus file dan data transaksi.\n\n" +
+          "Apakah Anda yakin ingin membatalkan?";
+        break;
+
+      default:
+        confirmMessage =
+          "Apakah Anda yakin ingin membatalkan transaksi ini?\n\n" +
+          "Transaksi yang dibatalkan tidak dapat dipulihkan.";
+        break;
+    }
+
+    if (!window.confirm(confirmMessage)) {
+      return; // User membatalkan aksi
+    }
+
+    // Jika status paid, beri konfirmasi kedua untuk keamanan
+    if (isHighRisk) {
+      const secondConfirm = window.confirm(
+        "KONFIRMASI AKHIR:\n\n" +
+          "Anda TIDAK AKAN MENDAPATKAN PENGEMBALIAN DANA.\n\n" +
+          "Tekan OK untuk membatalkan transaksi ini.",
+      );
+      if (!secondConfirm) {
+        return;
+      }
+    }
+
     return paymentManagement.cancelPendingTransaction(
       transaction,
       userManagement.userSession,
