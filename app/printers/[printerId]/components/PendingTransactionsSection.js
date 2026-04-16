@@ -28,8 +28,6 @@ export const PendingTransactionsSection = ({
   const isUnlimitedMode = paperMode === "unlimited";
   const showPaperWarning = !isUnlimitedMode && isPaperInsufficient;
 
-  console.log(pendingTransactions);
-
   return (
     <div className="bg-purple-50 rounded-xl border border-purple-200 p-4 sm:p-6 lg:p-6">
       <div className="flex items-center justify-between mb-4 sm:mb-5">

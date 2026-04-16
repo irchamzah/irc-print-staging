@@ -1,3 +1,4 @@
+// app/printers/%5BprinterId%5D/components/TransactionItem.js
 export const TransactionItem = ({
   transaction,
   onContinue,

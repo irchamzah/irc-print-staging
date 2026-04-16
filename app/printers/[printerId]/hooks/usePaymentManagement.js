@@ -154,16 +154,11 @@ export const usePaymentManagement = (
 
       if (syncResponse.ok) {
         const syncResult = await syncResponse.json();
-        console.log("🔄 Sync result:", syncResult);
 
         // Cari transaksi yang sudah settlement
         const updatedTx = syncResult.updatedTransactions?.find(
           (tx) => tx.orderId === currentJobId,
         );
-
-        if (updatedTx && updatedTx.newStatus === "settlement") {
-          console.log(`✅ Transaction ${currentJobId} synced to settlement`);
-        }
       }
 
       // ✅ STEP 2: Cek status pembayaran ke Midtrans
@@ -494,11 +489,6 @@ export const usePaymentManagement = (
       const syncResponse = await fetch(
         `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
       );
-
-      if (syncResponse.ok) {
-        const syncResult = await syncResponse.json();
-        console.log("🔄 Sync result:", syncResult);
-      }
 
       // ✅ STEP 2: Cek status pembayaran ke Midtrans
       const statusResponse = await fetch(

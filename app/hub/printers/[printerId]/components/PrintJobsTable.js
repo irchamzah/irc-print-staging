@@ -21,7 +21,6 @@ export const PrintJobsTable = ({
   endDate,
   loading,
 }) => {
-  // console.log("refills", refills);
   if (jobs.length === 0 && !loading) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -111,7 +110,6 @@ export const PrintJobsTable = ({
           </thead>
           <tbody className="divide-y divide-gray-200">
             {jobs.map((job) => {
-              console.log("job >>>>>>", job);
               const refill = refills.find((r) => r.refillId === job.refillId);
               const partnerProfit = getPartnerProfit(job);
               const totalCost = getJobTotalCost(job);

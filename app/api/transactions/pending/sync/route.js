@@ -14,11 +14,6 @@ export async function GET(request) {
         { status: 400 },
       );
     }
-
-    console.log(
-      `🔄 [FRONTEND] Syncing pending transactions for ${phoneNumber}`,
-    );
-
     // 1. Ambil pending transactions dari VPS
     const pendingResponse = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/pending?phoneNumber=${phoneNumber}`,
@@ -47,13 +42,9 @@ export async function GET(request) {
         const orderId = transaction.orderId;
         const currentStatus = transaction.paymentStatus || transaction.status;
 
-        // ✅ Jika sudah paid, skip (tidak perlu cek lagi)
         if (currentStatus === "paid") {
-          console.log(`   ⏭️ Skipping ${orderId} (already paid)`);
           continue;
         }
-
-        console.log(`🔍 [FRONTEND] Checking Midtrans status for ${orderId}`);
 
         const statusResponse = await fetch(
           `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/check-status?orderId=${orderId}&phoneNumber=${phoneNumber}`,
@@ -71,7 +62,8 @@ export async function GET(request) {
               statusResult.midtransStatus || statusResult.status;
 
             console.log(
-              `   Current: ${currentStatus}, Midtrans: ${midtransStatus}`,
+              `Midtrans status for orderId ${orderId}:`,
+              midtransStatus,
             );
 
             // ✅ Jika status di Midtrans settlement/capture, update ke "paid"
@@ -80,8 +72,6 @@ export async function GET(request) {
                 midtransStatus === "capture") &&
               currentStatus === "pending"
             ) {
-              console.log(`   ✅ Updating ${orderId} to paid`);
-
               const updateResponse = await fetch(
                 `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
                 {
@@ -90,7 +80,7 @@ export async function GET(request) {
                   body: JSON.stringify({
                     orderId: orderId,
                     phoneNumber: phoneNumber,
-                    status: "paid", // ✅ Kirim "paid" langsung
+                    status: "paid",
                     midtransStatus: midtransStatus,
                   }),
                 },
@@ -114,8 +104,6 @@ export async function GET(request) {
               midtransStatus === "expire" &&
               currentStatus === "pending"
             ) {
-              console.log(`   ⏰ Updating ${orderId} to expired`);
-
               const updateResponse = await fetch(
                 `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
                 {
@@ -144,8 +132,6 @@ export async function GET(request) {
               midtransStatus === "cancel" &&
               currentStatus === "pending"
             ) {
-              console.log(`   ❌ Updating ${orderId} to cancelled`);
-
               const updateResponse = await fetch(
                 `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
                 {
@@ -195,10 +181,6 @@ export async function GET(request) {
     } else {
       finalPendingTransactions = pendingTransactions;
     }
-
-    console.log(
-      `✅ [FRONTEND] Sync completed: ${updatedTransactions.length} updated`,
-    );
 
     return NextResponse.json({
       success: true,
