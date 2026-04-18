@@ -1,3 +1,4 @@
+// app/api/transactions/pending/sync/route.js tidak perlu diupdate
 import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
@@ -6,6 +7,7 @@ const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
+    s;
     const phoneNumber = searchParams.get("phoneNumber");
 
     if (!phoneNumber) {
@@ -60,11 +62,6 @@ export async function GET(request) {
           if (statusResult.success) {
             const midtransStatus =
               statusResult.midtransStatus || statusResult.status;
-
-            console.log(
-              `Midtrans status for orderId ${orderId}:`,
-              midtransStatus,
-            );
 
             // ✅ Jika status di Midtrans settlement/capture, update ke "paid"
             if (

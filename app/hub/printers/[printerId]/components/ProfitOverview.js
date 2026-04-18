@@ -27,14 +27,6 @@ export const ProfitOverview = ({
       )}
 
       <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <p className="text-sm text-gray-500 mb-1">Share Profit</p>
-        <p className="text-2xl font-bold text-green-600">{profitShare}%</p>
-        <p className="text-xs text-gray-400 mt-2">
-          {profitShare === 30 ? "✅ Partner isi sendiri" : "⏳ Diisi admin"}
-        </p>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
         <p className="text-sm text-gray-500 mb-1">Profit Tertunda</p>
         <p className="text-2xl font-bold text-orange-600">
           {formatRupiah(pendingPayout)}

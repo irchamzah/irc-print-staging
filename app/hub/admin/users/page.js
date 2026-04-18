@@ -1,3 +1,4 @@
+// app/hub/admin/users/page.js SUDAH DIUPDATE
 "use client";
 import { Suspense } from "react";
 import { useState, useRef, useEffect } from "react";
@@ -12,7 +13,7 @@ import { SortSection } from "./components/SortSection";
 import { UsersTable } from "./components/UsersTable";
 import { Pagination } from "./components/Pagination";
 
-// Komponen konten yang menggunakan useAdminUsers (yang di dalamnya menggunakan useSearchParams)
+// Komponen konten yang menggunakan useAdminUsers
 function UsersContent() {
   const { isSuperAdmin } = useHubAuth();
   const {
@@ -32,6 +33,8 @@ function UsersContent() {
     formatDate,
     formatRupiah,
     formatPoints,
+    getRoleBadge, // ✅ Tambah dari hook
+    getAccessPrinterCount, // ✅ Tambah dari hook
   } = useAdminUsers();
 
   const [showFormModal, setShowFormModal] = useState(false);
@@ -232,6 +235,8 @@ function UsersContent() {
               formatDate={formatDate}
               formatRupiah={formatRupiah}
               formatPoints={formatPoints}
+              getRoleBadge={getRoleBadge} // ✅ Tambah
+              getAccessPrinterCount={getAccessPrinterCount} // ✅ Tambah
               pagination={pagination}
             />
             {pagination.totalPages > 0 && (

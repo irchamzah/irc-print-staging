@@ -1,7 +1,7 @@
-// app/printers/[printerId]/hooks/useRefreshData.js
+// hooks/useRefreshData.js - UPDATED dengan struktur baru
 import { useState } from "react";
 
-// useRefreshData TERPAKAI
+// useRefreshData - UPDATED dengan struktur baru
 export const useRefreshData = (
   userSession,
   setUserPoints,
@@ -13,7 +13,9 @@ export const useRefreshData = (
 ) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // 🌐 refreshAllData /app/printers/[printerId]/hooks/useRefreshData.js TERPAKAI
+  // ============================================
+  // refreshAllData - Refresh all data (points & transactions)
+  // ============================================
   const refreshAllData = async () => {
     if (!userSession?.phone) {
       return;
@@ -24,12 +26,11 @@ export const useRefreshData = (
     }
 
     setIsRefreshing(true);
-    setRefreshingPoints(true); // ✅ Ini berjalan untuk modal close
+    setRefreshingPoints(true);
     setRefreshingTransactions(true);
     setCooldownTimers((prev) => ({ ...prev, refresh: true }));
 
     try {
-      // Refresh points and transactions concurrently
       await Promise.allSettled([
         refreshUserPoints(),
         refreshPendingTransactions(),
@@ -41,19 +42,19 @@ export const useRefreshData = (
       setRefreshingPoints(false);
       setRefreshingTransactions(false);
 
-      // Reset cooldown after 3 seconds
       setTimeout(() => {
         setCooldownTimers((prev) => ({ ...prev, refresh: false }));
       }, 3000);
     }
   };
 
-  // 🌐 refreshUserPoints /app/printers/[printerId]/hooks/useRefreshData.js TERPAKAI
+  // ============================================
+  // refreshUserPoints - Refresh user points from API
+  // ============================================
   const refreshUserPoints = async () => {
     if (!userSession) return;
 
     try {
-      // ✅ TAMBAHKAN: Set refreshing state untuk points
       setRefreshingPoints(true);
 
       const response = await fetch(`/api/users/${userSession.phone}/points`);
@@ -64,9 +65,11 @@ export const useRefreshData = (
 
       const result = await response.json();
 
-      if (result.success && result.user) {
-        const newPoints = result.points || 0;
+      if (result.success) {
+        // ✅ Ambil points dari berbagai kemungkinan field
+        const newPoints = result.points || result.user?.points || 0;
         setUserPoints(newPoints);
+
         const updatedSession = {
           ...userSession,
           points: newPoints,
@@ -82,7 +85,9 @@ export const useRefreshData = (
     }
   };
 
-  // 🌐 refreshPendingTransactions /app/printers/[printerId]/hooks/useRefreshData.js TERPAKAI
+  // ============================================
+  // refreshPendingTransactions - Refresh pending transactions
+  // ============================================
   const refreshPendingTransactions = async () => {
     if (!userSession?.phone) return;
 
@@ -100,6 +105,7 @@ export const useRefreshData = (
       const result = await response.json();
 
       if (result.success) {
+        // ✅ Transaksi sudah dalam format terbaru dari VPS
         setPendingTransactions(result.pendingTransactions || []);
       }
     } catch (error) {

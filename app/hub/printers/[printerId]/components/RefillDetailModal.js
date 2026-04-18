@@ -1,7 +1,6 @@
-// app/hub/[printerId]/components/RefillDetailModal.js
 "use client";
 
-// RefillDetailModal TERPAKAI
+// RefillDetailModal - UPDATED dengan struktur baru
 export const RefillDetailModal = ({
   isOpen,
   refill,
@@ -48,6 +47,31 @@ export const RefillDetailModal = ({
     }
   };
 
+  // Helper untuk mendapatkan total biaya job
+  const getJobTotalCost = (job) => {
+    return job.priceCalculation?.finalPrice || job.totalCost || 0;
+  };
+
+  // Helper untuk mendapatkan profit partner dari job
+  const getJobPartnerProfit = (job) => {
+    return job.priceCalculation?.partnerProfit || job.partnerProfit || 0;
+  };
+
+  // Helper untuk mendapatkan nama file
+  const getFileName = (job) => {
+    return job.fileName || "Unknown File";
+  };
+
+  // Helper untuk mendapatkan nomor telepon customer
+  const getCustomerPhone = (job) => {
+    return job.customerPhone || job.phoneNumber || "-";
+  };
+
+  // Helper untuk mendapatkan total halaman
+  const getTotalPages = (job) => {
+    return job.totalPages || job.pages?.length || 0;
+  };
+
   if (!isOpen || !refill) return null;
 
   return (
@@ -86,7 +110,7 @@ export const RefillDetailModal = ({
         {/* Modal Content */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
           {/* Info Refill */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-xs text-gray-500">Kertas Ditambah</p>
               <p className="text-lg font-bold text-gray-800">
@@ -105,12 +129,7 @@ export const RefillDetailModal = ({
                 {refill.paperCountAfter}
               </p>
             </div>
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-xs text-gray-500">Share Profit</p>
-              <p className="text-lg font-bold text-green-600">
-                {refill.profitShare}%
-              </p>
-            </div>
+            {/* ✅ HAPUS profitShare karena sudah tidak ada di struktur baru */}
           </div>
 
           {/* Summary */}
@@ -127,11 +146,18 @@ export const RefillDetailModal = ({
                 {formatRupiah(refill.partnerProfit)}
               </span>
             </div>
+            {/* ✅ TAMBAH Platform Profit */}
+            <div className="flex justify-between items-center mt-2">
+              <span className="text-sm text-gray-600">Profit Platform:</span>
+              <span className="text-lg font-bold text-blue-600">
+                {formatRupiah(refill.platformProfit)}
+              </span>
+            </div>
             <div className="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
               <div>
                 {getStatusBadge(refill.status)}
                 {refill.status === "active" && (
-                  <span className="text-xs text-green-600 animate-pulse">
+                  <span className="text-xs text-green-600 animate-pulse ml-2">
                     ● Menerima profit
                   </span>
                 )}
@@ -164,7 +190,7 @@ export const RefillDetailModal = ({
                   Lihat
                 </button>
               ) : refill.status === "paid" ? (
-                <span className="text-xs text-gray-400">Tidak ada</span>
+                <span className="text-xs text-gray-400">Tidak ada bukti</span>
               ) : (
                 <span className="text-xs text-gray-400">-</span>
               )}
@@ -194,9 +220,11 @@ export const RefillDetailModal = ({
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium text-gray-800">{job.fileName}</p>
+                    <p className="font-medium text-gray-800">
+                      {getFileName(job)}
+                    </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {job.phoneNumber || "No phone"}
+                      {getCustomerPhone(job)}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
                       {formatDate(job.createdAt)}
@@ -204,15 +232,19 @@ export const RefillDetailModal = ({
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium text-gray-800">
-                      {formatRupiah(job.totalCost)}
+                      {formatRupiah(getJobTotalCost(job))}
                     </p>
                     <p className="text-xs text-green-600 mt-1">
-                      Profit: {formatRupiah(job.partnerProfit || 0)}
+                      Profit Partner: {formatRupiah(getJobPartnerProfit(job))}
                     </p>
                   </div>
                 </div>
                 <div className="mt-2 text-xs text-gray-400">
-                  {job.totalPages} halaman
+                  {getTotalPages(job)} halaman
+                  {job.settings?.paperSize &&
+                    ` • Ukuran: ${job.settings.paperSize}`}
+                  {job.settings?.quality &&
+                    ` • Kualitas: ${job.settings.quality}`}
                 </div>
               </div>
             ))}

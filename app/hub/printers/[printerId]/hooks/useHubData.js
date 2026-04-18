@@ -1,9 +1,9 @@
-// app/hub/printers/[printerId]/hooks/useHubData.js
+// app/hub/printers/[printerId]/hooks/useHubData.js - SUDAH DIUPDATE
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useHubAuth } from "../../../auth/hooks/useHubAuth";
 
-// 🥸useHubData /app/hub/printers/[printerId]/hooks/useHubData.js TERPAKAI
+// useHubData - UPDATED dengan struktur baru
 export const useHubData = (
   printerId,
   initialRefillsPage = 1,
@@ -139,7 +139,7 @@ export const useHubData = (
         }
       }
 
-      // Fetch semua data untuk periode terpilih (bukan paginated) untuk total profit dan pending payout
+      // Fetch semua data untuk periode terpilih
       const allRefillsUrl = `/api/hub/printers/${printerId}/refills?page=1&limit=100000${
         dateRange.startDate && dateRange.endDate
           ? `&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
@@ -153,7 +153,6 @@ export const useHubData = (
         if (allRefillsData.success) {
           setAllPaperRefills(allRefillsData.data);
 
-          // Gunakan count berdasarkan data penuh (all refills) yang sudah difilter date range untuk akurasi pagination
           const allFilteredRefills = filterRefillsByDateRange(
             allRefillsData.data,
           );
@@ -230,7 +229,6 @@ export const useHubData = (
       const result = await response.json();
 
       if (result.success) {
-        // ✅ SIMPLE: Refresh halaman saja
         window.location.reload();
         return { success: true };
       } else {
@@ -245,7 +243,8 @@ export const useHubData = (
     }
   };
 
-  const markRefillAsPaid = async (refillId) => {
+  // ✅ Update markRefillAsPaid menggunakan paperRefillId
+  const markRefillAsPaid = async (paperRefillId) => {
     if (user?.role !== "super_admin") {
       return {
         success: false,
@@ -255,7 +254,7 @@ export const useHubData = (
 
     try {
       const response = await fetch(
-        `/api/hub/admin/paper-refills/${refillId}/pay`,
+        `/api/hub/admin/paper-refills/${paperRefillId}/pay`,
         {
           method: "POST",
           headers: {
@@ -281,11 +280,12 @@ export const useHubData = (
     }
   };
 
-  const getJobsByRefill = (refillId) => {
-    return printJobs.filter((job) => job.refillId === refillId);
+  // ✅ Update getJobsByRefill menggunakan paperRefillId
+  const getJobsByRefill = (paperRefillId) => {
+    return printJobs.filter((job) => job.paperRefillId === paperRefillId);
   };
 
-  // ✅ Filter functions untuk profit calculation
+  // Filter functions untuk profit calculation
   const filterJobsByDateRange = (jobs) => {
     if (!dateRange.startDate || !dateRange.endDate) return jobs;
 
@@ -330,36 +330,40 @@ export const useHubData = (
     });
   };
 
-  // ✅ Data yang sudah difilter untuk page table
+  // Data yang sudah difilter untuk page table
   const filteredJobs = filterJobsByDateRange(printJobs);
   const filteredRefills = filterRefillsByDateRange(paperRefills);
 
-  // ✅ Data yang sudah difilter untuk total (semua record dalam periode)
-  // const filteredAllJobs = filterJobsByDateRange(allPrintJobs);
+  // Data yang sudah difilter untuk total (semua record dalam periode)
   const filteredAllRefills = filterRefillsByDateRange(allPaperRefills);
 
-  // ✅ Hitung profit dari data semua periode terfilter, tidak bergantung pada halaman sekarang
+  // ✅ Hitung profit dari data semua periode terfilter
   const totalRevenue = filteredAllRefills.reduce(
     (sum, refill) => sum + (refill.totalRevenue || 0),
     0,
   );
 
-  const totalProfit = filteredAllRefills.reduce(
+  // ✅ Partner profit dari semua refills
+  const totalPartnerProfit = filteredAllRefills.reduce(
     (sum, refill) => sum + (refill.partnerProfit || 0),
     0,
   );
 
+  // ✅ Platform profit dari semua refills
+  const totalPlatformProfit = filteredAllRefills.reduce(
+    (sum, refill) => sum + (refill.platformProfit || 0),
+    0,
+  );
+
+  // ✅ Pending payout (active refills) - partner profit
   const pendingPayout = filteredAllRefills
     .filter((r) => r.status === "active")
     .reduce((sum, r) => sum + (r.partnerProfit || 0), 0);
 
-  // ✅ Profit share dari semua refills terfilter (atau default 30)
-  const profitShare = filteredAllRefills[0]?.profitShare || 30;
-
   const profit = {
     totalRevenue,
-    profitShare,
-    partnerProfit: totalProfit,
+    partnerProfit: totalPartnerProfit,
+    platformProfit: totalPlatformProfit,
     pendingPayout,
   };
 
@@ -416,9 +420,10 @@ export const useHubData = (
     filteredJobs,
     filteredRefills,
 
-    // ✅ Profit yang sudah dihitung dari data terfilter
+    // Profit yang sudah dihitung dari data terfilter
     filteredTotalRevenue: totalRevenue,
-    filteredPartnerProfit: totalProfit,
+    filteredPartnerProfit: totalPartnerProfit,
+    filteredPlatformProfit: totalPlatformProfit,
     profit,
 
     dateRange,

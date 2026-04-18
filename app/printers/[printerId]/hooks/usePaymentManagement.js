@@ -1,9 +1,9 @@
-// app/printers/[printerId]/hooks/usePaymentManagement.js (FRONTEND Next.js)
+// hooks/usePaymentManagement.js - UPDATED
 import { useState } from "react";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// usePaymentManagement TERPAKAI
+// usePaymentManagement - UPDATED dengan struktur baru
 export const usePaymentManagement = (
   printerId,
   setAdvancedSettings,
@@ -12,13 +12,15 @@ export const usePaymentManagement = (
   const [isLoading, setIsLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
-  const [currentJobId, setCurrentJobId] = useState(null);
+  const [currentPrintJobId, setCurrentPrintJobId] = useState(null); // ✅ Ganti currentJobId
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [refreshingTransactions, setRefreshingTransactions] = useState(false);
   const [cooldownTimers, setCooldownTimers] = useState({});
 
-  // 🌐 handleSubmit /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // handleSubmit - Create new print job and payment
+  // ============================================
   const handleSubmit = async (
     e,
     file,
@@ -46,7 +48,7 @@ export const usePaymentManagement = (
     setIsLoading(true);
 
     try {
-      const orderId = `print-${Date.now()}-${Math.random()
+      const printJobId = `print-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 9)}`;
 
@@ -67,7 +69,7 @@ export const usePaymentManagement = (
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: finalCost,
-          orderId: orderId,
+          orderId: printJobId,
           phoneNumber: userSession?.phone || null,
         }),
       });
@@ -84,7 +86,7 @@ export const usePaymentManagement = (
       if (userSession) {
         const transactionData = {
           phoneNumber: userSession.phone,
-          orderId: orderId,
+          orderId: printJobId,
           printerId: printerId,
           fileData: {
             name: file.name,
@@ -99,7 +101,7 @@ export const usePaymentManagement = (
               ...advancedSettings.printSettings,
               quality: (
                 advancedSettings.printSettings?.quality || "normal"
-              ).toLowerCase(), // ✅ Tambah ini
+              ).toLowerCase(),
             },
           },
           cost: finalCost,
@@ -121,11 +123,11 @@ export const usePaymentManagement = (
         token: paymentResult.token,
         redirectUrl: paymentResult.redirect_url,
         amount: finalCost,
-        orderId: orderId,
+        orderId: printJobId,
       });
 
       setShowPaymentModal(true);
-      setCurrentJobId(orderId);
+      setCurrentPrintJobId(printJobId);
     } catch (error) {
       console.error("❌ Payment error:", error);
       alert(`❌ Error: ${error.message}`);
@@ -134,9 +136,11 @@ export const usePaymentManagement = (
     }
   };
 
-  // 🌐 handlePaymentSuccess /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // handlePaymentSuccess - After payment success
+  // ============================================
   const handlePaymentSuccess = async (
-    currentJobId,
+    currentPrintJobId,
     advancedSettings,
     printerId,
     file,
@@ -147,23 +151,21 @@ export const usePaymentManagement = (
     try {
       setIsLoading(true);
 
-      // ✅ STEP 1: Sinkronkan status transaksi terlebih dahulu
+      // STEP 1: Sync transaction status
       const syncResponse = await fetch(
         `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
       );
 
       if (syncResponse.ok) {
         const syncResult = await syncResponse.json();
-
-        // Cari transaksi yang sudah settlement
         const updatedTx = syncResult.updatedTransactions?.find(
-          (tx) => tx.orderId === currentJobId,
+          (tx) => tx.orderId === currentPrintJobId,
         );
       }
 
-      // ✅ STEP 2: Cek status pembayaran ke Midtrans
+      // STEP 2: Check payment status to Midtrans
       const statusResponse = await fetch(
-        `/api/payment/status?orderId=${currentJobId}`,
+        `/api/payment/status?orderId=${currentPrintJobId}`,
       );
 
       if (!statusResponse.ok) {
@@ -179,7 +181,7 @@ export const usePaymentManagement = (
         return;
       }
 
-      // ✅ STEP 3: Kirim print job ke VPS
+      // STEP 3: Send print job to VPS
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
       );
@@ -189,7 +191,7 @@ export const usePaymentManagement = (
       const pointsToAdd = (advancedSettings.cost / pointDivider).toFixed(2);
 
       const printPayload = {
-        orderId: currentJobId,
+        orderId: currentPrintJobId,
         printerId: printerId,
         copies: advancedSettings.copies,
         colorPages: JSON.stringify(advancedSettings.colorPages),
@@ -234,9 +236,7 @@ export const usePaymentManagement = (
       const result = await response.json();
 
       if (result.success) {
-        // ✅ STEP 4: JANGAN LANGSUNG HAPUS TRANSAKSI DI SINI
-        // Biarkan Raspberry Pi yang akan menandai sebagai completed setelah print sukses
-        // Hanya refresh data
+        // Refresh data
         if (userSession) {
           setTimeout(() => {
             refreshAllData();
@@ -249,7 +249,7 @@ export const usePaymentManagement = (
             (userSession
               ? `🎉 +${pointsToAdd} point telah ditambahkan!\nPoint akan di-update otomatis...\n`
               : "") +
-            `Job ID: ${result.jobId}\n\nHalaman akan direfresh...`,
+            `Job ID: ${result.printJobId || result.jobId}\n\nHalaman akan direfresh...`,
         );
 
         setTimeout(() => {
@@ -266,15 +266,18 @@ export const usePaymentManagement = (
     }
   };
 
-  // 🌐 handlePaymentCancelled /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // handlePaymentCancelled
+  // ============================================
   const handlePaymentCancelled = (refreshAllData) => {
     setShowPaymentModal(false);
     setPaymentData(null);
-    // Refresh data ketika modal ditutup
     refreshAllData();
   };
 
-  // 🌐 fetchPendingTransactions /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // fetchPendingTransactions
+  // ============================================
   const fetchPendingTransactions = async (userSession) => {
     if (!userSession?.phone) return;
 
@@ -297,7 +300,9 @@ export const usePaymentManagement = (
     }
   };
 
-  // 🌐 continuePendingTransaction /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // continuePendingTransaction
+  // ============================================
   const continuePendingTransaction = async (transaction, userSession) => {
     if (cooldownTimers[transaction.orderId]) {
       return;
@@ -329,8 +334,6 @@ export const usePaymentManagement = (
 
       if (syncResult.success) {
         const latestStatus = syncResult.status;
-
-        // ✅ UPDATE: Gunakan paymentStatus dari transaksi
         const currentStatus = transaction.paymentStatus || transaction.status;
         const updatedTransaction = {
           ...transaction,
@@ -340,7 +343,6 @@ export const usePaymentManagement = (
         };
 
         if (latestStatus === "settlement") {
-          // Update status di backend
           await fetch(`/api/transactions/update-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -352,12 +354,10 @@ export const usePaymentManagement = (
             }),
           });
 
-          // ✅ UPDATE: Ambil settings dari transaction (bukan dari fileData)
           if (transaction.settings) {
             setAdvancedSettings(transaction.settings);
           }
 
-          // ✅ UPDATE: Hitung total pages dari settings
           const totalPagesFromSettings =
             transaction.settings?.totalPages ||
             transaction.settings?.selectedPages?.length ||
@@ -365,7 +365,7 @@ export const usePaymentManagement = (
             0;
           setTotalPages(totalPagesFromSettings);
 
-          setCurrentJobId(transaction.orderId);
+          setCurrentPrintJobId(transaction.orderId);
           await processSuccessfulPayment(updatedTransaction, userSession);
 
           setTimeout(() => {
@@ -377,7 +377,6 @@ export const usePaymentManagement = (
           return;
         }
 
-        // ✅ UPDATE: Cek keberadaan file (gunakan filePath sebagai indikator)
         const hasFile =
           !!transaction.filePath || !!transaction.fileData?.hasFile;
 
@@ -392,7 +391,6 @@ export const usePaymentManagement = (
           return;
         }
 
-        // ✅ UPDATE: Ambil settings dari transaction
         if (transaction.settings) {
           setAdvancedSettings(transaction.settings);
         }
@@ -403,7 +401,7 @@ export const usePaymentManagement = (
           transaction.fileData?.pages ||
           0;
         setTotalPages(totalPagesFromSettings);
-        setCurrentJobId(transaction.orderId);
+        setCurrentPrintJobId(transaction.orderId);
 
         setPaymentData({
           token:
@@ -441,9 +439,10 @@ export const usePaymentManagement = (
     }
   };
 
-  // 🌐 cancelPendingTransaction /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // cancelPendingTransaction
+  // ============================================
   const cancelPendingTransaction = async (transaction, userSession) => {
-    // ✅ Tambahkan userSession parameter
     if (
       !window.confirm(
         `Apakah Anda yakin ingin membatalkan transaksi ${transaction.orderId}?`,
@@ -466,8 +465,6 @@ export const usePaymentManagement = (
 
       if (result.success) {
         alert("❌ Transaksi berhasil dibatalkan");
-
-        // ✅ Refresh transactions dengan memanggil fetchPendingTransactions
         if (userSession) {
           await fetchPendingTransactions(userSession);
         }
@@ -480,17 +477,17 @@ export const usePaymentManagement = (
     }
   };
 
-  // 🌐 processSuccessfulPayment /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // processSuccessfulPayment
+  // ============================================
   const processSuccessfulPayment = async (transaction, userSession) => {
     try {
       setIsLoading(true);
 
-      // ✅ STEP 1: Sinkronkan status transaksi terlebih dahulu
       const syncResponse = await fetch(
         `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
       );
 
-      // ✅ STEP 2: Cek status pembayaran ke Midtrans
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${transaction.orderId}`,
       );
@@ -549,16 +546,13 @@ export const usePaymentManagement = (
       const result = await response.json();
 
       if (result.success) {
-        // ✅ JANGAN PANGGIL /complete DI SINI
-        // Biarkan Raspberry Pi yang menandai sebagai completed setelah print sukses
-
         alert(
           `✅ Print job berhasil dikirim!\n` +
             `📄 ${totalPagesToPrint} halaman akan dicetak.\n` +
             (userSession
               ? `🎉 +${pointsToAdd} point telah ditambahkan!\n`
               : "") +
-            `Job ID: ${result.jobId}\n\nHalaman akan direfresh...`,
+            `Job ID: ${result.printJobId || result.jobId}\n\nHalaman akan direfresh...`,
         );
 
         setTimeout(() => {
@@ -575,9 +569,10 @@ export const usePaymentManagement = (
     }
   };
 
-  // 🌐 openPaymentModalWithoutSync /app/printers/[printerId]/hooks/usePaymentManagement.js TERPAKAI
+  // ============================================
+  // openPaymentModalWithoutSync
+  // ============================================
   const openPaymentModalWithoutSync = async (transaction, userSession) => {
-    // ✅ UPDATE: Cek keberadaan file (gunakan filePath sebagai indikator)
     const hasFile = !!transaction.filePath || !!transaction.fileData?.hasFile;
 
     if (!hasFile) {
@@ -591,7 +586,6 @@ export const usePaymentManagement = (
       return;
     }
 
-    // ✅ UPDATE: Ambil settings dari transaction
     if (transaction.settings) {
       setAdvancedSettings(transaction.settings);
     }
@@ -602,7 +596,7 @@ export const usePaymentManagement = (
       transaction.fileData?.pages ||
       0;
     setTotalPages(totalPagesFromSettings);
-    setCurrentJobId(transaction.orderId);
+    setCurrentPrintJobId(transaction.orderId);
 
     setPaymentData({
       token:
@@ -629,7 +623,7 @@ export const usePaymentManagement = (
     isLoading,
     showPaymentModal,
     paymentData,
-    currentJobId,
+    currentPrintJobId, // ✅ Ganti currentJobId → currentPrintJobId
     pendingTransactions,
     loadingTransactions,
     refreshingTransactions,
@@ -639,7 +633,7 @@ export const usePaymentManagement = (
     setIsLoading,
     setShowPaymentModal,
     setPaymentData,
-    setCurrentJobId,
+    setCurrentPrintJobId,
     setPendingTransactions,
     setLoadingTransactions,
     setRefreshingTransactions,

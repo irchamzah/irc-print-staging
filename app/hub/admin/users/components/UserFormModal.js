@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-// 🥸UserFormModal /app/hub/admin/components/UserFormModal.js TERPAKAI
+// UserFormModal - UPDATED dengan accessPrinterIds
 export const UserFormModal = ({
   isOpen,
   onClose,
@@ -16,7 +16,7 @@ export const UserFormModal = ({
     phone: user?.phone || "",
     role: user?.role || "user",
     password: "",
-    accessPrinters: user?.accessPrinters || [],
+    accessPrinterIds: user?.accessPrinterIds || [], // ✅ Ganti accessPrinters → accessPrinterIds
     bankAccount: {
       bankName: user?.bankAccount?.bankName || "",
       accountNumber: user?.bankAccount?.accountNumber || "",
@@ -31,7 +31,7 @@ export const UserFormModal = ({
         phone: user.phone || "",
         role: user.role || "user",
         password: "",
-        accessPrinters: user.accessPrinters || [],
+        accessPrinterIds: user.accessPrinterIds || [], // ✅ Ganti
         bankAccount: {
           bankName: user.bankAccount?.bankName || "",
           accountNumber: user.bankAccount?.accountNumber || "",
@@ -45,7 +45,7 @@ export const UserFormModal = ({
         phone: "",
         role: "user",
         password: "",
-        accessPrinters: [],
+        accessPrinterIds: [], // ✅ Ganti
         bankAccount: {
           bankName: "",
           accountNumber: "",
@@ -65,13 +65,13 @@ export const UserFormModal = ({
   const togglePrinter = (printerId) => {
     setFormData((prev) => ({
       ...prev,
-      accessPrinters: prev.accessPrinters.includes(printerId)
-        ? prev.accessPrinters.filter((id) => id !== printerId)
-        : [...prev.accessPrinters, printerId],
+      accessPrinterIds: prev.accessPrinterIds.includes(printerId) // ✅ Ganti
+        ? prev.accessPrinterIds.filter((id) => id !== printerId)
+        : [...prev.accessPrinterIds, printerId],
     }));
   };
 
-  // Daftar bank Indonesia umum
+  // Daftar bank Indonesia umum (tidak berubah)
   const bankOptions = [
     { value: "", label: "Pilih Bank" },
     { value: "BCA", label: "Bank BCA" },
@@ -257,7 +257,7 @@ export const UserFormModal = ({
                       ...formData,
                       bankAccount: {
                         ...formData.bankAccount,
-                        accountNumber: e.target.value.replace(/\D/g, ""), // Hanya angka
+                        accountNumber: e.target.value.replace(/\D/g, ""),
                       },
                     })
                   }
@@ -308,7 +308,8 @@ export const UserFormModal = ({
                     >
                       <input
                         type="checkbox"
-                        checked={formData.accessPrinters.includes(
+                        checked={formData.accessPrinterIds.includes(
+                          // ✅ Ganti
                           printer.printerId,
                         )}
                         onChange={() => togglePrinter(printer.printerId)}
@@ -330,6 +331,10 @@ export const UserFormModal = ({
                   </p>
                 )}
               </div>
+              <p className="text-xs text-gray-400 mt-2">
+                * Hanya user dengan role Partner yang perlu memilih akses
+                printer
+              </p>
             </div>
           </div>
         </form>
