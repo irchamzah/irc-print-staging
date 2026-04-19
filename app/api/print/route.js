@@ -1,4 +1,3 @@
-// app/api/print/route.js (FRONTEND Next.js)
 import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
@@ -7,9 +6,14 @@ export async function POST(request) {
   try {
     const contentType = request.headers.get("content-type") || "";
 
+    // ✅ TAMBAHKAN LOG INI
+    console.log("🔍 [PROXY] VPS URL:", NEXT_PUBLIC_VPS_API_URL);
+    console.log("🔍 [PROXY] Content-Type:", contentType);
+
     if (contentType.includes("application/json")) {
-      // Handle restored transaction - forward as JSON
       const jsonData = await request.json();
+      console.log("🔍 [PROXY] Forwarding JSON to VPS:", jsonData);
+      console.log("🔍 [PROXY] URL:", `${NEXT_PUBLIC_VPS_API_URL}/api/print`);
 
       const response = await fetch(`${NEXT_PUBLIC_VPS_API_URL}/api/print`, {
         method: "POST",
@@ -17,17 +21,9 @@ export async function POST(request) {
         body: JSON.stringify({ ...jsonData, isRestored: true }),
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ VPS error response:", errorText);
-        throw new Error(
-          `VPS returned ${response.status}: ${response.statusText}`,
-        );
-      }
-
-      return NextResponse.json(await response.json());
+      const result = await response.json();
+      return NextResponse.json(result, { status: response.status });
     } else if (contentType.includes("multipart/form-data")) {
-      // Handle normal file upload
       const formData = await request.formData();
       const pdfFile = formData.get("pdf");
 
@@ -38,6 +34,8 @@ export async function POST(request) {
         );
       }
 
+      console.log("🔍 [PROXY] Forwarding FormData to VPS, file:", pdfFile.name);
+
       const vpsFormData = new FormData();
       vpsFormData.append("pdf", pdfFile);
 
@@ -47,26 +45,13 @@ export async function POST(request) {
         }
       }
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-
       const response = await fetch(`${NEXT_PUBLIC_VPS_API_URL}/api/print`, {
         method: "POST",
         body: vpsFormData,
-        signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ VPS error response:", errorText);
-        throw new Error(
-          `VPS returned ${response.status}: ${response.statusText}`,
-        );
-      }
-
-      return NextResponse.json(await response.json());
+      const result = await response.json();
+      return NextResponse.json(result, { status: response.status });
     } else {
       return NextResponse.json(
         { success: false, error: "Unsupported content type" },
@@ -74,19 +59,11 @@ export async function POST(request) {
       );
     }
   } catch (error) {
-    console.error("❌ Print API error:", error);
-
-    let errorMessage = error.message;
-    if (error.name === "AbortError") {
-      errorMessage = "VPS timeout - server tidak merespons";
-    } else if (error.message.includes("fetch failed")) {
-      errorMessage = "Tidak dapat terhubung ke server print";
-    }
-
+    console.error("❌ [PROXY] Error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
+        error: error.message,
         details:
           "Pastikan VPS server sedang running dan endpoint /api/print tersedia",
       },

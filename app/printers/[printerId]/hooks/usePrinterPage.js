@@ -134,7 +134,8 @@ export const usePrinterPage = () => {
       const pendingPages = paymentManagement.pendingTransactions
         .filter(
           (tx) =>
-            tx.paymentStatus === "pending" || tx.paymentStatus === "settlement",
+            tx.transactionStatus === "pending" ||
+            tx.transactionStatus === "settlement",
         )
         .reduce((total, tx) => {
           const txPages = tx.settings?.selectedPages?.length || 0;
@@ -310,7 +311,8 @@ export const usePrinterPage = () => {
   // handleCancelPendingTransaction
   // ============================================
   const handleCancelPendingTransaction = async (transaction) => {
-    const transactionStatus = transaction.paymentStatus || transaction.status;
+    const transactionStatus =
+      transaction.transactionStatus || transaction.status;
     let confirmMessage = "";
     let isHighRisk = false;
 

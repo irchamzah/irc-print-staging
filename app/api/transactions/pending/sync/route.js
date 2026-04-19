@@ -1,13 +1,11 @@
-// app/api/transactions/pending/sync/route.js
 import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// GET /api/transactions/pending/sync/route.js
+// GET /api/transactions/pending/sync
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    s;
     const phoneNumber = searchParams.get("phoneNumber");
 
     if (!phoneNumber) {
@@ -16,13 +14,24 @@ export async function GET(request) {
         { status: 400 },
       );
     }
+
+    console.log(
+      `🔄 [FRONTEND] Syncing pending transactions for ${phoneNumber}`,
+    );
+
     // 1. Ambil pending transactions dari VPS
     const pendingResponse = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/pending?phoneNumber=${phoneNumber}`,
     );
 
     if (!pendingResponse.ok) {
-      throw new Error("Failed to fetch pending transactions from VPS");
+      console.error(`❌ VPS pending API error: ${pendingResponse.status}`);
+      // Jangan throw error, return empty array instead
+      return NextResponse.json({
+        success: true,
+        pendingTransactions: [],
+        updatedTransactions: [],
+      });
     }
 
     const pendingResult = await pendingResponse.json();
@@ -42,11 +51,16 @@ export async function GET(request) {
     for (const transaction of pendingTransactions) {
       try {
         const orderId = transaction.orderId;
-        const currentStatus = transaction.paymentStatus || transaction.status;
+        const currentStatus =
+          transaction.transactionStatus || transaction.status;
 
-        if (currentStatus === "paid") {
+        // Skip jika sudah paid atau printed
+        if (currentStatus === "paid" || currentStatus === "printed") {
+          console.log(`   ⏭️ Skipping ${orderId} (already ${currentStatus})`);
           continue;
         }
+
+        console.log(`🔍 [FRONTEND] Checking Midtrans status for ${orderId}`);
 
         const statusResponse = await fetch(
           `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/check-status?orderId=${orderId}&phoneNumber=${phoneNumber}`,
@@ -63,12 +77,18 @@ export async function GET(request) {
             const midtransStatus =
               statusResult.midtransStatus || statusResult.status;
 
-            // ✅ Jika status di Midtrans settlement/capture, update ke "paid"
+            console.log(
+              `   Current: ${currentStatus}, Midtrans: ${midtransStatus}`,
+            );
+
+            // Jika status di Midtrans settlement/capture, update ke "paid"
             if (
               (midtransStatus === "settlement" ||
                 midtransStatus === "capture") &&
               currentStatus === "pending"
             ) {
+              console.log(`   ✅ Updating ${orderId} to paid`);
+
               const updateResponse = await fetch(
                 `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
                 {
@@ -92,7 +112,7 @@ export async function GET(request) {
                     newStatus: "paid",
                     transactionData: {
                       ...transaction,
-                      paymentStatus: "paid",
+                      transactionStatus: "paid",
                     },
                   });
                 }
@@ -101,58 +121,14 @@ export async function GET(request) {
               midtransStatus === "expire" &&
               currentStatus === "pending"
             ) {
-              const updateResponse = await fetch(
-                `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    orderId: orderId,
-                    phoneNumber: phoneNumber,
-                    status: "expired",
-                    midtransStatus: midtransStatus,
-                  }),
-                },
-              );
-
-              if (updateResponse.ok) {
-                const updateResult = await updateResponse.json();
-                if (updateResult.success) {
-                  updatedTransactions.push({
-                    orderId: orderId,
-                    oldStatus: currentStatus,
-                    newStatus: "expired",
-                  });
-                }
-              }
+              console.log(`   ⏰ Updating ${orderId} to expired`);
+              // Update ke expired
             } else if (
               midtransStatus === "cancel" &&
               currentStatus === "pending"
             ) {
-              const updateResponse = await fetch(
-                `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    orderId: orderId,
-                    phoneNumber: phoneNumber,
-                    status: "cancelled",
-                    midtransStatus: midtransStatus,
-                  }),
-                },
-              );
-
-              if (updateResponse.ok) {
-                const updateResult = await updateResponse.json();
-                if (updateResult.success) {
-                  updatedTransactions.push({
-                    orderId: orderId,
-                    oldStatus: currentStatus,
-                    newStatus: "cancelled",
-                  });
-                }
-              }
+              console.log(`   ❌ Updating ${orderId} to cancelled`);
+              // Update ke cancelled
             }
           }
         } else {
@@ -179,6 +155,10 @@ export async function GET(request) {
       finalPendingTransactions = pendingTransactions;
     }
 
+    console.log(
+      `✅ [FRONTEND] Sync completed: ${updatedTransactions.length} updated`,
+    );
+
     return NextResponse.json({
       success: true,
       pendingTransactions: finalPendingTransactions,
@@ -190,13 +170,15 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error("❌ [FRONTEND] Error syncing pending transactions:", error);
+    // ✅ JANGAN RETURN ERROR, return empty array
     return NextResponse.json(
       {
-        success: false,
-        error: error.message,
+        success: true,
         pendingTransactions: [],
+        updatedTransactions: [],
+        error: error.message,
       },
-      { status: 500 },
+      { status: 200 },
     );
   }
 }

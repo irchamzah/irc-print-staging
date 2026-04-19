@@ -48,9 +48,11 @@ export const usePaymentManagement = (
     setIsLoading(true);
 
     try {
-      const printJobId = `print-${Date.now()}-${Math.random()
+      const orderId = `print-${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 9)}`;
+
+      console.log("📝 Creating print job with ID:", orderId);
 
       // Convert file to base64
       const fileBase64 = await new Promise((resolve, reject) => {
@@ -69,7 +71,7 @@ export const usePaymentManagement = (
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: finalCost,
-          orderId: printJobId,
+          orderId: orderId,
           phoneNumber: userSession?.phone || null,
         }),
       });
@@ -86,7 +88,7 @@ export const usePaymentManagement = (
       if (userSession) {
         const transactionData = {
           phoneNumber: userSession.phone,
-          orderId: printJobId,
+          orderId: orderId,
           printerId: printerId,
           fileData: {
             name: file.name,
@@ -123,11 +125,11 @@ export const usePaymentManagement = (
         token: paymentResult.token,
         redirectUrl: paymentResult.redirect_url,
         amount: finalCost,
-        orderId: printJobId,
+        orderId: orderId,
       });
 
       setShowPaymentModal(true);
-      setCurrentPrintJobId(printJobId);
+      setCurrentJobId(orderId); // ✅ Pastikan currentJobId diset
     } catch (error) {
       console.error("❌ Payment error:", error);
       alert(`❌ Error: ${error.message}`);
@@ -140,7 +142,7 @@ export const usePaymentManagement = (
   // handlePaymentSuccess - After payment success
   // ============================================
   const handlePaymentSuccess = async (
-    currentPrintJobId,
+    currentJobId,
     advancedSettings,
     printerId,
     file,
@@ -151,21 +153,34 @@ export const usePaymentManagement = (
     try {
       setIsLoading(true);
 
-      // STEP 1: Sync transaction status
-      const syncResponse = await fetch(
-        `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
-      );
-
-      if (syncResponse.ok) {
-        const syncResult = await syncResponse.json();
-        const updatedTx = syncResult.updatedTransactions?.find(
-          (tx) => tx.orderId === currentPrintJobId,
-        );
+      // ✅ CEK currentJobId
+      if (!currentJobId) {
+        console.error("❌ currentJobId is undefined");
+        alert("Error: Job ID tidak ditemukan. Silakan coba lagi.");
+        setIsLoading(false);
+        return;
       }
 
-      // STEP 2: Check payment status to Midtrans
+      console.log("💰 Payment success for job:", currentJobId);
+
+      // ✅ STEP 1: Sinkronkan status transaksi terlebih dahulu
+      try {
+        const syncResponse = await fetch(
+          `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
+        );
+
+        if (syncResponse.ok) {
+          const syncResult = await syncResponse.json();
+          console.log("🔄 Sync result:", syncResult);
+        }
+      } catch (syncError) {
+        console.error("Sync error (non-critical):", syncError);
+        // Continue anyway
+      }
+
+      // ✅ STEP 2: Cek status pembayaran ke Midtrans
       const statusResponse = await fetch(
-        `/api/payment/status?orderId=${currentPrintJobId}`,
+        `/api/payment/status?orderId=${currentJobId}`,
       );
 
       if (!statusResponse.ok) {
@@ -181,7 +196,7 @@ export const usePaymentManagement = (
         return;
       }
 
-      // STEP 3: Send print job to VPS
+      // ✅ STEP 3: Kirim print job ke VPS
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
       );
@@ -191,7 +206,7 @@ export const usePaymentManagement = (
       const pointsToAdd = (advancedSettings.cost / pointDivider).toFixed(2);
 
       const printPayload = {
-        orderId: currentPrintJobId,
+        orderId: currentJobId,
         printerId: printerId,
         copies: advancedSettings.copies,
         colorPages: JSON.stringify(advancedSettings.colorPages),
@@ -236,7 +251,6 @@ export const usePaymentManagement = (
       const result = await response.json();
 
       if (result.success) {
-        // Refresh data
         if (userSession) {
           setTimeout(() => {
             refreshAllData();
@@ -334,11 +348,12 @@ export const usePaymentManagement = (
 
       if (syncResult.success) {
         const latestStatus = syncResult.status;
-        const currentStatus = transaction.paymentStatus || transaction.status;
+        const currentStatus =
+          transaction.transactionStatus || transaction.status;
         const updatedTransaction = {
           ...transaction,
           midtransStatus: latestStatus,
-          paymentStatus:
+          transactionStatus:
             latestStatus === "settlement" ? "settlement" : currentStatus,
         };
 
@@ -451,6 +466,12 @@ export const usePaymentManagement = (
       return;
     }
 
+    console.log(
+      transaction,
+      "Attempting to cancel transaction with orderId:",
+      transaction.orderId,
+    );
+
     try {
       const response = await fetch("/api/transactions/cancel", {
         method: "POST",
@@ -462,6 +483,8 @@ export const usePaymentManagement = (
       });
 
       const result = await response.json();
+
+      console.log("Cancel transaction response:", result);
 
       if (result.success) {
         alert("❌ Transaksi berhasil dibatalkan");
@@ -484,12 +507,33 @@ export const usePaymentManagement = (
     try {
       setIsLoading(true);
 
-      const syncResponse = await fetch(
-        `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
-      );
+      const printJobId = transaction.orderId;
 
+      if (!printJobId) {
+        console.error("❌ printJobId is undefined");
+        alert("Error: Job ID tidak ditemukan");
+        setIsLoading(false);
+        return;
+      }
+
+      console.log("💰 Processing successful payment for job:", printJobId);
+
+      // Sync transaction status
+      try {
+        const syncResponse = await fetch(
+          `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
+        );
+        if (syncResponse.ok) {
+          const syncResult = await syncResponse.json();
+          console.log("🔄 Sync result:", syncResult);
+        }
+      } catch (syncError) {
+        console.error("Sync error (non-critical):", syncError);
+      }
+
+      // Check payment status
       const statusResponse = await fetch(
-        `/api/payment/status?orderId=${transaction.orderId}`,
+        `/api/payment/status?orderId=${printJobId}`,
       );
 
       if (!statusResponse.ok) {
@@ -516,7 +560,7 @@ export const usePaymentManagement = (
       const pointsToAdd = (transaction.cost / pointDivider).toFixed(2);
 
       const printPayload = {
-        orderId: transaction.orderId,
+        orderId: printJobId,
         printerId: printerId,
         copies: transaction.settings.copies,
         colorPages: JSON.stringify(transaction.settings.colorPages),

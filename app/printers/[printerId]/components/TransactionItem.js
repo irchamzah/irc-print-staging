@@ -9,9 +9,9 @@ export const TransactionItem = ({
   isPaperInsufficient = false,
   paperMode = "limited", // ✅ Tambah: "limited" atau "unlimited"
 }) => {
-  // ✅ Gunakan paymentStatus (bukan status) untuk menentukan badge
-  const getStatusBadge = (paymentStatus) => {
-    switch (paymentStatus) {
+  // ✅ Gunakan transactionStatus (bukan status) untuk menentukan badge
+  const getStatusBadge = (transactionStatus) => {
+    switch (transactionStatus) {
       case "printed":
         return { class: "bg-gray-100 text-gray-600", text: "✅ Selesai" };
       case "paid":
@@ -31,14 +31,14 @@ export const TransactionItem = ({
       default:
         return {
           class: "bg-gray-100 text-gray-700",
-          text: paymentStatus || "Unknown",
+          text: transactionStatus || "Unknown",
         };
     }
   };
 
-  // ✅ Gunakan paymentStatus, fallback ke status jika tidak ada
+  // ✅ Gunakan transactionStatus, fallback ke status jika tidak ada
   const currentStatus =
-    transaction.paymentStatus || transaction.status || "pending";
+    transaction.transactionStatus || transaction.status || "pending";
   const statusBadge = getStatusBadge(currentStatus);
 
   // ✅ Hitung jumlah halaman dari settings atau fileData
