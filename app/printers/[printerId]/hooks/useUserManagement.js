@@ -2,6 +2,27 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 
+// Function to normalize phone number to +628xxxxxxxxx format
+function normalizePhoneNumber(phone) {
+  if (!phone) return phone;
+
+  // Remove all non-digit characters
+  let cleaned = phone.replace(/\D/g, "");
+
+  // If starts with 0, replace with 62
+  if (cleaned.startsWith("0")) {
+    cleaned = "62" + cleaned.substring(1);
+  }
+
+  // If starts with 8, add 62
+  if (cleaned.startsWith("8")) {
+    cleaned = "62" + cleaned;
+  }
+
+  // Add + prefix
+  return "+" + cleaned;
+}
+
 // useUserManagement - UPDATED dengan struktur baru
 export const useUserManagement = () => {
   const params = useParams();
@@ -139,6 +160,9 @@ export const useUserManagement = () => {
   // ============================================
   const createNewUserDirect = async (phone, isFallback = false) => {
     try {
+      // Normalize phone number before creating user
+      const normalizedPhone = normalizePhoneNumber(phone);
+
       // Dapatkan point divider dari printer
       const pointDivider = await getPrinterPointDivider();
 
@@ -147,8 +171,8 @@ export const useUserManagement = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: phone,
-          name: `User ${phone}`,
+          phone: normalizedPhone,
+          name: `User ${normalizedPhone}`,
           role: "customer",
         }),
       });
@@ -158,9 +182,9 @@ export const useUserManagement = () => {
 
         if (result.success && result.data) {
           const userData = {
-            phone: phone,
+            phone: normalizedPhone,
             points: 0,
-            name: result.data.name || `User ${phone}`,
+            name: result.data.name || `User ${normalizedPhone}`,
             userId: result.data.userId,
             role: result.data.role || "customer",
             timestamp: Date.now(),
@@ -194,10 +218,12 @@ export const useUserManagement = () => {
   // createLocalUserFallback - Local fallback if API fails
   // ============================================
   const createLocalUserFallback = async (phone) => {
+    const normalizedPhone = normalizePhoneNumber(phone);
+
     const userData = {
-      phone: phone,
+      phone: normalizedPhone,
       points: 0,
-      name: `User ${phone}`,
+      name: `User ${normalizedPhone}`,
       userId: `local-${Date.now()}`,
       role: "customer",
       timestamp: Date.now(),

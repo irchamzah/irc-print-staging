@@ -72,6 +72,11 @@ export const RefillDetailModal = ({
     return job.totalPages || job.pages?.length || 0;
   };
 
+  // Helper untuk mendapatkan printJobId
+  const getPrintJobId = (job) => {
+    return job.printJobId || job.jobId || job.id;
+  };
+
   if (!isOpen || !refill) return null;
 
   return (
@@ -129,7 +134,6 @@ export const RefillDetailModal = ({
                 {refill.paperCountAfter}
               </p>
             </div>
-            {/* ✅ HAPUS profitShare karena sudah tidak ada di struktur baru */}
           </div>
 
           {/* Summary */}
@@ -146,7 +150,6 @@ export const RefillDetailModal = ({
                 {formatRupiah(refill.partnerProfit)}
               </span>
             </div>
-            {/* ✅ TAMBAH Platform Profit */}
             <div className="flex justify-between items-center mt-2">
               <span className="text-sm text-gray-600">Profit Platform:</span>
               <span className="text-lg font-bold text-blue-600">
@@ -215,7 +218,7 @@ export const RefillDetailModal = ({
           <div className="space-y-3">
             {jobs?.map((job) => (
               <div
-                key={job.jobId}
+                key={getPrintJobId(job)}
                 className="border border-gray-200 rounded-lg p-3"
               >
                 <div className="flex justify-between items-start">

@@ -2,45 +2,35 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// Function to normalize phone number to +628xxxxxxxxx format
-function normalizePhoneNumber(phone) {
-  if (!phone) return phone;
-
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, "");
-
-  // If starts with 0, replace with 62
-  if (cleaned.startsWith("0")) {
-    cleaned = "62" + cleaned.substring(1);
-  }
-
-  // If starts with 8, add 62
-  if (cleaned.startsWith("8")) {
-    cleaned = "62" + cleaned;
-  }
-
-  // Add + prefix
-  return "+" + cleaned;
-}
-
-// GET /api/hub/admin/users/:userId - Get single user
+// GET /api/hub/admin/printer-models/:printerModelId
 export async function GET(request, { params }) {
   try {
-    const { userId } = await params;
+    const { printerModelId } = await params;
 
     const response = await fetch(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users/${userId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printer-models/${printerModelId}`,
       {
         headers: {
-          Authorization: request.headers.get("authorization"),
+          "Content-Type": "application/json",
+          ...(request.headers.get("authorization") && {
+            Authorization: request.headers.get("authorization"),
+          }),
         },
       },
     );
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      return NextResponse.json(
+        { success: false, error: `VPS API error: ${response.status}` },
+        { status: response.status },
+      );
+    }
+
     const result = await response.json();
-    return NextResponse.json(result, { status: response.status });
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("❌ Error fetching user:", error);
+    console.error("❌ Error fetching printer model:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
@@ -48,19 +38,14 @@ export async function GET(request, { params }) {
   }
 }
 
-// PUT /api/hub/admin/users/:userId - Update user
+// PUT /api/hub/admin/printer-models/:printerModelId
 export async function PUT(request, { params }) {
   try {
-    const { userId } = await params;
+    const { printerModelId } = await params;
     const body = await request.json();
 
-    // Normalize phone number if present
-    if (body.phone) {
-      body.phone = normalizePhoneNumber(body.phone);
-    }
-
     const response = await fetch(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users/${userId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printer-models/${printerModelId}`,
       {
         method: "PUT",
         headers: {
@@ -74,7 +59,7 @@ export async function PUT(request, { params }) {
     const result = await response.json();
     return NextResponse.json(result, { status: response.status });
   } catch (error) {
-    console.error("❌ Error updating user:", error);
+    console.error("❌ Error updating printer model:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
@@ -82,13 +67,13 @@ export async function PUT(request, { params }) {
   }
 }
 
-// DELETE /api/hub/admin/users/:userId - Delete user
+// DELETE /api/hub/admin/printer-models/:printerModelId
 export async function DELETE(request, { params }) {
   try {
-    const { userId } = await params;
+    const { printerModelId } = await params;
 
     const response = await fetch(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users/${userId}`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printer-models/${printerModelId}`,
       {
         method: "DELETE",
         headers: {
@@ -100,7 +85,7 @@ export async function DELETE(request, { params }) {
     const result = await response.json();
     return NextResponse.json(result, { status: response.status });
   } catch (error) {
-    console.error("❌ Error deleting user:", error);
+    console.error("❌ Error deleting printer model:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },

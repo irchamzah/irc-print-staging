@@ -1,4 +1,4 @@
-// app/hub/printers/[printerId]/page.js
+// app/hub/printers/[printerId]/page.js - UPDATED dengan struktur baru
 "use client";
 import { Suspense } from "react";
 import { useState, useRef, useEffect } from "react";
@@ -49,6 +49,7 @@ function PartnerHubContent() {
     filteredRefills,
     filteredTotalRevenue,
     filteredPartnerProfit,
+    filteredPlatformProfit, // ✅ Tambah platform profit
     profit,
     dateRange,
     setCustomDateRange,
@@ -90,7 +91,6 @@ function PartnerHubContent() {
     }
   }, [searchParams, initialLoading]);
 
-  // Scroll to section when page loads with hash or pagination
   useEffect(() => {
     if (
       !initialLoading &&
@@ -126,8 +126,10 @@ function PartnerHubContent() {
     }
   };
 
+  // ✅ Update menggunakan paperRefillId
   const handleViewRefill = (refill) => {
-    const relatedJobs = getJobsByRefill(refill.refillId);
+    const paperRefillId = refill.paperRefillId || refill.refillId;
+    const relatedJobs = getJobsByRefill(paperRefillId);
     setSelectedRefill({ ...refill, jobs: relatedJobs });
     setShowRefillModal(true);
   };
@@ -147,14 +149,17 @@ function PartnerHubContent() {
     setShowProofModal(true);
   };
 
+  // ✅ Update menggunakan paperRefillId
   const handleConfirmPayment = async (formData) => {
     if (!selectedRefill) return;
 
-    setProcessingId(selectedRefill.refillId);
+    const paperRefillId =
+      selectedRefill.paperRefillId || selectedRefill.refillId;
+    setProcessingId(paperRefillId);
 
     try {
       const response = await fetch(
-        `/api/hub/admin/paper-refills/${selectedRefill.refillId}/pay`,
+        `/api/hub/admin/paper-refills/${paperRefillId}/pay`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -329,23 +334,23 @@ function PartnerHubContent() {
           formatDate={formatDate}
         />
 
+        {/* ✅ Update ProfitOverview tanpa profitShare */}
         <ProfitOverview
           totalRevenue={filteredTotalRevenue}
-          profitShare={profit.profitShare}
           pendingPayout={profit.pendingPayout}
-          totalProfit={profit.partnerProfit}
+          paidProfit={profit.paidProfit}
+          platformProfit={filteredPlatformProfit}
           formatRupiah={formatRupiah}
           dateRange={dateRange}
         />
 
-        {/* ✅ Tambahkan ref ke section refills */}
+        {/* Section Refills */}
         <div ref={refillsSectionRef}>
           <PaperRefillHistory
             refills={filteredRefills}
             onViewRefill={handleViewRefill}
             formatRupiah={formatRupiah}
             formatShortDate={formatShortDate}
-            // Props pagination
             currentPage={refillsCurrentPage}
             totalPages={refillsTotalPages}
             totalItems={refillsTotalItems}
@@ -359,7 +364,7 @@ function PartnerHubContent() {
           />
         </div>
 
-        {/* ✅ Tambahkan ref ke section jobs */}
+        {/* Section Jobs (commented out, bisa diaktifkan nanti) */}
         {/* <div ref={jobsSectionRef} className="mt-8">
           <PrintJobsTable
             jobs={filteredJobs}
@@ -368,7 +373,6 @@ function PartnerHubContent() {
             formatRupiah={formatRupiah}
             formatDate={formatDate}
             formatShortDate={formatShortDate}
-            // Props pagination
             currentPage={jobsCurrentPage}
             totalPages={jobsTotalPages}
             totalItems={jobsTotalItems}
@@ -382,7 +386,8 @@ function PartnerHubContent() {
           />
         </div> */}
 
-        <InfoCard profitShare={profit.profitShare} />
+        {/* ✅ Update InfoCard tanpa profitShare */}
+        {/* <InfoCard /> */}
       </div>
 
       <RefillDetailModal
@@ -400,7 +405,10 @@ function PartnerHubContent() {
         onClose={() => setShowProofModal(false)}
         onConfirm={handleConfirmPayment}
         refill={selectedRefill}
-        processing={processingId === selectedRefill?.refillId}
+        processing={
+          processingId ===
+          (selectedRefill?.paperRefillId || selectedRefill?.refillId)
+        }
         formatRupiah={formatRupiah}
       />
     </div>

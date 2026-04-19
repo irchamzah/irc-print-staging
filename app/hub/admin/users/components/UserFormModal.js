@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 
-// UserFormModal - UPDATED dengan accessPrinterIds
+// UserFormModal - UPDATED dengan role admin & customer
 export const UserFormModal = ({
   isOpen,
   onClose,
@@ -14,9 +14,9 @@ export const UserFormModal = ({
   const [formData, setFormData] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
-    role: user?.role || "user",
+    role: user?.role || "customer", // ✅ Ganti default "user" → "customer"
     password: "",
-    accessPrinterIds: user?.accessPrinterIds || [], // ✅ Ganti accessPrinters → accessPrinterIds
+    accessPrinterIds: user?.accessPrinterIds || [],
     bankAccount: {
       bankName: user?.bankAccount?.bankName || "",
       accountNumber: user?.bankAccount?.accountNumber || "",
@@ -29,9 +29,9 @@ export const UserFormModal = ({
       setFormData({
         name: user.name || "",
         phone: user.phone || "",
-        role: user.role || "user",
+        role: user.role || "customer",
         password: "",
-        accessPrinterIds: user.accessPrinterIds || [], // ✅ Ganti
+        accessPrinterIds: user.accessPrinterIds || [],
         bankAccount: {
           bankName: user.bankAccount?.bankName || "",
           accountNumber: user.bankAccount?.accountNumber || "",
@@ -43,9 +43,9 @@ export const UserFormModal = ({
       setFormData({
         name: "",
         phone: "",
-        role: "user",
+        role: "customer", // ✅ Ganti default "user" → "customer"
         password: "",
-        accessPrinterIds: [], // ✅ Ganti
+        accessPrinterIds: [],
         bankAccount: {
           bankName: "",
           accountNumber: "",
@@ -65,13 +65,23 @@ export const UserFormModal = ({
   const togglePrinter = (printerId) => {
     setFormData((prev) => ({
       ...prev,
-      accessPrinterIds: prev.accessPrinterIds.includes(printerId) // ✅ Ganti
+      accessPrinterIds: prev.accessPrinterIds.includes(printerId)
         ? prev.accessPrinterIds.filter((id) => id !== printerId)
         : [...prev.accessPrinterIds, printerId],
     }));
   };
 
-  // Daftar bank Indonesia umum (tidak berubah)
+  // ✅ Cek apakah role memiliki akses ke printer
+  const hasPrinterAccess = (role) => {
+    return role === "partner" || role === "admin";
+  };
+
+  // ✅ Cek apakah role memiliki informasi bank
+  const hasBankAccountAccess = (role) => {
+    return role === "partner" || role === "admin";
+  };
+
+  // Daftar bank Indonesia umum
   const bankOptions = [
     { value: "", label: "Pilih Bank" },
     { value: "BCA", label: "Bank BCA" },
@@ -181,7 +191,7 @@ export const UserFormModal = ({
               />
             </div>
 
-            {/* Role */}
+            {/* Role - ✅ Update options */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Role
@@ -193,149 +203,153 @@ export const UserFormModal = ({
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
               >
-                <option value="user">User</option>
+                <option value="customer">Customer</option>
                 <option value="partner">Partner</option>
+                <option value="admin">Admin</option>
                 <option value="super_admin">Super Admin</option>
               </select>
             </div>
 
-            {/* Bank Information Section */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-gray-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+            {/* Bank Information Section - ✅ Untuk partner dan admin */}
+            {hasBankAccountAccess(formData.role) && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                  <svg
+                    className="w-5 h-5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                  Informasi Bank (untuk Partner/Admin)
+                </h4>
+
+                {/* Nama Bank */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Bank
+                  </label>
+                  <select
+                    value={formData.bankAccount.bankName}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        bankAccount: {
+                          ...formData.bankAccount,
+                          bankName: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  >
+                    {bankOptions.map((bank) => (
+                      <option key={bank.value} value={bank.value}>
+                        {bank.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Nomor Rekening */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nomor Rekening
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bankAccount.accountNumber}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        bankAccount: {
+                          ...formData.bankAccount,
+                          accountNumber: e.target.value.replace(/\D/g, ""),
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Contoh: 1234567890"
                   />
-                </svg>
-                Informasi Bank (untuk Partner)
-              </h4>
+                </div>
 
-              {/* Nama Bank */}
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Bank
-                </label>
-                <select
-                  value={formData.bankAccount.bankName}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      bankAccount: {
-                        ...formData.bankAccount,
-                        bankName: e.target.value,
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  {bankOptions.map((bank) => (
-                    <option key={bank.value} value={bank.value}>
-                      {bank.label}
-                    </option>
-                  ))}
-                </select>
+                {/* Nama Pemilik Rekening */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Pemilik Rekening
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.bankAccount.accountName}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        bankAccount: {
+                          ...formData.bankAccount,
+                          accountName: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    placeholder="Sesuai dengan nama di rekening"
+                  />
+                </div>
+
+                <p className="text-xs text-gray-500 mt-2">
+                  * Informasi bank digunakan untuk transfer keuntungan bagi
+                  pengguna dengan role Partner atau Admin
+                </p>
               </div>
+            )}
 
-              {/* Nomor Rekening */}
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nomor Rekening
-                </label>
-                <input
-                  type="text"
-                  value={formData.bankAccount.accountNumber}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      bankAccount: {
-                        ...formData.bankAccount,
-                        accountNumber: e.target.value.replace(/\D/g, ""),
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Contoh: 1234567890"
-                />
-              </div>
-
-              {/* Nama Pemilik Rekening */}
+            {/* Akses Printer - ✅ Untuk partner dan admin */}
+            {hasPrinterAccess(formData.role) && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nama Pemilik Rekening
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Akses ke Printer
                 </label>
-                <input
-                  type="text"
-                  value={formData.bankAccount.accountName}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      bankAccount: {
-                        ...formData.bankAccount,
-                        accountName: e.target.value,
-                      },
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  placeholder="Sesuai dengan nama di rekening"
-                />
+                <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+                  {printers && printers.length > 0 ? (
+                    printers.map((printer) => (
+                      <label
+                        key={printer.printerId}
+                        className="flex items-center gap-3 py-2 hover:bg-gray-50 px-2 rounded"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={formData.accessPrinterIds.includes(
+                            printer.printerId,
+                          )}
+                          onChange={() => togglePrinter(printer.printerId)}
+                          className="rounded text-purple-600 focus:ring-purple-500"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-800">
+                            {printer.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {printer.location?.city || "Lokasi tidak tersedia"}
+                          </p>
+                        </div>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      Tidak ada printer tersedia
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">
+                  * Hanya user dengan role Partner atau Admin yang perlu memilih
+                  akses printer
+                </p>
               </div>
-
-              <p className="text-xs text-gray-500 mt-2">
-                * Informasi bank digunakan untuk transfer keuntungan bagi
-                pengguna dengan role Partner
-              </p>
-            </div>
-
-            {/* Akses Printer */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Akses ke Printer
-              </label>
-              <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
-                {printers && printers.length > 0 ? (
-                  printers.map((printer) => (
-                    <label
-                      key={printer.printerId}
-                      className="flex items-center gap-3 py-2 hover:bg-gray-50 px-2 rounded"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.accessPrinterIds.includes(
-                          // ✅ Ganti
-                          printer.printerId,
-                        )}
-                        onChange={() => togglePrinter(printer.printerId)}
-                        className="rounded text-purple-600 focus:ring-purple-500"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-800">
-                          {printer.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {printer.location?.city || "Lokasi tidak tersedia"}
-                        </p>
-                      </div>
-                    </label>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    Tidak ada printer tersedia
-                  </p>
-                )}
-              </div>
-              <p className="text-xs text-gray-400 mt-2">
-                * Hanya user dengan role Partner yang perlu memilih akses
-                printer
-              </p>
-            </div>
+            )}
           </div>
         </form>
 

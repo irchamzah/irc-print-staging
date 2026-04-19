@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 
-// PrinterFormModal - UPDATED dengan struktur baru
+// PrinterFormModal
 export const PrinterFormModal = ({
   isOpen,
   onClose,
@@ -801,7 +801,7 @@ export const PrinterFormModal = ({
                   <span>→</span>
                   <input
                     type="number"
-                    value={discount.discountPercent}
+                    value={discount.discountPercent ?? 0}
                     onChange={(e) =>
                       updateVolumeDiscount(
                         index,
@@ -857,6 +857,68 @@ export const PrinterFormModal = ({
                 <p className="text-xs text-gray-400 mt-1">
                   Contoh: 4000 → setiap Rp 4.000 = 1 point
                 </p>
+              </div>
+            </div>
+
+            {/* Profit Distribution Settings */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                📊 Profit Distribution
+              </h4>
+              <p className="text-xs text-gray-500 mb-3">
+                Persentase profit partner berdasarkan siapa yang mengisi kertas
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Partner Isi Sendiri (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={
+                      formData.profitDistribution?.partnerSelfRefill ?? 100
+                    }
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        profitDistribution: {
+                          ...formData.profitDistribution,
+                          partnerSelfRefill: parseInt(e.target.value) || 0,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    min="0"
+                    max="100"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Profit partner jika mengisi kertas sendiri
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Admin Isi (%)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.profitDistribution?.adminRefill ?? 50}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        profitDistribution: {
+                          ...formData.profitDistribution,
+                          adminRefill: parseInt(e.target.value) || 0,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    min="0"
+                    max="100"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Profit partner jika admin yang mengisi kertas
+                  </p>
+                </div>
               </div>
             </div>
 

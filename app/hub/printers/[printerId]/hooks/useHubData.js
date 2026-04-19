@@ -357,7 +357,11 @@ export const useHubData = (
 
   // ✅ Pending payout (active refills) - partner profit
   const pendingPayout = filteredAllRefills
-    .filter((r) => r.status === "active")
+    .filter((r) => r.status === "active" || r.status === "completed")
+    .reduce((sum, r) => sum + (r.partnerProfit || 0), 0);
+
+  const paidProfit = filteredAllRefills
+    .filter((r) => r.status === "paid")
     .reduce((sum, r) => sum + (r.partnerProfit || 0), 0);
 
   const profit = {
@@ -365,6 +369,7 @@ export const useHubData = (
     partnerProfit: totalPartnerProfit,
     platformProfit: totalPlatformProfit,
     pendingPayout,
+    paidProfit,
   };
 
   const formatRupiah = (amount) => {

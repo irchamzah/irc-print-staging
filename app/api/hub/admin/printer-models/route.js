@@ -1,44 +1,20 @@
-// app/api/hub/admin/users/route.js
 import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// Function to normalize phone number to +628xxxxxxxxx format
-function normalizePhoneNumber(phone) {
-  if (!phone) return phone;
-
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, "");
-
-  // If starts with 0, replace with 62
-  if (cleaned.startsWith("0")) {
-    cleaned = "62" + cleaned.substring(1);
-  }
-
-  // If starts with 8, add 62
-  if (cleaned.startsWith("8")) {
-    cleaned = "62" + cleaned;
-  }
-
-  // Add + prefix
-  return "+" + cleaned;
-}
-
-// GET /api/hub/admin/users - Get all users with filters
+// GET /api/hub/admin/printer-models
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
+    const vpsUrl = new URL(
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printer-models`,
+    );
 
-    // Forward all query params to VPS
-    const vpsUrl = new URL(`${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users`);
-
-    // Copy all search params
     searchParams.forEach((value, key) => {
       vpsUrl.searchParams.set(key, value);
     });
 
     const response = await fetch(vpsUrl.toString(), {
-      method: "GET",
       headers: {
         "Content-Type": "application/json",
         ...(request.headers.get("authorization") && {
@@ -59,7 +35,7 @@ export async function GET(request) {
     const result = await response.json();
     return NextResponse.json(result);
   } catch (error) {
-    console.error("❌ Error fetching users:", error);
+    console.error("❌ Error fetching printer models:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
@@ -67,18 +43,13 @@ export async function GET(request) {
   }
 }
 
-// POST /api/hub/admin/users - Create new user
+// POST /api/hub/admin/printer-models
 export async function POST(request) {
   try {
     const body = await request.json();
 
-    // Normalize phone number if present
-    if (body.phone) {
-      body.phone = normalizePhoneNumber(body.phone);
-    }
-
     const response = await fetch(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users`,
+      `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/printer-models`,
       {
         method: "POST",
         headers: {
@@ -92,7 +63,7 @@ export async function POST(request) {
     const result = await response.json();
     return NextResponse.json(result, { status: response.status });
   } catch (error) {
-    console.error("❌ Error creating user:", error);
+    console.error("❌ Error creating printer model:", error);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },

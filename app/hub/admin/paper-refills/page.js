@@ -77,25 +77,43 @@ function PaperRefillsContent() {
     changeSort(sortBy, sortOrder);
   };
 
+  // ✅ Update: Gunakan paperRefillId
   const handleMarkAsPaid = (refill) => {
+    const paperRefillId = refill.paperRefillId || refill.refillId;
+
     if (refill.status !== "completed") {
       alert('❌ Hanya refill dengan status "Selesai" yang bisa dibayar');
       return;
     }
-    setSelectedRefill(refill);
+
+    if (refill.totalRevenue <= 0) {
+      alert("❌ Tidak bisa membayar refill tanpa pendapatan");
+      return;
+    }
+
+    setSelectedRefill({
+      ...refill,
+      paperRefillId: paperRefillId,
+    });
     setShowProofModal(true);
   };
 
+  // ✅ Update: Gunakan paperRefillId
   const handleConfirmPayment = async (formData) => {
     if (!selectedRefill) return;
-    setProcessingId(selectedRefill.refillId);
-    const result = await markAsPaid(selectedRefill.refillId, formData);
+
+    const paperRefillId =
+      selectedRefill.paperRefillId || selectedRefill.refillId;
+    setProcessingId(paperRefillId);
+
+    const result = await markAsPaid(paperRefillId, formData);
+
     if (result.success) {
       alert("✅ Pembayaran berhasil");
       setShowProofModal(false);
       await refresh();
     } else {
-      alert("❌ Gagal: " + result.error);
+      alert("❌ Gagal: " + (result.error || "Terjadi kesalahan"));
     }
     setProcessingId(null);
   };
@@ -193,7 +211,10 @@ function PaperRefillsContent() {
         onClose={() => setShowProofModal(false)}
         onConfirm={handleConfirmPayment}
         refill={selectedRefill}
-        processing={processingId === selectedRefill?.refillId}
+        processing={
+          processingId ===
+          (selectedRefill?.paperRefillId || selectedRefill?.refillId)
+        }
         formatRupiah={formatRupiah}
       />
     </div>
@@ -207,6 +228,21 @@ const tabs = [
     id: "refills",
     label: "💰 Paper Refills",
     href: "/hub/admin/paper-refills",
+  },
+  {
+    id: "printer-models",
+    label: "📦 Printer Models",
+    href: "/hub/admin/printer-models",
+  },
+  {
+    id: "platform-settings",
+    label: "⚙️ Platform Settings",
+    href: "/hub/admin/platform-settings",
+  },
+  {
+    id: "withdrawals",
+    label: "🏦 Withdrawals",
+    href: "/hub/admin/partner-withdrawals",
   },
 ];
 
