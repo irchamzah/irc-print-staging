@@ -282,22 +282,25 @@ export const useAdminPaperRefills = () => {
     [filters, pagination.limit, updateUrl],
   );
 
-  // Mark refill as paid (menggunakan paperRefillId)
+  // Di dalam useAdminPaperRefills.js, update fungsi markAsPaid
   const markAsPaid = useCallback(
-    async (paperRefillId, formData) => {
+    async (paperRefillId) => {
       try {
         const response = await fetch(
           `/api/hub/admin/paper-refills/${paperRefillId}/pay`,
           {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({}), // ✅ Kosongkan body, tanpa formData
           },
         );
 
         const result = await response.json();
         if (result.success) {
-          await fetchRefills(); // Refresh setelah update
+          await fetchRefills();
         }
         return result;
       } catch (err) {

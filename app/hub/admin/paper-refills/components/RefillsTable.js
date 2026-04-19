@@ -3,7 +3,6 @@ import CustomLink from "@/app/components/CustomLink";
 export const RefillsTable = ({
   refills,
   onMarkAsPaid,
-  onViewProof,
   processingId,
   formatDate,
   formatRupiah,
@@ -51,10 +50,10 @@ export const RefillsTable = ({
               Profit Partner
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Status
+              Profit Platform
             </th>
             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Bukti
+              Status
             </th>
             <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
               Aksi
@@ -93,64 +92,39 @@ export const RefillsTable = ({
                       href={`/hub/printers/${refill.printerId}`}
                       className="text-blue-500 hover:underline"
                     >
-                      {refill.printerName}
+                      {refill.printerName || refill.printerId}
                     </CustomLink>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {refill.filledByName}
                     <p className="text-xs text-gray-400">
-                      {refill.filledByRole}
+                      {refill.filledByRole === "super_admin"
+                        ? "Admin"
+                        : refill.filledByRole}
                     </p>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {refill.sheetsAdded} lembar
                     <p className="text-xs text-gray-400">
-                      {refill.paperCountBefore} → {refill.paperCountAfter}
+                      Stok: {refill.paperCountBefore} → {refill.paperCountAfter}
                     </p>
                   </td>
                   <td className="px-4 py-3">
                     <div className="text-sm font-medium text-green-600">
                       {formatRupiah(refill.partnerProfit)}
                     </div>
-                    {/* ✅ HAPUS profitShare - tidak ada di struktur baru */}
                     <p className="text-xs text-gray-400">
                       dari {formatRupiah(refill.totalRevenue)}
                     </p>
                   </td>
-                  <td className="px-4 py-3">{getStatusBadge(refill.status)}</td>
                   <td className="px-4 py-3">
-                    {refill.transferProof ? (
-                      <button
-                        onClick={() => onViewProof(refill)}
-                        className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1"
-                        title="Lihat Bukti"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                        Lihat
-                      </button>
-                    ) : (
-                      <span className="text-xs text-gray-400">-</span>
-                    )}
+                    <div className="text-sm font-medium text-blue-600">
+                      {formatRupiah(refill.platformProfit)}
+                    </div>
                   </td>
+                  <td className="px-4 py-3">{getStatusBadge(refill.status)}</td>
                   <td className="px-4 py-3 text-right">
+                    {/* ✅ Tombol hanya untuk status completed */}
                     {refill.status === "completed" && (
                       <button
                         onClick={() => onMarkAsPaid(refill)}
@@ -171,9 +145,10 @@ export const RefillsTable = ({
                         )}
                       </button>
                     )}
+                    {/* ✅ Tampilkan info siapa yang membayar jika status paid */}
                     {refill.status === "paid" && refill.paidByName && (
                       <p className="text-xs text-gray-400 mt-1">
-                        Oleh: {refill.paidByName}
+                        Dibayar oleh: {refill.paidByName}
                       </p>
                     )}
                   </td>
