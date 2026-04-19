@@ -1,7 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
-// PrinterFormModal
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
+
+// PrinterFormModal - UPDATED dengan upload gambar
 export const PrinterFormModal = ({
   isOpen,
   onClose,
@@ -27,10 +30,16 @@ export const PrinterFormModal = ({
   const ALL_QUALITIES = ["draft", "normal", "high"];
   const ALL_COLOR_MODES = ["color", "monochrome"];
 
+  // State untuk gambar
+  const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [imageError, setImageError] = useState(null);
+
   const [formData, setFormData] = useState({
     printerId: "",
     name: "",
-    modelId: "model_canon_g1010", // Default model ID
+    modelId: "model_canon_g1010",
     model: "",
     location: {
       address: "",
@@ -42,7 +51,7 @@ export const PrinterFormModal = ({
       },
       mapsUrl: "",
     },
-    paperMode: "limited", // "limited" atau "unlimited"
+    paperMode: "limited",
     enabledFeatures: {
       paperSizes: ["A4", "F4"],
       colorModes: ["color", "monochrome"],
@@ -50,7 +59,7 @@ export const PrinterFormModal = ({
       borderlessSizes: [],
       duplex: {
         enabled: false,
-        type: null, // null, "manual", "automatic"
+        type: null,
       },
     },
     ownerPrices: {
@@ -68,6 +77,10 @@ export const PrinterFormModal = ({
     ],
     extraFees: {
       highQuality: { enabled: false, feePercent: 0 },
+    },
+    profitDistribution: {
+      partnerSelfRefill: 100,
+      adminRefill: 50,
     },
     pointDivider: 4000,
     paperStatus: {
@@ -90,10 +103,38 @@ export const PrinterFormModal = ({
     status: "offline",
   });
 
+  // Fetch existing images when editing
+  useEffect(() => {
+    if (printer && printer.printerId) {
+      fetchExistingImages(printer.printerId);
+    }
+  }, [printer]);
+
+  const fetchExistingImages = async (printerId) => {
+    try {
+      const token = localStorage.getItem("hubToken");
+      const response = await fetch(`/api/hub/printers/${printerId}/images`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // ✅ TAMBAHKAN URL LENGKAP DARI VPS
+          const imagesWithFullUrl = (data.images || []).map((img) => ({
+            ...img,
+            url: `${NEXT_PUBLIC_VPS_API_URL}${img.url}`,
+          }));
+          setExistingImages(imagesWithFullUrl);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching existing images:", error);
+    }
+  };
+
   // Update formData ketika printer berubah (untuk edit)
   useEffect(() => {
     if (printer) {
-      // Inisialisasi ownerPrices dan markup untuk semua ukuran jika belum ada
       const initPrices = (pricesObj, defaultPrice) => {
         const result = { ...pricesObj };
         for (const size of ALL_PAPER_SIZES) {
@@ -144,6 +185,10 @@ export const PrinterFormModal = ({
         extraFees: printer.extraFees || {
           highQuality: { enabled: false, feePercent: 0 },
         },
+        profitDistribution: printer.profitDistribution || {
+          partnerSelfRefill: 100,
+          adminRefill: 50,
+        },
         pointDivider: printer.pointDivider || 4000,
         paperStatus: printer.paperStatus || {
           available: true,
@@ -165,7 +210,6 @@ export const PrinterFormModal = ({
         status: printer.status || "offline",
       });
     } else {
-      // Reset ke default untuk create new
       const defaultMonochrome = {};
       const defaultColor = {};
       const defaultMarkupMonochrome = {};
@@ -217,6 +261,10 @@ export const PrinterFormModal = ({
         extraFees: {
           highQuality: { enabled: false, feePercent: 0 },
         },
+        profitDistribution: {
+          partnerSelfRefill: 100,
+          adminRefill: 50,
+        },
         pointDivider: 4000,
         paperStatus: {
           available: true,
@@ -237,17 +285,147 @@ export const PrinterFormModal = ({
         },
         status: "offline",
       });
+      setExistingImages([]);
     }
+    setImages([]);
   }, [printer]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // First, submit the printer form data
     onSubmit(formData);
   };
 
-  // Helper untuk update owner price per ukuran
+  // Handle image upload
+  const handleImageUpload = async () => {
+    if (images.length === 0) {
+      console.log("No images to upload");
+      return;
+    }
+
+    console.log(`📸 Preparing to upload ${images.length} images`);
+
+    setUploadingImages(true);
+    setImageError(null);
+
+    const formDataImg = new FormData();
+    images.forEach((img) => {
+      console.log(
+        `📸 Appending file: ${img.file.name}, size: ${img.file.size}`,
+      );
+      formDataImg.append("images", img.file);
+    });
+
+    try {
+      const token = localStorage.getItem("hubToken");
+      console.log(
+        `📸 Sending to: /api/hub/printers/${formData.printerId}/images`,
+      );
+
+      const response = await fetch(
+        `/api/hub/printers/${formData.printerId}/images`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formDataImg,
+        },
+      );
+
+      console.log(`📸 Response status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Upload failed:", errorText);
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("Upload result:", result);
+
+      if (result.success) {
+        setExistingImages((prev) => [...prev, ...result.images]);
+        // Clean up preview URLs
+        images.forEach((img) => {
+          if (img.preview) URL.revokeObjectURL(img.preview);
+        });
+        setImages([]);
+        alert(`✅ ${result.images.length} gambar berhasil diupload`);
+      } else {
+        setImageError(result.error || "Upload failed");
+      }
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      setImageError(error.message);
+      alert("Gagal upload gambar: " + error.message);
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  // Handle image selection preview - PERBAIKAN
+  const handleImageSelect = (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const fileList = Array.from(files);
+    const imagePreviews = fileList.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setImages((prev) => [...prev, ...imagePreviews]);
+    // Clear file input so same file can be selected again
+    e.target.value = "";
+  };
+
+  // Remove selected image from preview
+  const removeSelectedImage = (index) => {
+    const imgToRemove = images[index];
+    if (imgToRemove && imgToRemove.preview) {
+      URL.revokeObjectURL(imgToRemove.preview);
+    }
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Delete existing image
+  const handleDeleteImage = async (imageId) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus gambar ini?")) return;
+
+    try {
+      const token = localStorage.getItem("hubToken");
+      const response = await fetch(
+        `/api/hub/printers/${formData.printerId}/images/${imageId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error(`Delete failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.success) {
+        setExistingImages((prev) =>
+          prev.filter((img) => img.filename !== imageId),
+        );
+      } else {
+        alert("Gagal menghapus gambar: " + result.error);
+      }
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      alert("Gagal menghapus gambar: " + error.message);
+    }
+  };
+
+  // Helper functions for form fields (same as before)
   const updateOwnerPrice = (colorMode, paperSize, value) => {
     setFormData({
       ...formData,
@@ -261,7 +439,6 @@ export const PrinterFormModal = ({
     });
   };
 
-  // Helper untuk update markup per ukuran
   const updateMarkup = (colorMode, paperSize, value) => {
     setFormData({
       ...formData,
@@ -275,7 +452,6 @@ export const PrinterFormModal = ({
     });
   };
 
-  // Toggle paper size di enabledFeatures
   const togglePaperSize = (size) => {
     const currentSizes = [...formData.enabledFeatures.paperSizes];
     if (currentSizes.includes(size)) {
@@ -297,7 +473,6 @@ export const PrinterFormModal = ({
     }
   };
 
-  // Toggle quality di enabledFeatures
   const toggleQuality = (quality) => {
     const currentQuality = [...formData.enabledFeatures.qualities];
     if (currentQuality.includes(quality)) {
@@ -319,14 +494,12 @@ export const PrinterFormModal = ({
     }
   };
 
-  // Update volume discount
   const updateVolumeDiscount = (index, field, value) => {
     const newDiscounts = [...formData.volumeDiscounts];
     newDiscounts[index] = { ...newDiscounts[index], [field]: value };
     setFormData({ ...formData, volumeDiscounts: newDiscounts });
   };
 
-  // Tambah volume discount
   const addVolumeDiscount = () => {
     setFormData({
       ...formData,
@@ -337,13 +510,11 @@ export const PrinterFormModal = ({
     });
   };
 
-  // Hapus volume discount
   const removeVolumeDiscount = (index) => {
     const newDiscounts = formData.volumeDiscounts.filter((_, i) => i !== index);
     setFormData({ ...formData, volumeDiscounts: newDiscounts });
   };
 
-  // Fungsi untuk menambah field nomor telepon
   const addPhoneField = () => {
     setFormData({
       ...formData,
@@ -410,6 +581,146 @@ export const PrinterFormModal = ({
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
               <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Upload Images Section */}
+          {(formData.printerId || printer) && (
+            <div className="bg-gray-50 p-4 rounded-lg mb-6">
+              <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                Gallery Printer
+              </h4>
+
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Gambar yang sudah ada:
+                  </p>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    {existingImages.map((img) => (
+                      <div key={img.filename} className="relative group">
+                        <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                          <img
+                            src={img.url}
+                            alt="Printer"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteImage(img.filename)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Image Preview for new uploads */}
+              {images.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Preview gambar baru:
+                  </p>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                    {images.map((img, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                          <img
+                            src={img.preview}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeSelectedImage(idx)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upload Button */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Upload Gambar (JPG, PNG, GIF, WEBP - maks 5MB per file)
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    id="imageUploadInput"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    multiple
+                    onChange={handleImageSelect}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                    disabled={!formData.printerId && !printer}
+                  />
+                  {images.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleImageUpload}
+                      disabled={uploadingImages}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm"
+                    >
+                      {uploadingImages ? "Mengupload..." : "Upload"}
+                    </button>
+                  )}
+                </div>
+                {!formData.printerId && !printer && (
+                  <p className="text-xs text-orange-500 mt-1">
+                    * Simpan printer terlebih dahulu sebelum upload gambar
+                  </p>
+                )}
+                {imageError && (
+                  <p className="text-xs text-red-500 mt-1">{imageError}</p>
+                )}
+              </div>
             </div>
           )}
 
