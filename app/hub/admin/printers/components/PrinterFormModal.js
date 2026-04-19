@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
@@ -110,6 +109,7 @@ export const PrinterFormModal = ({
     }
   }, [printer]);
 
+  // Di bagian fetchExistingImages
   const fetchExistingImages = async (printerId) => {
     try {
       const token = localStorage.getItem("hubToken");
@@ -118,9 +118,9 @@ export const PrinterFormModal = ({
       });
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          // ✅ TAMBAHKAN URL LENGKAP DARI VPS
-          const imagesWithFullUrl = (data.images || []).map((img) => ({
+        if (data.success && data.images) {
+          // ✅ Gunakan NEXT_PUBLIC_VPS_API_URL yang sudah didefinisikan
+          const imagesWithFullUrl = data.images.map((img) => ({
             ...img,
             url: `${NEXT_PUBLIC_VPS_API_URL}${img.url}`,
           }));
@@ -306,25 +306,16 @@ export const PrinterFormModal = ({
       return;
     }
 
-    console.log(`📸 Preparing to upload ${images.length} images`);
-
     setUploadingImages(true);
     setImageError(null);
 
     const formDataImg = new FormData();
     images.forEach((img) => {
-      console.log(
-        `📸 Appending file: ${img.file.name}, size: ${img.file.size}`,
-      );
       formDataImg.append("images", img.file);
     });
 
     try {
       const token = localStorage.getItem("hubToken");
-      console.log(
-        `📸 Sending to: /api/hub/printers/${formData.printerId}/images`,
-      );
-
       const response = await fetch(
         `/api/hub/printers/${formData.printerId}/images`,
         {
@@ -336,19 +327,22 @@ export const PrinterFormModal = ({
         },
       );
 
-      console.log(`📸 Response status: ${response.status}`);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Upload failed:", errorText);
         throw new Error(`Upload failed: ${response.status}`);
       }
 
       const result = await response.json();
-      console.log("Upload result:", result);
 
       if (result.success) {
-        setExistingImages((prev) => [...prev, ...result.images]);
+        // ✅ TAMBAHKAN URL LENGKAP VPS UNTUK GAMBAR BARU
+        const imagesWithFullUrl = result.images.map((img) => ({
+          ...img,
+          url: `${NEXT_PUBLIC_VPS_API_URL}${img.url}`,
+        }));
+
+        setExistingImages((prev) => [...prev, ...imagesWithFullUrl]);
+
         // Clean up preview URLs
         images.forEach((img) => {
           if (img.preview) URL.revokeObjectURL(img.preview);

@@ -14,13 +14,13 @@ export const PrinterImages = ({ printerId }) => {
       try {
         const token = localStorage.getItem("hubToken");
         const response = await fetch(`/api/hub/printers/${printerId}/images`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         if (response.ok) {
           const data = await response.json();
-          if (data.success) {
+          if (data.success && data.images) {
             // ✅ TAMBAHKAN URL LENGKAP DARI VPS
-            const imagesWithFullUrl = (data.images || []).map((img) => ({
+            const imagesWithFullUrl = data.images.map((img) => ({
               ...img,
               url: `${NEXT_PUBLIC_VPS_API_URL}${img.url}`,
             }));
