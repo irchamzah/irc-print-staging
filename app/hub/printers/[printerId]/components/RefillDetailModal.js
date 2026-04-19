@@ -159,18 +159,6 @@ export const RefillDetailModal = ({
                 )}
               </div>
 
-              {/* ✅ Tombol Bayar untuk Admin (tanpa upload proof) */}
-              {userRole === "super_admin" && refill.status !== "paid" && (
-                <button
-                  onClick={() => onMarkAsPaid(refill)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                >
-                  {refill.status === "completed"
-                    ? "Tandai Dibayar"
-                    : "Tandai Selesai"}
-                </button>
-              )}
-
               {/* ✅ Tampilkan info siapa yang membayar jika status paid */}
               {refill.status === "paid" && refill.paidByName && (
                 <p className="text-xs text-gray-500">

@@ -1,4 +1,5 @@
 "use client";
+const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
 export const WithdrawalDetailModal = ({
   isOpen,
@@ -32,16 +33,27 @@ export const WithdrawalDetailModal = ({
     );
   };
 
+  const getTransferProofUrl = (transferProof) => {
+    if (!transferProof) return null;
+    // Jika sudah full URL, langsung return
+    if (transferProof.url?.startsWith("http")) {
+      return transferProof.url;
+    }
+    // Tambahkan base URL VPS
+    return `${NEXT_PUBLIC_VPS_API_URL}${transferProof.url}`;
+  };
+
+  const transferProofUrl = getTransferProofUrl(withdrawal.transferProof);
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-        {/* Header */}
         <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h3 className="text-lg font-semibold text-gray-800">
               Detail Penarikan
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 font-mono">
               {withdrawal.partnerWithdrawalId}
             </p>
           </div>
@@ -65,41 +77,8 @@ export const WithdrawalDetailModal = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh] space-y-4">
-          {/* Partner Info */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-2">
-              Informasi Partner
-            </h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <span className="text-gray-500">Nama:</span>
-              <span className="font-medium">{withdrawal.partnerName}</span>
-              <span className="text-gray-500">ID Partner:</span>
-              <span className="font-medium">{withdrawal.partnerId}</span>
-            </div>
-          </div>
-
-          {/* Bank Account Info */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-medium text-gray-800 mb-2">Informasi Bank</h4>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <span className="text-gray-500">Bank:</span>
-              <span className="font-medium">
-                {withdrawal.bankAccount?.bankName || "-"}
-              </span>
-              <span className="text-gray-500">No. Rekening:</span>
-              <span className="font-medium">
-                {withdrawal.bankAccount?.accountNumber || "-"}
-              </span>
-              <span className="text-gray-500">Atas Nama:</span>
-              <span className="font-medium">
-                {withdrawal.bankAccount?.accountName || "-"}
-              </span>
-            </div>
-          </div>
-
-          {/* Withdrawal Info */}
+          {/* Informasi Penarikan */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-800 mb-2">
               Informasi Penarikan
@@ -144,7 +123,26 @@ export const WithdrawalDetailModal = ({
             </div>
           </div>
 
-          {/* Notes */}
+          {/* Informasi Bank */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h4 className="font-medium text-gray-800 mb-2">Informasi Bank</h4>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <span className="text-gray-500">Bank:</span>
+              <span className="font-medium">
+                {withdrawal.bankAccount?.bankName || "-"}
+              </span>
+              <span className="text-gray-500">No. Rekening:</span>
+              <span className="font-medium">
+                {withdrawal.bankAccount?.accountNumber || "-"}
+              </span>
+              <span className="text-gray-500">Atas Nama:</span>
+              <span className="font-medium">
+                {withdrawal.bankAccount?.accountName || "-"}
+              </span>
+            </div>
+          </div>
+
+          {/* Catatan */}
           {withdrawal.notes && (
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-medium text-gray-800 mb-2">Catatan</h4>
@@ -152,14 +150,12 @@ export const WithdrawalDetailModal = ({
             </div>
           )}
 
-          {/* Transfer Proof */}
-          {withdrawal.transferProof && (
+          {/* ✅ Bukti Transfer dengan URL VPS */}
+          {transferProofUrl && (
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-medium text-gray-800 mb-2">Bukti Transfer</h4>
               <button
-                onClick={() =>
-                  window.open(withdrawal.transferProof.url, "_blank")
-                }
+                onClick={() => window.open(transferProofUrl, "_blank")}
                 className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
               >
                 <svg
@@ -183,11 +179,18 @@ export const WithdrawalDetailModal = ({
                 </svg>
                 Lihat Bukti Transfer
               </button>
+              <div className="mt-2">
+                <img
+                  src={transferProofUrl}
+                  alt="Bukti Transfer"
+                  className="max-h-48 rounded-lg border border-gray-200 cursor-pointer"
+                  onClick={() => window.open(transferProofUrl, "_blank")}
+                />
+              </div>
             </div>
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={onClose}

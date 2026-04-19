@@ -88,24 +88,42 @@ export const useAdminPartnerWithdrawals = () => {
   const processWithdrawal = useCallback(
     async (withdrawalId, status, transferProof = null) => {
       try {
-        const body = { status };
-        if (transferProof) body.transferProof = transferProof;
+        let body;
+        let headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        if (transferProof && transferProof instanceof FormData) {
+          body = transferProof;
+          // Jangan set Content-Type untuk FormData
+        } else {
+          body = JSON.stringify({ status });
+          headers["Content-Type"] = "application/json";
+        }
+
+        console.log(`📤 Processing withdrawal: ${withdrawalId} -> ${status}`);
 
         const response = await fetch(
           `/api/hub/admin/partner-withdrawals/${withdrawalId}/process`,
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(body),
+            headers,
+            body,
           },
         );
+
         const result = await response.json();
-        if (result.success) await fetchWithdrawals();
+        console.log("📥 Process withdrawal response:", result);
+
+        if (result.success) {
+          await fetchWithdrawals();
+        }
+
+        // ✅ PASTIKAN MENGEMBALIKAN RESULT
         return result;
       } catch (err) {
+        console.error("❌ Error processing withdrawal:", err);
+        // ✅ KEMBALIKAN OBJECT ERROR
         return { success: false, error: err.message };
       }
     },

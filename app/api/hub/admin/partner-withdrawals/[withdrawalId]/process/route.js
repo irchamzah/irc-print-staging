@@ -2,30 +2,45 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// POST /api/hub/admin/partner-withdrawals/:withdrawalId/process
 export async function POST(request, { params }) {
   try {
     const { withdrawalId } = await params;
-    const body = await request.json();
+    const contentType = request.headers.get("content-type") || "";
+    const token = request.headers.get("authorization");
+
+    console.log(`📤 Proxy: Processing withdrawal ${withdrawalId}`);
+    console.log(`   Content-Type: ${contentType}`);
+
+    let body;
+    let headers = {
+      Authorization: token,
+    };
+
+    if (contentType.includes("multipart/form-data")) {
+      body = await request.formData();
+      console.log(`   FormData received with file`);
+    } else {
+      body = JSON.stringify(await request.json());
+      headers["Content-Type"] = "application/json";
+    }
 
     const response = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/partner-withdrawals/${withdrawalId}/process`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: request.headers.get("authorization"),
-        },
-        body: JSON.stringify(body),
+        headers,
+        body,
       },
     );
+
+    console.log(`   VPS Response status: ${response.status}`);
 
     const result = await response.json();
     return NextResponse.json(result, { status: response.status });
   } catch (error) {
-    console.error("❌ Error processing withdrawal:", error);
+    console.error("❌ Proxy error:", error);
     return NextResponse.json(
-      { success: false, error: "Internal server error" },
+      { success: false, error: error.message },
       { status: 500 },
     );
   }

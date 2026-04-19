@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { WithdrawalDetailModal } from "./WithdrawalDetailModal";
+import { ProofUploadModal } from "./ProofUploadModal";
 
 export const WithdrawalsTable = ({
   withdrawals,
@@ -11,6 +12,8 @@ export const WithdrawalsTable = ({
 }) => {
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [actionType, setActionType] = useState(null); // 'process' or 'transfer'
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -40,8 +43,44 @@ export const WithdrawalsTable = ({
     setShowDetailModal(true);
   };
 
-  const handleProcess = (withdrawal, status, transferProof = null) => {
-    onProcess(withdrawal.partnerWithdrawalId, status, transferProof);
+  const handleProcessClick = (withdrawal, type) => {
+    setSelectedWithdrawal(withdrawal);
+    setActionType(type);
+    setShowProofModal(true);
+  };
+
+  const handleConfirmPayment = async (formData) => {
+    if (!selectedWithdrawal) return;
+
+    const newStatus = actionType === "process" ? "processed" : "transferred";
+
+    console.log(
+      `🔄 Processing withdrawal: ${selectedWithdrawal.partnerWithdrawalId} -> ${newStatus}`,
+    );
+
+    const result = await onProcess(
+      selectedWithdrawal.partnerWithdrawalId,
+      newStatus,
+      formData,
+    );
+
+    console.log("Result from onProcess:", result);
+
+    // ✅ CEK APAKAH result ADA
+    if (result && result.success) {
+      const message =
+        newStatus === "processed"
+          ? "✅ Withdrawal berhasil diproses!"
+          : "✅ Withdrawal berhasil ditandai transfer! Status refills telah diperbarui menjadi PAID.";
+      alert(message);
+    } else {
+      const errorMsg = result?.error || "Terjadi kesalahan";
+      alert("❌ Gagal: " + errorMsg);
+    }
+
+    setShowProofModal(false);
+    setSelectedWithdrawal(null);
+    setActionType(null);
   };
 
   if (withdrawals.length === 0) {
@@ -131,7 +170,7 @@ export const WithdrawalsTable = ({
                     </button>
                     {wd.status === "requested" && (
                       <button
-                        onClick={() => handleProcess(wd, "processed")}
+                        onClick={() => handleProcessClick(wd, "process")}
                         disabled={processingId === wd.partnerWithdrawalId}
                         className={`px-3 py-1 text-white rounded-lg text-xs ${
                           processingId === wd.partnerWithdrawalId
@@ -146,7 +185,7 @@ export const WithdrawalsTable = ({
                     )}
                     {wd.status === "processed" && (
                       <button
-                        onClick={() => handleProcess(wd, "transferred")}
+                        onClick={() => handleProcessClick(wd, "transfer")}
                         disabled={processingId === wd.partnerWithdrawalId}
                         className={`px-3 py-1 text-white rounded-lg text-xs ${
                           processingId === wd.partnerWithdrawalId
@@ -172,6 +211,19 @@ export const WithdrawalsTable = ({
         onClose={() => setShowDetailModal(false)}
         withdrawal={selectedWithdrawal}
         formatDate={formatDate}
+        formatRupiah={formatRupiah}
+      />
+
+      <ProofUploadModal
+        isOpen={showProofModal}
+        onClose={() => {
+          setShowProofModal(false);
+          setSelectedWithdrawal(null);
+          setActionType(null);
+        }}
+        onConfirm={handleConfirmPayment}
+        withdrawal={selectedWithdrawal}
+        processing={processingId === selectedWithdrawal?.partnerWithdrawalId}
         formatRupiah={formatRupiah}
       />
     </>

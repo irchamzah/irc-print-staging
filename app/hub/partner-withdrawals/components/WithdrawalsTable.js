@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { WithdrawalDetailModal } from "./WithdrawalDetailModal";
+import { WithdrawalDetailModal } from "../../admin/partner-withdrawals/components/WithdrawalDetailModal";
 
 export const WithdrawalsTable = ({
   withdrawals,
