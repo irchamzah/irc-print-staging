@@ -260,8 +260,9 @@ export const usePrinterPage = () => {
   // handlePaymentSuccess
   // ============================================
   const handlePaymentSuccess = async () => {
+    // ✅ Gunakan paymentManagement.currentPrintJobId
     return paymentManagement.handlePaymentSuccess(
-      paymentManagement.currentJobId,
+      paymentManagement.currentPrintJobId, // ✅ Ganti dari currentJobId
       fileManagement.advancedSettings,
       printerId,
       fileManagement.file,
@@ -390,7 +391,7 @@ export const usePrinterPage = () => {
     isLoading: paymentManagement.isLoading,
     showPaymentModal: paymentManagement.showPaymentModal,
     paymentData: paymentManagement.paymentData,
-    currentJobId: paymentManagement.currentJobId,
+    currentJobId: paymentManagement.currentPrintJobId,
 
     // User states (from useUserManagement)
     userSession: userManagement.userSession,

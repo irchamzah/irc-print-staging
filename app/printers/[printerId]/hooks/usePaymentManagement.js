@@ -52,8 +52,6 @@ export const usePaymentManagement = (
         .toString(36)
         .substr(2, 9)}`;
 
-      console.log("📝 Creating print job with ID:", orderId);
-
       // Convert file to base64
       const fileBase64 = await new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -129,7 +127,9 @@ export const usePaymentManagement = (
       });
 
       setShowPaymentModal(true);
-      setCurrentJobId(orderId); // ✅ Pastikan currentJobId diset
+
+      // ✅ PERBAIKAN: Gunakan setCurrentPrintJobId, bukan setCurrentJobId
+      setCurrentPrintJobId(orderId);
     } catch (error) {
       console.error("❌ Payment error:", error);
       alert(`❌ Error: ${error.message}`);
@@ -161,8 +161,6 @@ export const usePaymentManagement = (
         return;
       }
 
-      console.log("💰 Payment success for job:", currentJobId);
-
       // ✅ STEP 1: Sinkronkan status transaksi terlebih dahulu
       try {
         const syncResponse = await fetch(
@@ -171,7 +169,6 @@ export const usePaymentManagement = (
 
         if (syncResponse.ok) {
           const syncResult = await syncResponse.json();
-          console.log("🔄 Sync result:", syncResult);
         }
       } catch (syncError) {
         console.error("Sync error (non-critical):", syncError);
@@ -203,7 +200,9 @@ export const usePaymentManagement = (
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
         advancedSettings.copies;
-      const pointsToAdd = (advancedSettings.cost / pointDivider).toFixed(2);
+      const totalCost = advancedSettings.cost || 0;
+      const pointsToAdd =
+        totalCost > 0 ? (totalCost / pointDivider).toFixed(2) : "0";
 
       const printPayload = {
         orderId: currentJobId,
@@ -336,15 +335,18 @@ export const usePaymentManagement = (
 
       if (!syncResponse.ok) {
         const errorText = await syncResponse.text();
-        console.error(
-          `❌ Payment status check failed: ${syncResponse.status}`,
-          errorText,
-        );
+        // ✅ Tetap buka modal payment
         await openPaymentModalWithoutSync(transaction, userSession);
         return;
       }
 
       const syncResult = await syncResponse.json();
+
+      // ✅ Handle case when transaction not found (belum dibuat)
+      if (!syncResult.success && syncResult.message?.includes("not found")) {
+        await openPaymentModalWithoutSync(transaction, userSession);
+        return;
+      }
 
       if (syncResult.success) {
         const latestStatus = syncResult.status;
@@ -391,56 +393,53 @@ export const usePaymentManagement = (
           }, 3000);
           return;
         }
-
-        const hasFile =
-          !!transaction.filePath || !!transaction.fileData?.hasFile;
-
-        if (!hasFile) {
-          alert(
-            "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru.",
-          );
-          setCooldownTimers((prev) => ({
-            ...prev,
-            [transaction.orderId]: false,
-          }));
-          return;
-        }
-
-        if (transaction.settings) {
-          setAdvancedSettings(transaction.settings);
-        }
-
-        const totalPagesFromSettings =
-          transaction.settings?.totalPages ||
-          transaction.settings?.selectedPages?.length ||
-          transaction.fileData?.pages ||
-          0;
-        setTotalPages(totalPagesFromSettings);
-        setCurrentPrintJobId(transaction.orderId);
-
-        setPaymentData({
-          token:
-            transaction.paymentToken ||
-            transaction.midtransResponse?.paymentToken,
-          redirectUrl:
-            transaction.redirectUrl ||
-            transaction.midtransResponse?.redirectUrl,
-          amount: transaction.amount || transaction.cost,
-          orderId: transaction.orderId,
-          isRestored: true,
-        });
-
-        setShowPaymentModal(true);
-
-        setTimeout(() => {
-          setCooldownTimers((prev) => ({
-            ...prev,
-            [transaction.orderId]: false,
-          }));
-        }, 3000);
-      } else {
-        throw new Error(syncResult.error || "Failed to sync with Midtrans");
       }
+
+      // ✅ Cek keberadaan file
+      const hasFile = !!transaction.filePath || !!transaction.fileData?.hasFile;
+
+      if (!hasFile) {
+        alert(
+          "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru.",
+        );
+        setCooldownTimers((prev) => ({
+          ...prev,
+          [transaction.orderId]: false,
+        }));
+        return;
+      }
+
+      if (transaction.settings) {
+        setAdvancedSettings(transaction.settings);
+      }
+
+      const totalPagesFromSettings =
+        transaction.settings?.totalPages ||
+        transaction.settings?.selectedPages?.length ||
+        transaction.fileData?.pages ||
+        0;
+      setTotalPages(totalPagesFromSettings);
+      setCurrentPrintJobId(transaction.orderId);
+
+      setPaymentData({
+        token:
+          transaction.paymentToken ||
+          transaction.midtransResponse?.paymentToken,
+        redirectUrl:
+          transaction.redirectUrl || transaction.midtransResponse?.redirectUrl,
+        amount: transaction.amount || transaction.cost,
+        orderId: transaction.orderId,
+        isRestored: true,
+      });
+
+      setShowPaymentModal(true);
+
+      setTimeout(() => {
+        setCooldownTimers((prev) => ({
+          ...prev,
+          [transaction.orderId]: false,
+        }));
+      }, 3000);
     } catch (error) {
       console.error("Error continuing transaction:", error);
       if (error.name === "TimeoutError" || error.name === "AbortError") {
@@ -448,7 +447,10 @@ export const usePaymentManagement = (
           "⏰ Timeout saat memeriksa status pembayaran. Membuka halaman pembayaran...",
         );
       } else {
-        alert("❌ Gagal memulihkan transaksi: " + error.message);
+        // ✅ Jangan tampilkan alert error untuk transaksi yang belum dibuat
+        if (!error.message?.includes("not found")) {
+          alert("❌ Gagal memulihkan transaksi: " + error.message);
+        }
       }
       await openPaymentModalWithoutSync(transaction, userSession);
     }
@@ -466,12 +468,6 @@ export const usePaymentManagement = (
       return;
     }
 
-    console.log(
-      transaction,
-      "Attempting to cancel transaction with orderId:",
-      transaction.orderId,
-    );
-
     try {
       const response = await fetch("/api/transactions/cancel", {
         method: "POST",
@@ -483,8 +479,6 @@ export const usePaymentManagement = (
       });
 
       const result = await response.json();
-
-      console.log("Cancel transaction response:", result);
 
       if (result.success) {
         alert("❌ Transaksi berhasil dibatalkan");
@@ -505,6 +499,8 @@ export const usePaymentManagement = (
   // ============================================
   const processSuccessfulPayment = async (transaction, userSession) => {
     try {
+      console.log("transaction >>>", transaction);
+      console.log("userSession >>>", userSession);
       setIsLoading(true);
 
       const printJobId = transaction.orderId;
@@ -516,25 +512,11 @@ export const usePaymentManagement = (
         return;
       }
 
-      console.log("💰 Processing successful payment for job:", printJobId);
-
-      // Sync transaction status
-      try {
-        const syncResponse = await fetch(
-          `/api/transactions/pending/sync?phoneNumber=${userSession?.phone}`,
-        );
-        if (syncResponse.ok) {
-          const syncResult = await syncResponse.json();
-          console.log("🔄 Sync result:", syncResult);
-        }
-      } catch (syncError) {
-        console.error("Sync error (non-critical):", syncError);
-      }
-
       // Check payment status
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${printJobId}`,
       );
+      console.log("statusResponse >>>", statusResponse);
 
       if (!statusResponse.ok) {
         throw new Error(
@@ -543,6 +525,7 @@ export const usePaymentManagement = (
       }
 
       const statusResult = await statusResponse.json();
+      console.log("statusResult >>>", statusResult);
 
       if (!statusResult.success || statusResult.status !== "settlement") {
         setIsLoading(false);
@@ -553,11 +536,14 @@ export const usePaymentManagement = (
       const pointDivider = parseInt(
         localStorage.getItem("printerPointDivider"),
       );
+      console.log("pointDivider >>>", pointDivider);
       const totalPagesToPrint =
         (transaction.settings.colorPages.length +
           transaction.settings.bwPages.length) *
         transaction.settings.copies;
-      const pointsToAdd = (transaction.cost / pointDivider).toFixed(2);
+      const totalCost = transaction.cost || 0;
+      const pointsToAdd =
+        totalCost > 0 ? (totalCost / pointDivider).toFixed(2) : "0";
 
       const printPayload = {
         orderId: printJobId,
@@ -573,11 +559,15 @@ export const usePaymentManagement = (
         isRestoredTransaction: true,
       };
 
+      console.log("printPayload >>>", printPayload);
+
       const response = await fetch("/api/print", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(printPayload),
       });
+
+      console.log("response >>>", response);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -588,6 +578,8 @@ export const usePaymentManagement = (
       }
 
       const result = await response.json();
+
+      console.log("result >>>", result);
 
       if (result.success) {
         alert(
@@ -617,18 +609,8 @@ export const usePaymentManagement = (
   // openPaymentModalWithoutSync
   // ============================================
   const openPaymentModalWithoutSync = async (transaction, userSession) => {
+    // ✅ Cek keberadaan file
     const hasFile = !!transaction.filePath || !!transaction.fileData?.hasFile;
-
-    if (!hasFile) {
-      alert(
-        "❌ File tidak tersimpan untuk transaksi ini. Silakan buat transaksi baru.",
-      );
-      setCooldownTimers((prev) => ({
-        ...prev,
-        [transaction.orderId]: false,
-      }));
-      return;
-    }
 
     if (transaction.settings) {
       setAdvancedSettings(transaction.settings);
