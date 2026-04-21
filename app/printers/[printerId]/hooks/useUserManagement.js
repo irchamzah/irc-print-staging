@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
+import { normalizePhoneNumber } from "@/utils/normalizePhone";
 
-// useUserManagement - UPDATED dengan struktur baru
+// useUserManagement - UPDATED dengan normalisasi nomor
 export const useUserManagement = () => {
   const params = useParams();
   const printerId = params?.printerId;
@@ -13,7 +14,7 @@ export const useUserManagement = () => {
   const [userSession, setUserSession] = useState(null);
 
   // ============================================
-  // getPrinterPointDivider - Get point divider from printer
+  // getPrinterPointDivider
   // ============================================
   const getPrinterPointDivider = async () => {
     try {
@@ -54,7 +55,7 @@ export const useUserManagement = () => {
   };
 
   // ============================================
-  // loadUserSession - Load session from localStorage
+  // loadUserSession
   // ============================================
   const loadUserSession = () => {
     const savedSession = localStorage.getItem("userSession");
@@ -79,11 +80,21 @@ export const useUserManagement = () => {
       return;
     }
 
+    // ✅ Normalisasi nomor telepon ke format 628...
+    const normalizedPhone = normalizePhoneNumber(phoneNumber);
+
+    if (!normalizedPhone) {
+      alert("Nomor HP tidak valid. Pastikan nomor sudah benar.");
+      return;
+    }
+
+    console.log("📞 Normalized phone:", normalizedPhone);
+
     setCheckingPoints(true);
     try {
-      // ✅ Kirim phoneNumber ke API
+      // ✅ Kirim normalizedPhone ke API
       const response = await fetch(
-        `/api/users/${encodeURIComponent(phoneNumber)}/points?printerId=${printerId}`,
+        `/api/users/${encodeURIComponent(normalizedPhone)}/points?printerId=${printerId}`,
       );
 
       if (!response.ok) {
@@ -98,9 +109,9 @@ export const useUserManagement = () => {
           setUserPoints(points);
 
           const userData = {
-            phone: phoneNumber,
+            phone: normalizedPhone,
             points: points,
-            name: result.user?.name || `User ${phoneNumber}`,
+            name: result.user?.name || `User ${normalizedPhone}`,
             userId: result.user?.userId,
             role: result.user?.role || "customer",
             timestamp: Date.now(),
@@ -110,33 +121,32 @@ export const useUserManagement = () => {
 
           alert(`✅ Berhasil login! Anda memiliki ${points.toFixed(2)} point.`);
         } else if (result.user === null) {
-          await createNewUserDirect(phoneNumber);
+          await createNewUserDirect(normalizedPhone);
         }
       } else {
         throw new Error(result.error || "Gagal Login");
       }
     } catch (error) {
       console.error("❌ Error checking points:", error);
-      await createNewUserDirect(phoneNumber, true);
+      await createNewUserDirect(normalizedPhone, true);
     } finally {
       setCheckingPoints(false);
     }
   };
 
   // ============================================
-  // createNewUserDirect - Create new user via API
+  // createNewUserDirect
   // ============================================
   const createNewUserDirect = async (phone, isFallback = false) => {
     try {
-      // ✅ Pastikan phone sudah dalam format normal (diterima dari parameter)
-      // Dapatkan point divider dari printer
+      // ✅ Phone sudah dalam format 628...
       const pointDivider = await getPrinterPointDivider();
 
       const createResponse = await fetch(`/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: phone, // ✅ Langsung pakai phone yang sudah dinormalisasi
+          phone: phone,
           name: `User ${phone}`,
           role: "customer",
         }),
@@ -179,7 +189,7 @@ export const useUserManagement = () => {
   };
 
   // ============================================
-  // createLocalUserFallback - Local fallback if API fails
+  // createLocalUserFallback
   // ============================================
   const createLocalUserFallback = async (phone) => {
     const userData = {
@@ -198,7 +208,7 @@ export const useUserManagement = () => {
   };
 
   // ============================================
-  // logoutUser - Clear user session
+  // logoutUser
   // ============================================
   const logoutUser = () => {
     setUserSession(null);
@@ -208,21 +218,16 @@ export const useUserManagement = () => {
   };
 
   return {
-    // States
     phoneNumber,
     userPoints,
     checkingPoints,
     refreshingPoints,
     userSession,
-
-    // Setters
     setPhoneNumber,
     setUserPoints,
     setCheckingPoints,
     setRefreshingPoints,
     setUserSession,
-
-    // Functions
     handlePhoneNumberChange,
     loadUserSession,
     checkUserPoints,
