@@ -54,17 +54,11 @@ export const WithdrawalsTable = ({
 
     const newStatus = actionType === "process" ? "processed" : "transferred";
 
-    console.log(
-      `🔄 Processing withdrawal: ${selectedWithdrawal.partnerWithdrawalId} -> ${newStatus}`,
-    );
-
     const result = await onProcess(
       selectedWithdrawal.partnerWithdrawalId,
       newStatus,
       formData,
     );
-
-    console.log("Result from onProcess:", result);
 
     // ✅ CEK APAKAH result ADA
     if (result && result.success) {

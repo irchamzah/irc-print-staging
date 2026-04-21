@@ -2,27 +2,6 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// Function to normalize phone number to +628xxxxxxxxx format
-function normalizePhoneNumber(phone) {
-  if (!phone) return phone;
-
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, "");
-
-  // If starts with 0, replace with 62
-  if (cleaned.startsWith("0")) {
-    cleaned = "62" + cleaned.substring(1);
-  }
-
-  // If starts with 8, add 62
-  if (cleaned.startsWith("8")) {
-    cleaned = "62" + cleaned;
-  }
-
-  // Add + prefix
-  return "+" + cleaned;
-}
-
 // GET /api/users/[phone]/points
 export async function GET(request, { params }) {
   try {
@@ -93,9 +72,6 @@ export async function GET(request, { params }) {
 // Helper function untuk membuat user baru
 async function createNewUser(phone, printerId) {
   try {
-    // Normalize phone number before creating user
-    const normalizedPhone = normalizePhoneNumber(phone);
-
     let pointDivider = 4000; // Default value
 
     // Dapatkan point divider dari printer jika ada
@@ -120,8 +96,8 @@ async function createNewUser(phone, printerId) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        phone: normalizedPhone,
-        name: `User ${normalizedPhone}`,
+        phone: phone,
+        name: `User ${phone}`,
         role: "customer",
         points: 0,
         totalSpent: 0,
@@ -141,8 +117,8 @@ async function createNewUser(phone, printerId) {
         success: true,
         points: 0,
         user: {
-          phone: createResult.data?.phone || normalizedPhone,
-          name: createResult.data?.name || `User ${normalizedPhone}`,
+          phone: createResult.data?.phone || phone,
+          name: createResult.data?.name || `User ${phone}`,
           points: 0,
         },
         isNewUser: true,
@@ -159,8 +135,8 @@ async function createNewUser(phone, printerId) {
       success: true,
       points: 0,
       user: {
-        phone: normalizedPhone,
-        name: `User ${normalizedPhone}`,
+        phone: phone,
+        name: `User ${phone}`,
         points: 0,
       },
       isNewUser: true,

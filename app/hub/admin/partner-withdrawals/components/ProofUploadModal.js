@@ -41,12 +41,6 @@ export const ProofUploadModal = ({
       formData.append("notes", notes);
     }
 
-    console.log(
-      "Submitting formData with status:",
-      withdrawal.status === "requested" ? "processed" : "transferred",
-    );
-    console.log("File:", proofFile.name, proofFile.size, proofFile.type);
-
     onConfirm(formData);
   };
 

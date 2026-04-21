@@ -15,10 +15,6 @@ export async function GET(request) {
       );
     }
 
-    console.log(
-      `🔄 [FRONTEND] Syncing pending transactions for ${phoneNumber}`,
-    );
-
     // 1. Ambil pending transactions dari VPS
     const pendingResponse = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/pending?phoneNumber=${phoneNumber}`,
@@ -56,11 +52,8 @@ export async function GET(request) {
 
         // Skip jika sudah paid atau printed
         if (currentStatus === "paid" || currentStatus === "printed") {
-          console.log(`   ⏭️ Skipping ${orderId} (already ${currentStatus})`);
           continue;
         }
-
-        console.log(`🔍 [FRONTEND] Checking Midtrans status for ${orderId}`);
 
         const statusResponse = await fetch(
           `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/check-status?orderId=${orderId}&phoneNumber=${phoneNumber}`,
@@ -77,18 +70,12 @@ export async function GET(request) {
             const midtransStatus =
               statusResult.midtransStatus || statusResult.status;
 
-            console.log(
-              `   Current: ${currentStatus}, Midtrans: ${midtransStatus}`,
-            );
-
             // Jika status di Midtrans settlement/capture, update ke "paid"
             if (
               (midtransStatus === "settlement" ||
                 midtransStatus === "capture") &&
               currentStatus === "pending"
             ) {
-              console.log(`   ✅ Updating ${orderId} to paid`);
-
               const updateResponse = await fetch(
                 `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/update-status`,
                 {
@@ -121,13 +108,11 @@ export async function GET(request) {
               midtransStatus === "expire" &&
               currentStatus === "pending"
             ) {
-              console.log(`   ⏰ Updating ${orderId} to expired`);
               // Update ke expired
             } else if (
               midtransStatus === "cancel" &&
               currentStatus === "pending"
             ) {
-              console.log(`   ❌ Updating ${orderId} to cancelled`);
               // Update ke cancelled
             }
           }
@@ -154,10 +139,6 @@ export async function GET(request) {
     } else {
       finalPendingTransactions = pendingTransactions;
     }
-
-    console.log(
-      `✅ [FRONTEND] Sync completed: ${updatedTransactions.length} updated`,
-    );
 
     return NextResponse.json({
       success: true,

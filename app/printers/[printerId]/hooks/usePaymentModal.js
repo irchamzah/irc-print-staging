@@ -12,6 +12,7 @@ export const usePaymentModal = (
   isOpen,
   paymentData,
   isRestoredTransaction = false,
+  currentPrintJobId,
 ) => {
   const [snapLoaded, setSnapLoaded] = useState(false);
   const [snapError, setSnapError] = useState(false);
@@ -161,7 +162,7 @@ export const usePaymentModal = (
         onSuccess: function (result) {
           isSnapOpenRef.current = false;
           hasAttemptedOpenRef.current = false;
-          onSuccess(result);
+          onSuccess(currentPrintJobId);
         },
         onPending: function (result) {
           isSnapOpenRef.current = false;

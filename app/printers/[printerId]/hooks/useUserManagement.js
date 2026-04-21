@@ -1,27 +1,5 @@
-// app/printers/[printerId]/hooks/useUserManagement.js SUDAH DIUPDATE
 import { useState } from "react";
 import { useParams } from "next/navigation";
-
-// Function to normalize phone number to +628xxxxxxxxx format
-function normalizePhoneNumber(phone) {
-  if (!phone) return phone;
-
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, "");
-
-  // If starts with 0, replace with 62
-  if (cleaned.startsWith("0")) {
-    cleaned = "62" + cleaned.substring(1);
-  }
-
-  // If starts with 8, add 62
-  if (cleaned.startsWith("8")) {
-    cleaned = "62" + cleaned;
-  }
-
-  // Add + prefix
-  return "+" + cleaned;
-}
 
 // useUserManagement - UPDATED dengan struktur baru
 export const useUserManagement = () => {
@@ -43,19 +21,16 @@ export const useUserManagement = () => {
 
       if (cached) {
         const { value, timestamp } = JSON.parse(cached);
-        // Cache selama 1 jam
         if (Date.now() - timestamp < 60 * 60 * 1000) {
           return value;
         }
       }
 
-      // Ambil dari API
       const response = await fetch(`/api/printers/${printerId}/point-divider`);
       const data = await response.json();
 
       const pointDivider = data.pointDivider || 4000;
 
-      // Simpan ke localStorage
       localStorage.setItem(
         `printer_${printerId}_pointDivider`,
         JSON.stringify({
@@ -67,7 +42,7 @@ export const useUserManagement = () => {
       return pointDivider;
     } catch (error) {
       console.error("Error getting point divider:", error);
-      return 4000; // Default fallback
+      return 4000;
     }
   };
 
@@ -104,16 +79,11 @@ export const useUserManagement = () => {
       return;
     }
 
-    const cleanPhone = phoneNumber.replace(/\D/g, "");
-    if (cleanPhone.length < 10) {
-      alert("Nomor HP harus minimal 10 digit");
-      return;
-    }
-
     setCheckingPoints(true);
     try {
+      // ✅ Kirim phoneNumber ke API
       const response = await fetch(
-        `/api/users/${cleanPhone}/points?printerId=${printerId}`,
+        `/api/users/${encodeURIComponent(phoneNumber)}/points?printerId=${printerId}`,
       );
 
       if (!response.ok) {
@@ -124,14 +94,13 @@ export const useUserManagement = () => {
 
       if (result.success) {
         if (result.user) {
-          // ✅ Ambil points dari response
           const points = result.points || result.user?.points || 0;
           setUserPoints(points);
 
           const userData = {
-            phone: cleanPhone,
+            phone: phoneNumber,
             points: points,
-            name: result.user?.name || `User ${cleanPhone}`,
+            name: result.user?.name || `User ${phoneNumber}`,
             userId: result.user?.userId,
             role: result.user?.role || "customer",
             timestamp: Date.now(),
@@ -141,15 +110,14 @@ export const useUserManagement = () => {
 
           alert(`✅ Berhasil login! Anda memiliki ${points.toFixed(2)} point.`);
         } else if (result.user === null) {
-          // User tidak ditemukan, buat baru
-          await createNewUserDirect(cleanPhone);
+          await createNewUserDirect(phoneNumber);
         }
       } else {
         throw new Error(result.error || "Gagal Login");
       }
     } catch (error) {
       console.error("❌ Error checking points:", error);
-      await createNewUserDirect(cleanPhone, true);
+      await createNewUserDirect(phoneNumber, true);
     } finally {
       setCheckingPoints(false);
     }
@@ -160,19 +128,16 @@ export const useUserManagement = () => {
   // ============================================
   const createNewUserDirect = async (phone, isFallback = false) => {
     try {
-      // Normalize phone number before creating user
-      const normalizedPhone = normalizePhoneNumber(phone);
-
+      // ✅ Pastikan phone sudah dalam format normal (diterima dari parameter)
       // Dapatkan point divider dari printer
       const pointDivider = await getPrinterPointDivider();
 
-      // ✅ Gunakan endpoint POST /api/users (bukan /api/users/points)
       const createResponse = await fetch(`/api/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone: normalizedPhone,
-          name: `User ${normalizedPhone}`,
+          phone: phone, // ✅ Langsung pakai phone yang sudah dinormalisasi
+          name: `User ${phone}`,
           role: "customer",
         }),
       });
@@ -182,9 +147,9 @@ export const useUserManagement = () => {
 
         if (result.success && result.data) {
           const userData = {
-            phone: normalizedPhone,
+            phone: phone,
             points: 0,
-            name: result.data.name || `User ${normalizedPhone}`,
+            name: result.data.name || `User ${phone}`,
             userId: result.data.userId,
             role: result.data.role || "customer",
             timestamp: Date.now(),
@@ -204,7 +169,6 @@ export const useUserManagement = () => {
           throw new Error(result.error || "Gagal membuat user baru");
         }
       } else {
-        // Fallback: buat user secara lokal
         console.warn("⚠️ API create user failed, using local fallback");
         await createLocalUserFallback(phone);
       }
@@ -218,12 +182,10 @@ export const useUserManagement = () => {
   // createLocalUserFallback - Local fallback if API fails
   // ============================================
   const createLocalUserFallback = async (phone) => {
-    const normalizedPhone = normalizePhoneNumber(phone);
-
     const userData = {
-      phone: normalizedPhone,
+      phone: phone,
       points: 0,
-      name: `User ${normalizedPhone}`,
+      name: `User ${phone}`,
       userId: `local-${Date.now()}`,
       role: "customer",
       timestamp: Date.now(),

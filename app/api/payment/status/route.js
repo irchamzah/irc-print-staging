@@ -15,8 +15,6 @@ export async function GET(request) {
       );
     }
 
-    console.log(`🔍 Checking payment status for orderId: ${orderId}`);
-
     // VALIDASI ENVIRONMENT VARIABLES
     const midtransEnvironment = process.env.NEXT_PUBLIC_MIDTRANS_ENVIRONMENT;
     const isProduction = midtransEnvironment === "production";
@@ -70,9 +68,6 @@ export async function GET(request) {
       error.message?.includes("Transaction doesn't exist") ||
       error.message?.includes("404")
     ) {
-      console.log(
-        `ℹ️ Transaction ${orderId} not found in Midtrans (belum dibuat)`,
-      );
       return NextResponse.json(
         {
           success: false,

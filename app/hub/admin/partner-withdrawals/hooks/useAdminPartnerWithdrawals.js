@@ -101,8 +101,6 @@ export const useAdminPartnerWithdrawals = () => {
           headers["Content-Type"] = "application/json";
         }
 
-        console.log(`📤 Processing withdrawal: ${withdrawalId} -> ${status}`);
-
         const response = await fetch(
           `/api/hub/admin/partner-withdrawals/${withdrawalId}/process`,
           {
@@ -113,7 +111,6 @@ export const useAdminPartnerWithdrawals = () => {
         );
 
         const result = await response.json();
-        console.log("📥 Process withdrawal response:", result);
 
         if (result.success) {
           await fetchWithdrawals();

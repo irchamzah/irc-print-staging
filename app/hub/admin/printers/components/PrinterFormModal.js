@@ -302,7 +302,6 @@ export const PrinterFormModal = ({
   // Handle image upload
   const handleImageUpload = async () => {
     if (images.length === 0) {
-      console.log("No images to upload");
       return;
     }
 

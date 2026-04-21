@@ -6,22 +6,34 @@ export async function POST(request) {
   try {
     const contentType = request.headers.get("content-type") || "";
 
-    // ✅ TAMBAHKAN LOG INI
-    console.log("🔍 [PROXY] VPS URL:", NEXT_PUBLIC_VPS_API_URL);
-    console.log("🔍 [PROXY] Content-Type:", contentType);
-
     if (contentType.includes("application/json")) {
       const jsonData = await request.json();
-      console.log("🔍 [PROXY] Forwarding JSON to VPS:", jsonData);
-      console.log("🔍 [PROXY] URL:", `${NEXT_PUBLIC_VPS_API_URL}/api/print`);
+
+      // ✅ PASTIKAN DATA YANG DIKIRIM LENGKAP
+      const payload = {
+        orderId: jsonData.orderId,
+        printerId: jsonData.printerId,
+        copies: jsonData.copies,
+        colorPages: jsonData.colorPages,
+        bwPages: jsonData.bwPages,
+        totalCost: jsonData.totalCost,
+        totalPages: jsonData.totalPages,
+        pointsToAdd: jsonData.pointsToAdd,
+        pointDivider: jsonData.pointDivider,
+        phoneNumber: jsonData.phoneNumber,
+        paperSize: jsonData.paperSize || "A4",
+        quality: jsonData.quality || "normal",
+        isRestored: true,
+      };
 
       const response = await fetch(`${NEXT_PUBLIC_VPS_API_URL}/api/print`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...jsonData, isRestored: true }),
+        body: JSON.stringify(payload),
       });
 
       const result = await response.json();
+
       return NextResponse.json(result, { status: response.status });
     } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
@@ -33,8 +45,6 @@ export async function POST(request) {
           { status: 400 },
         );
       }
-
-      console.log("🔍 [PROXY] Forwarding FormData to VPS, file:", pdfFile.name);
 
       const vpsFormData = new FormData();
       vpsFormData.append("pdf", pdfFile);

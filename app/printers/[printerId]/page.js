@@ -53,6 +53,7 @@ export default function PrinterPage() {
     finalPrices, // ✅ Ganti prices → finalPrices
     enabledFeatures, // ✅ Tambah enabledFeatures
     volumeDiscounts, // ✅ Tambah volumeDiscounts
+    currentPrintJobId,
 
     // Functions
     handleFileUpload,
@@ -176,6 +177,7 @@ export default function PrinterPage() {
           isLoading={isLoading}
           userSession={userSession}
           isRestoredTransaction={paymentData?.isRestored || false}
+          currentPrintJobId={currentPrintJobId}
         />
       </div>
       <BottomBar />

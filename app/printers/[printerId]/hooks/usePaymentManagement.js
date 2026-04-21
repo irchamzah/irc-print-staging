@@ -1,4 +1,4 @@
-// hooks/usePaymentManagement.js - UPDATED
+// app/printers/%5BprinterId%5D/hooks/usePaymentManagement.js
 import { useState } from "react";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
@@ -142,7 +142,7 @@ export const usePaymentManagement = (
   // handlePaymentSuccess - After payment success
   // ============================================
   const handlePaymentSuccess = async (
-    currentJobId,
+    currentPrintJobId,
     advancedSettings,
     printerId,
     file,
@@ -153,9 +153,9 @@ export const usePaymentManagement = (
     try {
       setIsLoading(true);
 
-      // ✅ CEK currentJobId
-      if (!currentJobId) {
-        console.error("❌ currentJobId is undefined");
+      // ✅ CEK currentPrintJobId
+      if (!currentPrintJobId) {
+        console.error("❌ currentPrintJobId is undefined");
         alert("Error: Job ID tidak ditemukan. Silakan coba lagi.");
         setIsLoading(false);
         return;
@@ -177,7 +177,7 @@ export const usePaymentManagement = (
 
       // ✅ STEP 2: Cek status pembayaran ke Midtrans
       const statusResponse = await fetch(
-        `/api/payment/status?orderId=${currentJobId}`,
+        `/api/payment/status?orderId=${currentPrintJobId}`,
       );
 
       if (!statusResponse.ok) {
@@ -200,12 +200,13 @@ export const usePaymentManagement = (
       const totalPagesToPrint =
         (advancedSettings.colorPages.length + advancedSettings.bwPages.length) *
         advancedSettings.copies;
+
       const totalCost = advancedSettings.cost || 0;
       const pointsToAdd =
         totalCost > 0 ? (totalCost / pointDivider).toFixed(2) : "0";
 
       const printPayload = {
-        orderId: currentJobId,
+        orderId: currentPrintJobId,
         printerId: printerId,
         copies: advancedSettings.copies,
         colorPages: JSON.stringify(advancedSettings.colorPages),
@@ -215,6 +216,8 @@ export const usePaymentManagement = (
         pointsToAdd: pointsToAdd,
         pointDivider: pointDivider,
         phoneNumber: userSession?.phone,
+        paperSize: advancedSettings.paperSize || "A4", // ✅ Tambah
+        quality: advancedSettings.quality || "normal", // ✅ Tambah
         isRestoredTransaction: paymentData?.isRestored || false,
       };
 
@@ -295,6 +298,8 @@ export const usePaymentManagement = (
     if (!userSession?.phone) return;
 
     setLoadingTransactions(true);
+
+    console.log(`/api/transactions/pending?phoneNumber=${userSession.phone}`);
     try {
       const response = await fetch(
         `/api/transactions/pending?phoneNumber=${userSession.phone}`,
@@ -499,10 +504,9 @@ export const usePaymentManagement = (
   // ============================================
   const processSuccessfulPayment = async (transaction, userSession) => {
     try {
-      console.log("transaction >>>", transaction);
-      console.log("userSession >>>", userSession);
       setIsLoading(true);
 
+      // ✅ Gunakan transaction.orderId sebagai printJobId
       const printJobId = transaction.orderId;
 
       if (!printJobId) {
@@ -512,11 +516,10 @@ export const usePaymentManagement = (
         return;
       }
 
-      // Check payment status
+      // ✅ Cek status pembayaran ke Midtrans
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${printJobId}`,
       );
-      console.log("statusResponse >>>", statusResponse);
 
       if (!statusResponse.ok) {
         throw new Error(
@@ -525,7 +528,6 @@ export const usePaymentManagement = (
       }
 
       const statusResult = await statusResponse.json();
-      console.log("statusResult >>>", statusResult);
 
       if (!statusResult.success || statusResult.status !== "settlement") {
         setIsLoading(false);
@@ -533,41 +535,54 @@ export const usePaymentManagement = (
         return;
       }
 
-      const pointDivider = parseInt(
-        localStorage.getItem("printerPointDivider"),
-      );
-      console.log("pointDivider >>>", pointDivider);
+      // ✅ Ambil pointDivider dari localStorage
+      const pointDivider =
+        parseInt(localStorage.getItem("printerPointDivider")) || 4000;
+
+      // ✅ Hitung total pages
       const totalPagesToPrint =
         (transaction.settings.colorPages.length +
           transaction.settings.bwPages.length) *
         transaction.settings.copies;
+
+      // ✅ Hitung points
       const totalCost = transaction.cost || 0;
       const pointsToAdd =
         totalCost > 0 ? (totalCost / pointDivider).toFixed(2) : "0";
 
+      // ✅ Ambil paperSize dan quality dari transaction.settings
+      const paperSize =
+        transaction.settings.paperSize ||
+        transaction.settings.printSettings?.paperSize ||
+        "A4";
+      const quality =
+        transaction.settings.quality ||
+        transaction.settings.printSettings?.quality ||
+        "normal";
+
+      // ✅ Buat printPayload dengan data dari transaction
       const printPayload = {
         orderId: printJobId,
-        printerId: printerId,
-        copies: transaction.settings.copies,
-        colorPages: JSON.stringify(transaction.settings.colorPages),
-        bwPages: JSON.stringify(transaction.settings.bwPages),
-        totalCost: transaction.cost,
+        printerId: printerId, // printerId dari closure usePaymentManagement
+        copies: transaction.settings.copies || 1,
+        colorPages: JSON.stringify(transaction.settings.colorPages || []),
+        bwPages: JSON.stringify(transaction.settings.bwPages || []),
+        totalCost: totalCost,
         totalPages: totalPagesToPrint,
         pointsToAdd: pointsToAdd,
         pointDivider: pointDivider,
         phoneNumber: userSession?.phone,
+        paperSize: paperSize,
+        quality: quality.toLowerCase(),
         isRestoredTransaction: true,
       };
 
-      console.log("printPayload >>>", printPayload);
-
+      // ✅ Kirim ke VPS via proxy Next.js
       const response = await fetch("/api/print", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(printPayload),
       });
-
-      console.log("response >>>", response);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -578,8 +593,6 @@ export const usePaymentManagement = (
       }
 
       const result = await response.json();
-
-      console.log("result >>>", result);
 
       if (result.success) {
         alert(

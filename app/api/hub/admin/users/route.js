@@ -3,27 +3,6 @@ import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;
 
-// Function to normalize phone number to +628xxxxxxxxx format
-function normalizePhoneNumber(phone) {
-  if (!phone) return phone;
-
-  // Remove all non-digit characters
-  let cleaned = phone.replace(/\D/g, "");
-
-  // If starts with 0, replace with 62
-  if (cleaned.startsWith("0")) {
-    cleaned = "62" + cleaned.substring(1);
-  }
-
-  // If starts with 8, add 62
-  if (cleaned.startsWith("8")) {
-    cleaned = "62" + cleaned;
-  }
-
-  // Add + prefix
-  return "+" + cleaned;
-}
-
 // GET /api/hub/admin/users - Get all users with filters
 export async function GET(request) {
   try {
@@ -71,11 +50,6 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-
-    // Normalize phone number if present
-    if (body.phone) {
-      body.phone = normalizePhoneNumber(body.phone);
-    }
 
     const response = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/hub/admin/users`,

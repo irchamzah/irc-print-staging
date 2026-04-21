@@ -61,8 +61,6 @@ export async function POST(request, { params }) {
     const formData = await request.formData();
     const files = formData.getAll("images");
 
-    console.log(`📸 Received ${files.length} files for upload`);
-
     if (files.length === 0) {
       return NextResponse.json(
         { success: false, error: "No files to upload" },

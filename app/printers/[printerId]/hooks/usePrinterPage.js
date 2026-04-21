@@ -391,7 +391,7 @@ export const usePrinterPage = () => {
     isLoading: paymentManagement.isLoading,
     showPaymentModal: paymentManagement.showPaymentModal,
     paymentData: paymentManagement.paymentData,
-    currentJobId: paymentManagement.currentPrintJobId,
+    currentPrintJobId: paymentManagement.currentPrintJobId,
 
     // User states (from useUserManagement)
     userSession: userManagement.userSession,

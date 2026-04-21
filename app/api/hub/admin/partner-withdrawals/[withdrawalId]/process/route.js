@@ -8,9 +8,6 @@ export async function POST(request, { params }) {
     const contentType = request.headers.get("content-type") || "";
     const token = request.headers.get("authorization");
 
-    console.log(`📤 Proxy: Processing withdrawal ${withdrawalId}`);
-    console.log(`   Content-Type: ${contentType}`);
-
     let body;
     let headers = {
       Authorization: token,
@@ -18,7 +15,6 @@ export async function POST(request, { params }) {
 
     if (contentType.includes("multipart/form-data")) {
       body = await request.formData();
-      console.log(`   FormData received with file`);
     } else {
       body = JSON.stringify(await request.json());
       headers["Content-Type"] = "application/json";
@@ -32,8 +28,6 @@ export async function POST(request, { params }) {
         body,
       },
     );
-
-    console.log(`   VPS Response status: ${response.status}`);
 
     const result = await response.json();
     return NextResponse.json(result, { status: response.status });
