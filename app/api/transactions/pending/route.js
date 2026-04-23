@@ -16,10 +16,6 @@ export async function GET(request) {
       );
     }
 
-    console.log(
-      `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/pending?phoneNumber=${phoneNumber}`,
-    );
-
     const response = await fetch(
       `${NEXT_PUBLIC_VPS_API_URL}/api/transactions/pending?phoneNumber=${phoneNumber}`,
     );

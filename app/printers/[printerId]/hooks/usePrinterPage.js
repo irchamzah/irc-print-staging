@@ -283,7 +283,6 @@ export const usePrinterPage = () => {
   // handleContinuePendingTransaction - UPDATED
   // ============================================
   const handleContinuePendingTransaction = async (transaction) => {
-    // ✅ CEK PAPER MODE: Hanya validasi kertas jika mode LIMITED
     const isUnlimitedMode = printer?.paperMode === "unlimited";
 
     if (!isUnlimitedMode && isPaperInsufficient) {
@@ -293,7 +292,6 @@ export const usePrinterPage = () => {
       return;
     }
 
-    // ✅ VALIDASI ukuran kertas untuk pending transaction
     const txPaperSize = transaction.settings?.printSettings?.paperSize || "A4";
     if (enabledFeatures && !enabledFeatures.paperSizes?.includes(txPaperSize)) {
       alert(

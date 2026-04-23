@@ -88,8 +88,6 @@ export const useUserManagement = () => {
       return;
     }
 
-    console.log("📞 Normalized phone:", normalizedPhone);
-
     setCheckingPoints(true);
     try {
       // ✅ Kirim normalizedPhone ke API

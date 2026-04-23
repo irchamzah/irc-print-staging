@@ -88,7 +88,7 @@ export const TransactionItem = ({
               {fileName}
             </p>
             <p className="text-lg sm:text-xl font-bold text-purple-600">
-              Rp {amount.toLocaleString("id-ID")}
+              Rp {transaction.settings.cost.toLocaleString("id-ID")}
             </p>
           </div>
 

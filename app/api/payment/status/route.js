@@ -49,6 +49,11 @@ export async function GET(request) {
       ),
     ]);
 
+    console.log(
+      "Midtrans status response: >>>>>>>>>>>>>>>>>>>>>",
+      statusResponse,
+    );
+
     return NextResponse.json({
       success: true,
       status: statusResponse.transaction_status,

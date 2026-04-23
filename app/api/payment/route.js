@@ -55,11 +55,13 @@ export async function POST(request) {
     // Create transaction
     const transaction = await snap.createTransaction(parameter);
 
+    console.log("Midtrans transaction response:", transaction);
+
     return NextResponse.json({
       success: true,
       token: transaction.token,
       redirect_url: transaction.redirect_url,
-      qr_code: transaction.qr_code, // QRIS code URL
+      qr_code: transaction.qr_code,
       environment: process.env.NEXT_PUBLIC_MIDTRANS_ENVIRONMENT,
     });
   } catch (error) {

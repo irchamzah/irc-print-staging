@@ -106,6 +106,7 @@ export const usePaymentManagement = (
           },
           cost: finalCost,
           paymentToken: paymentResult.token,
+          redirectUrl: paymentResult.redirect_url,
           status: "pending",
           createdAt: new Date().toISOString(),
           expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
@@ -298,8 +299,6 @@ export const usePaymentManagement = (
     if (!userSession?.phone) return;
 
     setLoadingTransactions(true);
-
-    console.log(`/api/transactions/pending?phoneNumber=${userSession.phone}`);
     try {
       const response = await fetch(
         `/api/transactions/pending?phoneNumber=${userSession.phone}`,
@@ -364,6 +363,12 @@ export const usePaymentManagement = (
             latestStatus === "settlement" ? "settlement" : currentStatus,
         };
 
+        console.log("latestStatus:>>>>>>>>>>>>>>>>>>>>", latestStatus);
+        console.log(
+          "syncResult.paymentType:>>>>>>>>>>>>>>>>>>>>",
+          syncResult.paymentType,
+        );
+
         if (latestStatus === "settlement") {
           await fetch(`/api/transactions/update-status`, {
             method: "POST",
@@ -373,6 +378,7 @@ export const usePaymentManagement = (
               phoneNumber: userSession.phone,
               status: "settlement",
               midtransStatus: latestStatus,
+              paymentMethod: syncResult.paymentType,
             }),
           });
 
@@ -520,6 +526,7 @@ export const usePaymentManagement = (
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${printJobId}`,
       );
+      console.log("Payment status response:", statusResponse);
 
       if (!statusResponse.ok) {
         throw new Error(
