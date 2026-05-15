@@ -21,8 +21,8 @@ export async function POST(request) {
         pointsToAdd: jsonData.pointsToAdd,
         pointDivider: jsonData.pointDivider,
         phoneNumber: jsonData.phoneNumber,
-        paperSize: jsonData.paperSize || "A4",
-        quality: jsonData.quality || "normal",
+        paperSize: jsonData.paperSize,
+        quality: jsonData.quality,
         isRestored: true,
       };
 

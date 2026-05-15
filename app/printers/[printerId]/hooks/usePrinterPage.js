@@ -372,7 +372,7 @@ export const usePrinterPage = () => {
     printer,
     finalPrices,
     enabledFeatures,
-    volumeDiscounts: printer?.volumeDiscounts || [], // ✅ Tambah volumeDiscounts
+    volumeDiscounts: printer?.volumeDiscounts || [],
 
     // Paper & printer status
     isPrinterOffline,

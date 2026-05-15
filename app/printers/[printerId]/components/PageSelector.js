@@ -1,7 +1,19 @@
 "use client";
 import { usePageSelection } from "../hooks/usePageSelection";
 import dynamic from "next/dynamic";
-import { PRINT_SETTINGS } from "../../../../lib/printConstants";
+
+// Helper function untuk mendapatkan deskripsi ukuran kertas
+const getPaperSizeDescription = (size) => {
+  const descriptions = {
+    A4: "A4 (210 × 297 mm)",
+    F4: "F4 (210 × 330 mm)",
+    Letter: "Letter (216 × 279 mm)",
+    Legal: "Legal (216 × 356 mm)",
+    A3: "A3 (297 × 420 mm)",
+    A5: "A5 (148 × 210 mm)",
+  };
+  return descriptions[size] || size;
+};
 
 const PDFPreview = dynamic(() => import("./PDFPreview"), {
   ssr: false,
@@ -18,8 +30,8 @@ const PageSelector = ({
   onSettingsChange,
   initialSettings,
   file,
-  finalPrices, // ✅ Ganti prices → finalPrices
-  enabledFeatures, // ✅ Tambah untuk validasi ukuran kertas
+  finalPrices,
+  enabledFeatures,
   volumeDiscounts,
 }) => {
   const {
@@ -50,11 +62,12 @@ const PageSelector = ({
 
   if (totalPages === 0) return null;
 
-  // ✅ Dapatkan daftar ukuran kertas yang didukung printer
-  const supportedPaperSizes = enabledFeatures?.paperSizes || ["A4", "F4"];
-  const availablePaperSizes = Object.entries(PRINT_SETTINGS.PAPER_SIZES)
-    .filter(([key]) => supportedPaperSizes.includes(key))
-    .map(([key, paper]) => ({ key, ...paper }));
+  const availablePaperSizes = (enabledFeatures?.paperSizes || ["A4", "F4"]).map(
+    (size) => ({
+      key: size,
+      description: getPaperSizeDescription(size),
+    }),
+  );
 
   return (
     <div className="space-y-6">
@@ -458,15 +471,6 @@ const SettingsIcon = () => {
 
 // PaperSizeSetting - UPDATED dengan availablePaperSizes
 const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [] }) => {
-  // Jika belum ada data dari printer, gunakan semua ukuran default
-  const paperSizesToShow =
-    availablePaperSizes.length > 0
-      ? availablePaperSizes
-      : Object.entries(PRINT_SETTINGS.PAPER_SIZES).map(([key, paper]) => ({
-          key,
-          ...paper,
-        }));
-
   return (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
@@ -477,7 +481,7 @@ const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [] }) => {
         onChange={(e) => onChange(e.target.value)}
         className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-700"
       >
-        {paperSizesToShow.map((paper) => (
+        {availablePaperSizes.map((paper) => (
           <option key={paper.key} value={paper.key}>
             {paper.description}
           </option>

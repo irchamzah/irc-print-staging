@@ -55,8 +55,6 @@ export async function POST(request) {
     // Create transaction
     const transaction = await snap.createTransaction(parameter);
 
-    console.log("Midtrans transaction response:", transaction);
-
     return NextResponse.json({
       success: true,
       token: transaction.token,

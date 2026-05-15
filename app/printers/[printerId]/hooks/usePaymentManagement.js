@@ -363,12 +363,6 @@ export const usePaymentManagement = (
             latestStatus === "settlement" ? "settlement" : currentStatus,
         };
 
-        console.log("latestStatus:>>>>>>>>>>>>>>>>>>>>", latestStatus);
-        console.log(
-          "syncResult.paymentType:>>>>>>>>>>>>>>>>>>>>",
-          syncResult.paymentType,
-        );
-
         if (latestStatus === "settlement") {
           await fetch(`/api/transactions/update-status`, {
             method: "POST",
@@ -526,7 +520,6 @@ export const usePaymentManagement = (
       const statusResponse = await fetch(
         `/api/payment/status?orderId=${printJobId}`,
       );
-      console.log("Payment status response:", statusResponse);
 
       if (!statusResponse.ok) {
         throw new Error(

@@ -50,9 +50,9 @@ export default function PrinterPage() {
     isPaperInsufficient,
     availablePaper,
     totalPagesNeeded,
-    finalPrices, // ✅ Ganti prices → finalPrices
-    enabledFeatures, // ✅ Tambah enabledFeatures
-    volumeDiscounts, // ✅ Tambah volumeDiscounts
+    finalPrices,
+    enabledFeatures,
+    volumeDiscounts,
     currentPrintJobId,
 
     // Functions
@@ -109,9 +109,9 @@ export default function PrinterPage() {
                       initialSettings={advancedSettings}
                       onSettingsChange={handleSettingsChange}
                       file={file}
-                      finalPrices={finalPrices} // ✅ Ganti prices → finalPrices
-                      enabledFeatures={enabledFeatures} // ✅ Tambah
-                      volumeDiscounts={volumeDiscounts} // ✅ Tambah
+                      finalPrices={finalPrices}
+                      enabledFeatures={enabledFeatures}
+                      volumeDiscounts={volumeDiscounts}
                     />
                   </div>
                 )}

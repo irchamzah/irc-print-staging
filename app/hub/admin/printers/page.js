@@ -97,6 +97,8 @@ function PrintersContent() {
     setProcessing(true);
     setFormError(null);
 
+    // console.log("Submitting form with data:", formData);
+
     let result;
     if (selectedPrinter) {
       result = await updatePrinter(selectedPrinter.printerId, formData);

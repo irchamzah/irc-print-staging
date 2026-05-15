@@ -296,6 +296,7 @@ export const PrinterFormModal = ({
     e.preventDefault();
 
     // First, submit the printer form data
+    console.log("Submitting form with data:", formData);
     onSubmit(formData);
   };
 
