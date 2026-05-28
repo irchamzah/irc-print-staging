@@ -33,6 +33,11 @@ const tabs = [
     label: "🏦 Withdrawals",
     href: "/hub/admin/partner-withdrawals",
   },
+  {
+    id: "raspberry-devices",
+    label: "💻 Raspberry Devices",
+    href: "/hub/admin/raspberry-devices",
+  },
 ];
 
 function PrinterModelsContent() {

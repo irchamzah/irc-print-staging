@@ -1,3 +1,4 @@
+// app/printers/[printerId]/hooks/usePageSelection.js
 import { useEffect, useState } from "react";
 
 // usePageSelection - UPDATED dengan finalPrices

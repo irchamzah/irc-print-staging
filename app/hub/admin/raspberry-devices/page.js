@@ -1,24 +1,24 @@
-// app/hub/admin/users/page.js SUDAH DIUPDATE
+// /app/hub/admin/raspberry-devices/page.js
 "use client";
 import { Suspense } from "react";
 import { useState, useRef, useEffect } from "react";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
 import { AdminLayout } from "../components/AdminLayout";
-import { useAdminUsers } from "../hooks/useAdminUsers";
-import { UserFormModal } from "./components/UserFormModal";
+import { useRaspberryDevices } from "./hooks/useRaspberryDevices";
+import { RaspberryFormModal } from "./components/RaspberryFormModal";
+import { AssignPrintersModal } from "./components/AssignPrintersModal";
 import { DeleteConfirmModal } from "../components/DeleteConfirmModal";
 import { StatsCards } from "./components/StatsCards";
 import { FilterSection } from "./components/FilterSection";
-import { SortSection } from "./components/SortSection";
-import { UsersTable } from "./components/UsersTable";
-import { Pagination } from "./components/Pagination";
+import { RaspberryTable } from "./components/RaspberryTable";
 
-// Komponen konten yang menggunakan useAdminUsers
-function UsersContent() {
+// Komponen konten yang menggunakan useRaspberryDevices
+function RaspberryDevicesContent() {
   const { isSuperAdmin } = useHubAuth();
   const {
-    users,
+    devices,
     stats,
+    filterOptions,
     loading,
     pagination,
     filters,
@@ -27,60 +27,35 @@ function UsersContent() {
     changePage,
     changeLimit,
     changeSort,
-    createUser,
-    updateUser,
-    deleteUser,
+    createDevice,
+    updateDevice,
+    deleteDevice,
+    assignPrinters,
     formatDate,
-    formatRupiah,
-    formatPoints,
-    getRoleBadge, // ✅ Tambah dari hook
-    getAccessPrinterCount, // ✅ Tambah dari hook
-  } = useAdminUsers();
+  } = useRaspberryDevices();
 
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedDevice, setSelectedDevice] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [printers, setPrinters] = useState([]);
   const scrollRef = useRef(null);
 
   const saveScrollPosition = () => {
     if (scrollRef.current) {
       const position = scrollRef.current.scrollTop;
-      sessionStorage.setItem("usersScrollPos", position);
+      sessionStorage.setItem("raspberryDevicesScrollPos", position);
     }
   };
 
-  // Kembalikan posisi scroll setelah loading selesai
   useEffect(() => {
-    const savedPosition = sessionStorage.getItem("usersScrollPos");
+    const savedPosition = sessionStorage.getItem("raspberryDevicesScrollPos");
     if (savedPosition && scrollRef.current && !loading) {
       scrollRef.current.scrollTop = parseInt(savedPosition);
-      sessionStorage.removeItem("usersScrollPos");
+      sessionStorage.removeItem("raspberryDevicesScrollPos");
     }
   }, [loading]);
-
-  // Fetch printers for partner access
-  useEffect(() => {
-    const fetchPrinters = async () => {
-      try {
-        const token = localStorage.getItem("hubToken");
-        const response = await fetch(`/api/hub/admin/printers?limit=1000`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (data.success) {
-          setPrinters(data.data || []);
-        }
-      } catch (error) {
-        console.error("Error fetching printers:", error);
-      }
-    };
-    fetchPrinters();
-  }, []);
 
   const handleApplyFilters = async (newFilters) => {
     saveScrollPosition();
@@ -103,19 +78,24 @@ function UsersContent() {
   };
 
   const handleAddNew = () => {
-    setSelectedUser(null);
+    setSelectedDevice(null);
     setFormError(null);
     setShowFormModal(true);
   };
 
-  const handleEdit = (user) => {
-    setSelectedUser(user);
+  const handleEdit = (device) => {
+    setSelectedDevice(device);
     setFormError(null);
     setShowFormModal(true);
   };
 
-  const handleDelete = (user) => {
-    setSelectedUser(user);
+  const handleAssignPrinters = (device) => {
+    setSelectedDevice(device);
+    setShowAssignModal(true);
+  };
+
+  const handleDelete = (device) => {
+    setSelectedDevice(device);
     setShowDeleteModal(true);
   };
 
@@ -124,30 +104,42 @@ function UsersContent() {
     setFormError(null);
 
     let result;
-    if (selectedUser) {
-      result = await updateUser(selectedUser.userId, formData);
+    if (selectedDevice) {
+      result = await updateDevice(selectedDevice._id, formData);
     } else {
-      result = await createUser(formData);
+      result = await createDevice(formData);
     }
 
     if (result.success) {
       setShowFormModal(false);
-      setSelectedUser(null);
+      setSelectedDevice(null);
     } else {
       setFormError(result.error || "Terjadi kesalahan");
     }
     setProcessing(false);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!selectedUser) return;
+  const handleAssignSubmit = async (printerIds) => {
     setProcessing(true);
-    const result = await deleteUser(selectedUser.userId);
+    const result = await assignPrinters(selectedDevice._id, printerIds);
+    if (result.success) {
+      setShowAssignModal(false);
+      setSelectedDevice(null);
+    } else {
+      alert("Gagal assign printer: " + result.error);
+    }
+    setProcessing(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedDevice) return;
+    setProcessing(true);
+    const result = await deleteDevice(selectedDevice._id);
     if (result.success) {
       setShowDeleteModal(false);
-      setSelectedUser(null);
+      setSelectedDevice(null);
     } else {
-      alert("Gagal menghapus user: " + result.error);
+      alert("Gagal menghapus device: " + result.error);
     }
     setProcessing(false);
   };
@@ -164,12 +156,31 @@ function UsersContent() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-800">
-            👥 Manajemen User
+            💻 Manajemen Raspberry Devices
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Kelola semua user, partner, dan admin
+            Kelola semua perangkat Raspberry Pi yang terdaftar
           </p>
         </div>
+        <button
+          onClick={handleAddNew}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          Tambah Device
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -180,13 +191,8 @@ function UsersContent() {
         filters={filters}
         onApply={handleApplyFilters}
         onReset={handleResetFilters}
+        options={filterOptions}
         isLoading={loading}
-      />
-
-      {/* Sort Section */}
-      <SortSection
-        currentSort={{ sortBy: filters.sortBy, sortOrder: filters.sortOrder }}
-        onSortChange={changeSort}
       />
 
       {/* Table */}
@@ -198,37 +204,36 @@ function UsersContent() {
           </div>
         ) : (
           <>
-            <UsersTable
-              users={users}
+            <RaspberryTable
+              devices={devices}
               onEdit={handleEdit}
+              onAssign={handleAssignPrinters}
               onDelete={handleDelete}
               onCreate={handleAddNew}
               formatDate={formatDate}
-              formatRupiah={formatRupiah}
-              formatPoints={formatPoints}
-              getRoleBadge={getRoleBadge} // ✅ Tambah
-              getAccessPrinterCount={getAccessPrinterCount} // ✅ Tambah
               pagination={pagination}
+              onPageChange={handleChangePage}
+              onLimitChange={handleChangeLimit}
             />
-            {pagination.totalPages > 0 && (
-              <Pagination
-                pagination={pagination}
-                onPageChange={handleChangePage}
-                onLimitChange={handleChangeLimit}
-              />
-            )}
           </>
         )}
       </div>
 
       {/* Modals */}
-      <UserFormModal
+      <RaspberryFormModal
         isOpen={showFormModal}
         onClose={() => setShowFormModal(false)}
         onSubmit={handleSubmit}
-        user={selectedUser}
-        printers={printers}
+        device={selectedDevice}
         error={formError}
+        processing={processing}
+      />
+
+      <AssignPrintersModal
+        isOpen={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        onSubmit={handleAssignSubmit}
+        device={selectedDevice}
         processing={processing}
       />
 
@@ -236,8 +241,8 @@ function UsersContent() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
-        title="Hapus User"
-        message={`Apakah Anda yakin ingin menghapus user "${selectedUser?.name}"?`}
+        title="Hapus Raspberry Device"
+        message={`Apakah Anda yakin ingin menghapus device "${selectedDevice?.name}"?`}
         processing={processing}
       />
     </div>
@@ -255,7 +260,7 @@ function LoadingFallback() {
 }
 
 // Halaman utama dengan Suspense boundary
-export default function AdminUsersPage() {
+export default function AdminRaspberryDevicesPage() {
   const tabs = [
     { id: "users", label: "👥 Users", href: "/hub/admin/users" },
     { id: "printers", label: "🖨️ Printers", href: "/hub/admin/printers" },
@@ -287,9 +292,9 @@ export default function AdminUsersPage() {
   ];
 
   return (
-    <AdminLayout tabs={tabs} activeTab="users">
+    <AdminLayout tabs={tabs} activeTab="raspberry-devices">
       <Suspense fallback={<LoadingFallback />}>
-        <UsersContent />
+        <RaspberryDevicesContent />
       </Suspense>
     </AdminLayout>
   );

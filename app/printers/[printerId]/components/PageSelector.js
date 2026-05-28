@@ -1,6 +1,9 @@
+// app/printers/[printerId]/components/PageSelector.js
 "use client";
 import { usePageSelection } from "../hooks/usePageSelection";
 import dynamic from "next/dynamic";
+import PaperSizeTutorialModal from "./PaperSizeTutorialModal";
+import { useState } from "react";
 
 // Helper function untuk mendapatkan deskripsi ukuran kertas
 const getPaperSizeDescription = (size) => {
@@ -33,6 +36,7 @@ const PageSelector = ({
   finalPrices,
   enabledFeatures,
   volumeDiscounts,
+  printerName,
 }) => {
   const {
     pagesToShow,
@@ -198,6 +202,7 @@ const PageSelector = ({
         onPrintSettingsChange={handlePrintSettingsChange}
         onCopiesChange={handleCopiesChange}
         availablePaperSizes={availablePaperSizes}
+        printerName={printerName}
       />
     </div>
   );
@@ -423,6 +428,7 @@ const AdvancedSettings = ({
   onPrintSettingsChange,
   onCopiesChange,
   availablePaperSizes = [], // ✅ Tambah prop ini
+  printerName,
 }) => {
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
@@ -436,6 +442,7 @@ const AdvancedSettings = ({
           value={printSettings.paperSize}
           onChange={(value) => onPrintSettingsChange({ paperSize: value })}
           availablePaperSizes={availablePaperSizes}
+          printerName={printerName}
         />
         <CopiesSetting value={copies} onChange={onCopiesChange} />
       </div>
@@ -469,25 +476,66 @@ const SettingsIcon = () => {
   );
 };
 
-// PaperSizeSetting - UPDATED dengan availablePaperSizes
+// PaperSizeSetting - UPDATED dengan tutorial modal
 const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [] }) => {
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [previousValue, setPreviousValue] = useState(value);
+  const [selectedPaperSize, setSelectedPaperSize] = useState(value);
+  const [printerName, setPrinterName] = useState(""); // Dapatkan dari context/props
+
+  const handlePaperSizeChange = (newValue) => {
+    if (newValue !== value) {
+      // Simpan ukuran kertas yang dipilih
+      setSelectedPaperSize(newValue);
+      // Tampilkan modal tutorial
+      setShowTutorial(true);
+    }
+  };
+
+  const handleConfirmChange = () => {
+    // User mengkonfirmasi setelah melihat tutorial
+    onChange(selectedPaperSize);
+    setPreviousValue(selectedPaperSize);
+    setShowTutorial(false);
+  };
+
+  const handleCancelChange = () => {
+    // User membatalkan perubahan
+    setSelectedPaperSize(previousValue);
+    setShowTutorial(false);
+  };
+
   return (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        📄 Ukuran Kertas
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-700"
-      >
-        {availablePaperSizes.map((paper) => (
-          <option key={paper.key} value={paper.key}>
-            {paper.description}
-          </option>
-        ))}
-      </select>
-    </div>
+    <>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          📄 Ukuran Kertas
+        </label>
+        <select
+          value={value}
+          onChange={(e) => handlePaperSizeChange(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-700"
+        >
+          {availablePaperSizes.map((paper) => (
+            <option key={paper.key} value={paper.key}>
+              {paper.description}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          💡 Tips: Mengganti ukuran kertas akan menampilkan panduan
+        </p>
+      </div>
+
+      {/* Modal Tutorial */}
+      <PaperSizeTutorialModal
+        isOpen={showTutorial}
+        onClose={handleCancelChange}
+        paperSize={selectedPaperSize}
+        printerName={printerName}
+        onConfirm={handleConfirmChange}
+      />
+    </>
   );
 };
 
