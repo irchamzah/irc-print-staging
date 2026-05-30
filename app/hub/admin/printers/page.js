@@ -1,3 +1,4 @@
+// app/hub/admin/printers/page.js
 "use client";
 import { Suspense } from "react";
 import { useState, useRef, useEffect } from "react";
