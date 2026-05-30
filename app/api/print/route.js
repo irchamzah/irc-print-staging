@@ -1,3 +1,4 @@
+// api/print/route.js (Frontend Next.js)
 import { NextResponse } from "next/server";
 
 const NEXT_PUBLIC_VPS_API_URL = process.env.NEXT_PUBLIC_VPS_API_URL;

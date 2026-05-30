@@ -1,4 +1,4 @@
-// app/printers/[printerId]/page.js
+// app/printers/[printerId]/page.js (Frontend Next.js)
 "use client";
 import { usePrinterPage } from "./hooks/usePrinterPage";
 import { PrinterHeader } from "./components/PrinterHeader";
