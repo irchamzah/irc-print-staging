@@ -44,6 +44,8 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
 
       const result = await response.json();
 
+      console.log("Scan USB response:", result);
+
       if (result.success) {
         // Tunggu hasil scan (polling)
         await pollForUSBScanResult(printer.raspberryId);
@@ -74,6 +76,8 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
 
         const data = await response.json();
 
+        console.log(`Polling attempt ${i + 1}:`, data);
+
         if (data.success && data.data.usbDevices) {
           setUsbDevices(data.data.usbDevices);
 
@@ -86,6 +90,7 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
               setSelectedUsbDevice(matched);
             }
           }
+          console.log("USB devices found:", data.data.usbDevices);
           return;
         }
       } catch (error) {
