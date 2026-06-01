@@ -9,13 +9,7 @@ export const SubmitButton = ({
   totalPagesNeeded = 0,
   paperMode = "limited", // ✅ Tambah: "limited" atau "unlimited"
 }) => {
-  if (
-    !advancedSettings.cost ||
-    advancedSettings.cost <= 0 ||
-    totalPagesNeeded <= 0
-  ) {
-    return null;
-  }
+  if (!advancedSettings) return null;
 
   // CEK JIKA USER SESSION KOSONG
   const isUserNotLoggedIn = !userSession?.phone;
@@ -23,11 +17,15 @@ export const SubmitButton = ({
   // ✅ Logika untuk Unlimited Mode: Abaikan pengecekan kertas
   const isUnlimitedMode = paperMode === "unlimited";
   const showPaperWarning = !isUnlimitedMode && isPaperInsufficient;
+  const costValue = advancedSettings.cost || 0;
+
   const isDisabled =
     isLoading ||
     isPrinterOffline ||
     isUserNotLoggedIn ||
-    (!isUnlimitedMode && isPaperInsufficient);
+    (!isUnlimitedMode && isPaperInsufficient) ||
+    costValue <= 0 ||
+    totalPagesNeeded <= 0;
 
   // Fungsi handle click dengan confirmation
   const handleClickWithWarning = (e) => {

@@ -26,24 +26,30 @@ export const usePageSelection = (
   // ============================================
   // Helper: Hitung harga BW berdasarkan volume discounts
   // ============================================
-  const calculateBwPriceFromDiscounts = (totalSheets, discounts) => {
-    if (!discounts || discounts.length === 0) {
-      return null; // Tidak ada diskon, gunakan harga normal
-    }
+  const calculateBwPriceFromDiscounts = (totalSheets, discounts, basePrice) => {
+    if (!discounts || discounts.length === 0) return null;
 
     // Urutkan dari minSheets terbesar ke terkecil
     const sortedTiers = [...discounts].sort(
       (a, b) => b.minSheets - a.minSheets,
     );
 
-    // Cari tier yang memenuhi syarat
     for (const tier of sortedTiers) {
       if (totalSheets >= tier.minSheets) {
-        return tier.price;
+        // Jika admin menyediakan `price` gunakan itu, otherwise gunakan discountPercent
+        if (typeof tier.price === "number") return tier.price;
+        if (
+          typeof tier.discountPercent === "number" &&
+          typeof basePrice === "number"
+        ) {
+          const pct = Math.max(0, Math.min(100, tier.discountPercent));
+          return Math.round((basePrice * (100 - pct)) / 100);
+        }
+        return null;
       }
     }
 
-    return null; // Tidak ada tier yang memenuhi
+    return null;
   };
 
   // ============================================
@@ -78,8 +84,9 @@ export const usePageSelection = (
     const discountedPrice = calculateBwPriceFromDiscounts(
       totalSheets,
       discounts,
+      bwPricePerSheet,
     );
-    if (discountedPrice !== null) {
+    if (typeof discountedPrice === "number") {
       bwPricePerSheet = discountedPrice;
     }
 

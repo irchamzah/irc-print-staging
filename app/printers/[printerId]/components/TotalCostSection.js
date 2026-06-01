@@ -4,9 +4,8 @@ export const TotalCostSection = ({
   totalPages,
   finalPrices,
 }) => {
-  if (!advancedSettings.cost || advancedSettings.cost <= 0) {
-    return null;
-  }
+  // Always render the cost section; show placeholder when cost not calculated yet
+  const costValue = advancedSettings.cost || 0;
 
   const selectedCount = advancedSettings.selectedPages?.length || totalPages;
   const bwPages = advancedSettings.bwPages?.length || 0;
@@ -51,7 +50,7 @@ export const TotalCostSection = ({
           </p>
         </div>
         <p className="text-2xl font-bold text-green-600">
-          Rp {advancedSettings.cost.toLocaleString()}
+          Rp {costValue.toLocaleString()}
         </p>
       </div>
 
