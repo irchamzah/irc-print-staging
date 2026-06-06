@@ -151,7 +151,7 @@ export const PrintersTable = ({
                     href={`/hub/printers/${printer.printerId}`}
                     className="text-sm font-medium text-blue-500 hover:underline"
                   >
-                    {printer.name}
+                    {printer.printerName}
                   </CustomLink>
                 </td>
                 <td className="px-4 sm:px-6 py-3">

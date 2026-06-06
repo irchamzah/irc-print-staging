@@ -19,12 +19,13 @@ export const SubmitButton = ({
   const showPaperWarning = !isUnlimitedMode && isPaperInsufficient;
   const costValue = advancedSettings.cost || 0;
 
+  if (costValue <= 0) return null;
+
   const isDisabled =
     isLoading ||
     isPrinterOffline ||
     isUserNotLoggedIn ||
     (!isUnlimitedMode && isPaperInsufficient) ||
-    costValue <= 0 ||
     totalPagesNeeded <= 0;
 
   // Fungsi handle click dengan confirmation

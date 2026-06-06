@@ -522,9 +522,6 @@ const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [] }) => {
             </option>
           ))}
         </select>
-        <p className="text-xs text-gray-500 mt-1">
-          💡 Tips: Mengganti ukuran kertas akan menampilkan panduan
-        </p>
       </div>
 
       {/* Modal Tutorial */}

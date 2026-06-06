@@ -35,9 +35,24 @@ export const PrinterFormModal = ({
   const [uploadingImages, setUploadingImages] = useState(false);
   const [imageError, setImageError] = useState(null);
 
+  // State untuk printer models
+  const [printerModels, setPrinterModels] = useState([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+
+  // State untuk printer ID validation
+  const [printerIdValidation, setPrinterIdValidation] = useState({
+    isChecking: false,
+    isAvailable: null,
+    error: null,
+  });
+  const [debounceTimer, setDebounceTimer] = useState(null);
+
+  const [raspberryDevices, setRaspberryDevices] = useState([]);
+  const [loadingRaspberryDevices, setLoadingRaspberryDevices] = useState(false);
+
   const [formData, setFormData] = useState({
     printerId: "",
-    name: "",
+    printerName: "",
     modelId: "model_canon_g1010",
     model: "",
     location: {
@@ -70,12 +85,15 @@ export const PrinterFormModal = ({
       color: {},
     },
     volumeDiscounts: [
-      { minSheets: 5, maxSheets: 9, discountPercent: 10 },
-      { minSheets: 10, maxSheets: 14, discountPercent: 20 },
-      { minSheets: 15, maxSheets: null, discountPercent: 30 },
+      { minSheets: 1, maxSheets: 4, discountFlat: 0 },
+      { minSheets: 5, maxSheets: 9, discountFlat: 0 },
+      { minSheets: 10, maxSheets: 14, discountFlat: 0 },
+      { minSheets: 15, maxSheets: null, discountFlat: 0 },
     ],
     extraFees: {
-      highQuality: { enabled: false, feePercent: 0 },
+      highQuality: 0,
+      specialPaper: 0,
+      duplex: 0,
     },
     profitDistribution: {
       partnerSelfRefill: 100,
@@ -100,7 +118,148 @@ export const PrinterFormModal = ({
       email: "",
     },
     status: "offline",
+    cupsPrinterName: "",
+    raspberryId: "",
+    printerStatus: "active",
   });
+
+  // Helper: Convert text to slug format (e.g., "printer pertama" → "printer-pertama")
+  const convertToSlug = (text) => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^\w\-]/g, "")
+      .replace(/\-+/g, "-")
+      .replace(/^\-|\-$/g, "");
+  };
+
+  // Check if Printer ID is available
+  const checkPrinterIdAvailability = async (id) => {
+    if (!id) {
+      setPrinterIdValidation({
+        isChecking: false,
+        isAvailable: null,
+        error: null,
+      });
+      return;
+    }
+
+    try {
+      setPrinterIdValidation((prev) => ({ ...prev, isChecking: true }));
+      const token = localStorage.getItem("hubToken");
+      const response = await fetch(
+        `/api/hub/admin/printers/check-id?printerId=${encodeURIComponent(id)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      const data = await response.json();
+      setPrinterIdValidation({
+        isChecking: false,
+        isAvailable: data.available,
+        error: data.available ? null : "Printer ID ini sudah digunakan",
+      });
+    } catch (error) {
+      console.error("Error checking printer ID:", error);
+      setPrinterIdValidation({
+        isChecking: false,
+        isAvailable: null,
+        error: "Gagal memeriksa ketersediaan Printer ID",
+      });
+    }
+  };
+
+  // Handle Nama Printer input with auto-fill Printer ID
+  const handleNameChange = (newName) => {
+    setFormData({ ...formData, printerName: newName });
+
+    // Generate slug for printer ID
+    const slug = convertToSlug(newName);
+    setFormData((prevData) => ({ ...prevData, printerId: slug }));
+
+    // Clear previous debounce timer
+    if (debounceTimer) clearTimeout(debounceTimer);
+
+    // Reset validation state while typing
+    setPrinterIdValidation({
+      isChecking: false,
+      isAvailable: null,
+      error: null,
+    });
+
+    // Set new debounce timer (2 seconds)
+    if (slug) {
+      const timer = setTimeout(() => {
+        checkPrinterIdAvailability(slug);
+      }, 2000);
+      setDebounceTimer(timer);
+    }
+  };
+
+  // Fetch printer models on mount
+  useEffect(() => {
+    fetchPrinterModels();
+    fetchRaspberryDevices();
+  }, []);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [debounceTimer]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+    };
+  }, [debounceTimer]);
+
+  // Fetch printer models dari API
+  const fetchPrinterModels = async () => {
+    try {
+      setLoadingModels(true);
+      const token = localStorage.getItem("hubToken");
+      const response = await fetch("/api/hub/admin/printer-models?limit=100", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Printer Models Response:", data);
+        if (data.success && data.data) {
+          setPrinterModels(data.data);
+        }
+      } else {
+        console.error("Error fetching printer models:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching printer models:", error);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  const fetchRaspberryDevices = async () => {
+    try {
+      setLoadingRaspberryDevices(true);
+      const token = localStorage.getItem("hubToken");
+      const response = await fetch("/api/hub/admin/raspberry-devices?limit=100", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setRaspberryDevices(data.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching raspberry devices:", error);
+    } finally {
+      setLoadingRaspberryDevices(false);
+    }
+  };
 
   // Fetch existing images when editing
   useEffect(() => {
@@ -148,7 +307,7 @@ export const PrinterFormModal = ({
 
       setFormData({
         printerId: printer.printerId || "",
-        name: printer.name || "",
+        printerName: printer.printerName || printer.name || "",
         modelId: printer.modelId || "model_canon_g1010",
         model: printer.model || "",
         location: {
@@ -177,13 +336,20 @@ export const PrinterFormModal = ({
           monochrome: initPrices(markup.monochrome, 100),
           color: initPrices(markup.color, 100),
         },
-        volumeDiscounts: printer.volumeDiscounts || [
-          { minSheets: 5, maxSheets: 9, discountPercent: 10 },
-          { minSheets: 10, maxSheets: 14, discountPercent: 20 },
-          { minSheets: 15, maxSheets: null, discountPercent: 30 },
-        ],
-        extraFees: printer.extraFees || {
-          highQuality: { enabled: false, feePercent: 0 },
+        volumeDiscounts: (printer.volumeDiscounts || [
+          { minSheets: 1, maxSheets: 4, discountFlat: 0 },
+          { minSheets: 5, maxSheets: 9, discountFlat: 0 },
+          { minSheets: 10, maxSheets: 14, discountFlat: 0 },
+          { minSheets: 15, maxSheets: null, discountFlat: 0 },
+        ]).map((d) => ({
+          minSheets: d.minSheets,
+          maxSheets: d.maxSheets,
+          discountFlat: d.discountFlat ?? d.price ?? d.discountPercent ?? 0,
+        })),
+        extraFees: {
+          highQuality: printer.extraFees?.highQuality ?? 0,
+          specialPaper: printer.extraFees?.specialPaper ?? 0,
+          duplex: printer.extraFees?.duplex ?? 0,
         },
         profitDistribution: printer.profitDistribution || {
           partnerSelfRefill: 100,
@@ -208,6 +374,9 @@ export const PrinterFormModal = ({
           email: printer.contact?.email || "",
         },
         status: printer.status || "offline",
+        cupsPrinterName: printer.cupsPrinterName || "",
+        raspberryId: printer.raspberryId || "",
+        printerStatus: printer.printerStatus || "active",
       });
     } else {
       const defaultMonochrome = {};
@@ -224,7 +393,7 @@ export const PrinterFormModal = ({
 
       setFormData({
         printerId: "",
-        name: "",
+        printerName: "",
         modelId: "model_canon_g1010",
         model: "",
         location: {
@@ -254,12 +423,15 @@ export const PrinterFormModal = ({
           color: defaultMarkupColor,
         },
         volumeDiscounts: [
-          { minSheets: 5, maxSheets: 9, discountPercent: 10 },
-          { minSheets: 10, maxSheets: 14, discountPercent: 20 },
-          { minSheets: 15, maxSheets: null, discountPercent: 30 },
+          { minSheets: 1, maxSheets: 4, discountFlat: 0 },
+          { minSheets: 5, maxSheets: 9, discountFlat: 0 },
+          { minSheets: 10, maxSheets: 14, discountFlat: 0 },
+          { minSheets: 15, maxSheets: null, discountFlat: 0 },
         ],
         extraFees: {
-          highQuality: { enabled: false, feePercent: 0 },
+          highQuality: 0,
+          specialPaper: 0,
+          duplex: 0,
         },
         profitDistribution: {
           partnerSelfRefill: 100,
@@ -284,6 +456,9 @@ export const PrinterFormModal = ({
           email: "",
         },
         status: "offline",
+        cupsPrinterName: "",
+        raspberryId: "",
+        printerStatus: "active",
       });
       setExistingImages([]);
     }
@@ -499,7 +674,7 @@ export const PrinterFormModal = ({
       ...formData,
       volumeDiscounts: [
         ...formData.volumeDiscounts,
-        { minSheets: 0, maxSheets: null, discountPercent: 0 },
+        { minSheets: 0, maxSheets: null, discountFlat: 0 },
       ],
     });
   };
@@ -729,21 +904,102 @@ export const PrinterFormModal = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Printer ID
                   </label>
-                  <input
-                    type="text"
-                    value={formData.printerId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, printerId: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    required
-                    disabled={!!printer}
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.printerId}
+                      className={`w-full px-3 py-2 border rounded-lg ${
+                        printerIdValidation.isChecking
+                          ? "border-yellow-300 bg-yellow-50"
+                          : printerIdValidation.isAvailable === false
+                            ? "border-red-300 bg-red-50"
+                            : printerIdValidation.isAvailable === true
+                              ? "border-green-300 bg-green-50"
+                              : "border-gray-300 bg-gray-100 text-gray-600"
+                      }`}
+                      placeholder="Printer ID otomatis terisi dari Nama Printer"
+                      required
+                      disabled={true}
+                    />
+                    {printerIdValidation.isChecking && (
+                      <div className="absolute right-3 top-3">
+                        <svg
+                          className="animate-spin h-5 w-5 text-yellow-600"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                    {printerIdValidation.isAvailable === true &&
+                      !printerIdValidation.isChecking && (
+                        <div className="absolute right-3 top-3">
+                          <svg
+                            className="h-5 w-5 text-green-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                    {printerIdValidation.isAvailable === false &&
+                      !printerIdValidation.isChecking && (
+                        <div className="absolute right-3 top-3">
+                          <svg
+                            className="h-5 w-5 text-red-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18.101 12.93l4.656-4.657a2 2 0 00-2.828-2.828l-4.656 4.657-4.656-4.657a2 2 0 00-2.828 2.828l4.656 4.657-4.656 4.657a2 2 0 102.828 2.828l4.656-4.657 4.656 4.657a2 2 0 102.828-2.828l-4.656-4.657z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      )}
+                  </div>
                   {printer && (
                     <p className="text-xs text-gray-500 mt-1">
                       Printer ID tidak dapat diubah
                     </p>
                   )}
+                  {printerIdValidation.isChecking && (
+                    <p className="text-xs text-yellow-600 mt-1">
+                      Memeriksa ketersediaan Printer ID...
+                    </p>
+                  )}
+                  {printerIdValidation.isAvailable === true &&
+                    !printerIdValidation.isChecking && (
+                      <p className="text-xs text-green-600 mt-1">
+                        ✓ Printer ID tersedia
+                      </p>
+                    )}
+                  {printerIdValidation.error &&
+                    !printerIdValidation.isChecking && (
+                      <p className="text-xs text-red-600 mt-1">
+                        ✗ {printerIdValidation.error}
+                      </p>
+                    )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -751,10 +1007,8 @@ export const PrinterFormModal = ({
                   </label>
                   <input
                     type="text"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
+                    value={formData.printerName}
+                    onChange={(e) => handleNameChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     required
                   />
@@ -763,15 +1017,33 @@ export const PrinterFormModal = ({
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Model ID
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.modelId}
-                    onChange={(e) =>
-                      setFormData({ ...formData, modelId: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const selectedModel = printerModels.find(
+                        (m) => m._id === e.target.value,
+                      );
+                      setFormData({
+                        ...formData,
+                        modelId: e.target.value,
+                        model: selectedModel?.model || "",
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="model_canon_g1010"
-                  />
+                    disabled={loadingModels}
+                  >
+                    <option value="">Pilih Model Printer</option>
+                    {printerModels.map((model) => (
+                      <option key={model._id} value={model._id}>
+                        {model.displayName || `${model.brand} ${model.model}`}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingModels && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Loading models...
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -780,12 +1052,13 @@ export const PrinterFormModal = ({
                   <input
                     type="text"
                     value={formData.model}
-                    onChange={(e) =>
-                      setFormData({ ...formData, model: e.target.value })
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                    placeholder="Canon G1010 series"
+                    disabled={true}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed"
+                    placeholder="Pilih Model ID terlebih dahulu"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    * Otomatis terisi berdasarkan Model ID yang dipilih
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -819,6 +1092,81 @@ export const PrinterFormModal = ({
                     <option value="offline">Offline</option>
                     <option value="maintenance">Maintenance</option>
                   </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Konfigurasi Printer & Raspberry Pi */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                🖥️ Konfigurasi Printer & Raspberry Pi
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Raspberry Pi
+                  </label>
+                  <select
+                    value={formData.raspberryId}
+                    onChange={(e) =>
+                      setFormData({ ...formData, raspberryId: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    disabled={loadingRaspberryDevices}
+                  >
+                    <option value="">-- Tidak Dipasang --</option>
+                    {raspberryDevices.map((raspi) => (
+                      <option key={raspi._id} value={raspi._id}>
+                        {raspi.name} — {raspi.location || "No location"}
+                      </option>
+                    ))}
+                  </select>
+                  {loadingRaspberryDevices && (
+                    <p className="text-xs text-gray-500 mt-1">Loading...</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    CUPS Printer Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cupsPrinterName}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        cupsPrinterName: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="Contoh: Canon-G1010"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Nama printer di sistem CUPS pada Raspberry Pi
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Printer Status (Hardware)
+                  </label>
+                  <select
+                    value={formData.printerStatus}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        printerStatus: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="error">Error</option>
+                    <option value="unknown">Unknown</option>
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Status hardware printer (berbeda dari status layanan di atas)
+                  </p>
                 </div>
               </div>
             </div>
@@ -884,7 +1232,84 @@ export const PrinterFormModal = ({
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Latitude{" "}
+                    <span className="text-gray-400 font-normal">(angka pertama dari Google Maps, misal: -8.159936)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={formData.location.coordinates.coordinates[1]}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        location: {
+                          ...formData.location,
+                          coordinates: {
+                            ...formData.location.coordinates,
+                            coordinates: [
+                              formData.location.coordinates.coordinates[0],
+                              parseFloat(e.target.value) || 0,
+                            ],
+                          },
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Longitude{" "}
+                    <span className="text-gray-400 font-normal">(angka kedua dari Google Maps, misal: 113.732886)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="any"
+                    value={formData.location.coordinates.coordinates[0]}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        location: {
+                          ...formData.location,
+                          coordinates: {
+                            ...formData.location.coordinates,
+                            coordinates: [
+                              parseFloat(e.target.value) || 0,
+                              formData.location.coordinates.coordinates[1],
+                            ],
+                          },
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Google Maps URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.location.mapsUrl}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        location: {
+                          ...formData.location,
+                          mapsUrl: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="https://maps.app.goo.gl/..."
+                  />
+                </div>
               </div>
+              <p className="text-xs text-blue-500 mt-2">
+                💡 Google Maps menampilkan koordinat sebagai <strong>Latitude, Longitude</strong> — isi sesuai urutan tersebut.
+              </p>
             </div>
 
             {/* Enabled Features - Paper Sizes */}
@@ -904,6 +1329,38 @@ export const PrinterFormModal = ({
                       className="rounded text-purple-600"
                     />
                     <span className="text-sm">{size}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Enabled Features - Color Modes */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                🖨️ Mode Warna (yang diaktifkan)
+              </h4>
+              <div className="flex gap-3">
+                {ALL_COLOR_MODES.map((mode) => (
+                  <label key={mode} className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={formData.enabledFeatures.colorModes.includes(mode)}
+                      onChange={() => {
+                        const currentModes = [...formData.enabledFeatures.colorModes];
+                        const newModes = currentModes.includes(mode)
+                          ? currentModes.filter((m) => m !== mode)
+                          : [...currentModes, mode];
+                        setFormData({
+                          ...formData,
+                          enabledFeatures: {
+                            ...formData.enabledFeatures,
+                            colorModes: newModes,
+                          },
+                        });
+                      }}
+                      className="rounded text-purple-600"
+                    />
+                    <span className="text-sm capitalize">{mode}</span>
                   </label>
                 ))}
               </div>
@@ -1070,8 +1527,11 @@ export const PrinterFormModal = ({
             {/* Volume Discounts */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-gray-800 mb-3">
-                📊 Diskon Volume (BW)
+                📊 Diskon Volume (Flat Rp)
               </h4>
+              <p className="text-xs text-gray-500 mb-2">
+                Jumlah potongan harga flat (Rp) per lembar berdasarkan jumlah lembar
+              </p>
               {formData.volumeDiscounts.map((discount, index) => (
                 <div key={index} className="flex gap-2 mb-2 items-center">
                   <input
@@ -1106,16 +1566,16 @@ export const PrinterFormModal = ({
                   <span>→</span>
                   <input
                     type="number"
-                    value={discount.discountPercent ?? 0}
+                    value={discount.discountFlat ?? 0}
                     onChange={(e) =>
                       updateVolumeDiscount(
                         index,
-                        "discountPercent",
+                        "discountFlat",
                         parseInt(e.target.value) || 0,
                       )
                     }
                     className="w-20 px-2 py-1 border border-gray-300 rounded-lg text-sm"
-                    placeholder="%"
+                    placeholder="Rp"
                   />
                   {formData.volumeDiscounts.length > 1 && (
                     <button
@@ -1135,6 +1595,78 @@ export const PrinterFormModal = ({
               >
                 + Tambah Tier
               </button>
+            </div>
+
+            {/* Extra Fees */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">
+                💸 Biaya Tambahan (per lembar)
+              </h4>
+              <p className="text-xs text-gray-500 mb-3">
+                Biaya tambahan berdasarkan pilihan cetak (Rp, 0 = tidak ada biaya)
+              </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    High Quality
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.extraFees?.highQuality ?? 0}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        extraFees: {
+                          ...formData.extraFees,
+                          highQuality: parseInt(e.target.value) || 0,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Special Paper
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.extraFees?.specialPaper ?? 0}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        extraFees: {
+                          ...formData.extraFees,
+                          specialPaper: parseInt(e.target.value) || 0,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duplex
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.extraFees?.duplex ?? 0}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        extraFees: {
+                          ...formData.extraFees,
+                          duplex: parseInt(e.target.value) || 0,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    min="0"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Point Settings */}
@@ -1277,6 +1809,100 @@ export const PrinterFormModal = ({
                 >
                   + Tambah Nomor Telepon
                 </button>
+              </div>
+            </div>
+
+            {/* Operating Hours */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-medium text-gray-800 mb-3">🕐 Jam Operasional</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={formData.operatingHours.is24Hours}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          operatingHours: {
+                            ...formData.operatingHours,
+                            is24Hours: e.target.checked,
+                          },
+                        })
+                      }
+                      className="rounded text-purple-600"
+                    />
+                    <span className="text-sm text-gray-700">Buka 24 Jam</span>
+                  </label>
+                </div>
+                {!formData.operatingHours.is24Hours && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Jam Buka
+                      </label>
+                      <input
+                        type="time"
+                        value={formData.operatingHours.open}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            operatingHours: {
+                              ...formData.operatingHours,
+                              open: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Jam Tutup
+                      </label>
+                      <input
+                        type="time"
+                        value={
+                          formData.operatingHours.close === "24:00"
+                            ? "23:59"
+                            : formData.operatingHours.close
+                        }
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            operatingHours: {
+                              ...formData.operatingHours,
+                              close: e.target.value,
+                            },
+                          })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      />
+                    </div>
+                  </>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Timezone
+                  </label>
+                  <select
+                    value={formData.operatingHours.timezone}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        operatingHours: {
+                          ...formData.operatingHours,
+                          timezone: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="Asia/Jakarta">WIB (Asia/Jakarta)</option>
+                    <option value="Asia/Makassar">WITA (Asia/Makassar)</option>
+                    <option value="Asia/Jayapura">WIT (Asia/Jayapura)</option>
+                  </select>
+                </div>
               </div>
             </div>
 

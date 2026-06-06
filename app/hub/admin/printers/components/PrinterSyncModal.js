@@ -8,7 +8,9 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [usbDevices, setUsbDevices] = useState([]);
+  const [cupsPrinters, setCupsPrinters] = useState([]);
   const [selectedUsbDevice, setSelectedUsbDevice] = useState(null);
+  const [selectedCupsPrinter, setSelectedCupsPrinter] = useState(null);
   const [syncResult, setSyncResult] = useState(null);
   const [error, setError] = useState(null);
 
@@ -16,7 +18,9 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
   useEffect(() => {
     if (isOpen && printer) {
       setUsbDevices([]);
+      setCupsPrinters([]);
       setSelectedUsbDevice(null);
+      setSelectedCupsPrinter(null);
       setSyncResult(null);
       setError(null);
       fetchUSBDevices();
@@ -78,19 +82,33 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
 
         console.log(`Polling attempt ${i + 1}:`, data);
 
-        if (data.success && data.data.usbDevices) {
-          setUsbDevices(data.data.usbDevices);
+        if (data.success && (data.data.usbDevices || data.data.cupsPrinters)) {
+          setUsbDevices(data.data.usbDevices || []);
+          setCupsPrinters(data.data.cupsPrinters || []);
 
           // Auto-select jika ada USB device yang match dengan printer
-          if (printer.usbDeviceId) {
+          if (printer.usbDeviceId && data.data.usbDevices) {
             const matched = data.data.usbDevices.find(
               (d) => d.usbId === printer.usbDeviceId,
             );
-            if (matched) {
-              setSelectedUsbDevice(matched);
-            }
+            if (matched) setSelectedUsbDevice(matched);
           }
-          console.log("USB devices found:", data.data.usbDevices);
+
+          // Jika printer sudah memiliki printerName (dari DB), coba auto-select di daftar CUPS
+          if (printer.printerName && data.data.cupsPrinters) {
+            const matchedCup = data.data.cupsPrinters.find((c) =>
+              (c.cupsName || c.name || "")
+                .toLowerCase()
+                .includes((printer.printerName || "").toLowerCase()),
+            );
+            if (matchedCup) setSelectedCupsPrinter(matchedCup);
+          }
+
+          console.log(
+            "USB devices / CUPS printers found:",
+            data.data.usbDevices,
+            data.data.cupsPrinters,
+          );
           return;
         }
       } catch (error) {
@@ -101,8 +119,9 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
   };
 
   const handleSync = async () => {
-    if (!selectedUsbDevice) {
-      setError("Pilih USB device terlebih dahulu");
+    // Prefer selected CUPS printer; fall back to selected USB device
+    if (!selectedCupsPrinter && !selectedUsbDevice) {
+      setError("Pilih printer CUPS atau USB terlebih dahulu");
       return;
     }
 
@@ -120,8 +139,12 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            usbDeviceId: selectedUsbDevice.usbId,
-            printerName: selectedUsbDevice.description || printer.printerName,
+            usbDeviceId: selectedUsbDevice?.usbId || printer.usbDeviceId,
+            printerName:
+              selectedCupsPrinter?.cupsName ||
+              selectedCupsPrinter?.name ||
+              selectedUsbDevice?.description ||
+              printer.printerName,
             connectionType: "usb",
             printerStatus: "active",
             lastSyncAt: new Date().toISOString(),
@@ -132,13 +155,19 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
       const result = await response.json();
 
       if (result.success) {
+        const syncData = {
+          usbDeviceId: selectedUsbDevice?.usbId || printer.usbDeviceId,
+          printerName:
+            selectedCupsPrinter?.cupsName ||
+            selectedCupsPrinter?.name ||
+            selectedUsbDevice?.description ||
+            printer.printerName,
+        };
+
         setSyncResult({
           success: true,
           message: "Printer berhasil disinkronisasi!",
-          data: {
-            usbDeviceId: selectedUsbDevice.usbId,
-            printerName: selectedUsbDevice.description,
-          },
+          data: syncData,
         });
 
         // Close modal after 2 seconds
@@ -242,8 +271,50 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
               </div>
             )}
 
-            {/* USB Devices List */}
-            {!loading && usbDevices.length > 0 && (
+            {/* CUPS Printers List (preferred) */}
+            {!loading && cupsPrinters.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">
+                  🖨️ Printers in CUPS (di Raspberry Pi)
+                </h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {cupsPrinters.map((c, index) => (
+                    <label
+                      key={index}
+                      className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
+                        (selectedCupsPrinter?.cupsName ||
+                          selectedCupsPrinter?.name) === (c.cupsName || c.name)
+                          ? "border-purple-500 bg-purple-50"
+                          : "border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="cupsPrinter"
+                        checked={
+                          (selectedCupsPrinter?.cupsName ||
+                            selectedCupsPrinter?.name) ===
+                          (c.cupsName || c.name)
+                        }
+                        onChange={() => setSelectedCupsPrinter(c)}
+                        className="w-4 h-4 text-purple-600"
+                      />
+                      <div className="ml-3 flex-1">
+                        <div className="font-medium text-gray-900">
+                          {c.cupsName || c.name}
+                        </div>
+                        <div className="text-xs text-gray-500 font-mono mt-1">
+                          Accepting: {c.accepting ? "yes" : "no"}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fallback: USB Devices List */}
+            {!loading && cupsPrinters.length === 0 && usbDevices.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">
                   🔌 USB Devices Terdeteksi
@@ -350,7 +421,9 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
                 <div className="flex justify-between">
                   <span className="text-blue-700">Printer Name (CUPS):</span>
                   <span className="text-blue-900">
-                    {selectedUsbDevice?.description.split(" ")[0] ||
+                    {selectedCupsPrinter?.cupsName ||
+                      selectedCupsPrinter?.name ||
+                      (selectedUsbDevice?.description || "")?.split(" ")[0] ||
                       printer?.printerName}
                   </span>
                 </div>
@@ -376,7 +449,7 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
             </button>
             <button
               onClick={handleSync}
-              disabled={!selectedUsbDevice || syncing}
+              disabled={!(selectedCupsPrinter || selectedUsbDevice) || syncing}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {syncing && (

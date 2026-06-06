@@ -262,17 +262,16 @@ export default function PrinterCard({ printer, userLocation }) {
 
             <div className="flex items-center">
               <span className="text-gray-500 mr-2">📄</span>
-              <span
-                className={`text-sm ${
-                  normalizedPrinter.paperStatus?.available
-                    ? "text-green-600"
-                    : "text-red-600"
-                }`}
-              >
-                {normalizedPrinter.paperStatus?.available
-                  ? `${normalizedPrinter.paperStatus.paperCount || 0} kertas tersedia`
-                  : "Kertas habis"}
-              </span>
+              {normalizedPrinter.paperStatus?.available ||
+              normalizedPrinter.paperMode === "unlimited" ? (
+                <span className="text-sm text-green-600">
+                  {normalizedPrinter.paperMode === "unlimited"
+                    ? "Mode unlimited"
+                    : `${normalizedPrinter.paperStatus.paperCount || 0} kertas tersedia`}
+                </span>
+              ) : (
+                <span className="text-sm text-red-600">Kertas habis</span>
+              )}
             </div>
           </div>
 

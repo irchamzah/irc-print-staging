@@ -6,6 +6,7 @@ export const TotalCostSection = ({
 }) => {
   // Always render the cost section; show placeholder when cost not calculated yet
   const costValue = advancedSettings.cost || 0;
+  if (costValue <= 0) return null;
 
   const selectedCount = advancedSettings.selectedPages?.length || totalPages;
   const bwPages = advancedSettings.bwPages?.length || 0;
