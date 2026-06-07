@@ -18,7 +18,7 @@ export const PrintersTable = ({
 
   const filteredPrinters = printers.filter(
     (printer) =>
-      printer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (printer.printerName || printer.name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       printer.printerId?.includes(searchTerm) ||
       printer.location?.city?.includes(searchTerm),
   );

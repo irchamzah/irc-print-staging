@@ -104,7 +104,7 @@ export const usePartnerPrinters = () => {
   const filteredPrinters = printers.filter((printer) => {
     if (
       filters.search &&
-      !printer.name.toLowerCase().includes(filters.search.toLowerCase())
+      !(printer.printerName || printer.name || "").toLowerCase().includes(filters.search.toLowerCase())
     ) {
       return false;
     }

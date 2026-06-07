@@ -70,7 +70,7 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="font-semibold text-gray-800 line-clamp-1">
-              {printer.name}
+              {printer.printerName || printer.name}
             </h3>
             <p className="text-xs text-gray-500 mt-1">
               {printer.location?.city || "Lokasi tidak tersedia"}

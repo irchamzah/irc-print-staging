@@ -300,7 +300,7 @@ function PartnerHubContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
         <div>
-          <p className="text-sm text-gray-500 mt-1">{printer.name}</p>
+          <p className="text-sm text-gray-500 mt-1">{printer.printerName || printer.name}</p>
         </div>
         <div className="flex items-center justify-between gap-3">
           <div className="text-sm bg-blue-100 text-blue-800 px-3 py-1.5 rounded-full">

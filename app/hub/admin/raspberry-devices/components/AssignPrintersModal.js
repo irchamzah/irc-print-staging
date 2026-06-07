@@ -63,7 +63,9 @@ export function AssignPrintersModal({
   const handleSelectAll = () => {
     const filteredPrinters = printers.filter(
       (p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.printerName || p.name || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         p.printerId.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     const allIds = filteredPrinters.map((p) => p.printerId);
@@ -80,7 +82,9 @@ export function AssignPrintersModal({
 
   const filteredPrinters = printers.filter(
     (printer) =>
-      printer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (printer.printerName || printer.name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       printer.printerId.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
@@ -162,7 +166,7 @@ export function AssignPrintersModal({
                       />
                       <div className="ml-3 flex-1">
                         <div className="font-medium text-gray-900">
-                          {printer.name}
+                          {printer.printerName || printer.name}
                         </div>
                         <div className="text-sm text-gray-500">
                           {printer.printerId}

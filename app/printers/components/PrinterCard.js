@@ -148,7 +148,7 @@ export default function PrinterCard({ printer, userLocation }) {
             <>
               <img
                 src={images[0].url}
-                alt={printer.name}
+                alt={printer.printerName || printer.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover/image:scale-105"
               />
               {/* Badge jumlah gambar */}

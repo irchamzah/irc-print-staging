@@ -82,7 +82,7 @@ export const PrinterHeader = ({ printer }) => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 truncate">
-              {printer.name}
+              {printer.printerName || printer.name}
             </h1>
             <p className="text-gray-600 text-sm sm:text-base mt-1 truncate">
               {printer.location?.address}

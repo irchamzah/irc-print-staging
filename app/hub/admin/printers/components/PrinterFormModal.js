@@ -245,9 +245,12 @@ export const PrinterFormModal = ({
     try {
       setLoadingRaspberryDevices(true);
       const token = localStorage.getItem("hubToken");
-      const response = await fetch("/api/hub/admin/raspberry-devices?limit=100", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        "/api/hub/admin/raspberry-devices?limit=100",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -336,12 +339,14 @@ export const PrinterFormModal = ({
           monochrome: initPrices(markup.monochrome, 100),
           color: initPrices(markup.color, 100),
         },
-        volumeDiscounts: (printer.volumeDiscounts || [
-          { minSheets: 1, maxSheets: 4, discountFlat: 0 },
-          { minSheets: 5, maxSheets: 9, discountFlat: 0 },
-          { minSheets: 10, maxSheets: 14, discountFlat: 0 },
-          { minSheets: 15, maxSheets: null, discountFlat: 0 },
-        ]).map((d) => ({
+        volumeDiscounts: (
+          printer.volumeDiscounts || [
+            { minSheets: 1, maxSheets: 4, discountFlat: 0 },
+            { minSheets: 5, maxSheets: 9, discountFlat: 0 },
+            { minSheets: 10, maxSheets: 14, discountFlat: 0 },
+            { minSheets: 15, maxSheets: null, discountFlat: 0 },
+          ]
+        ).map((d) => ({
           minSheets: d.minSheets,
           maxSheets: d.maxSheets,
           discountFlat: d.discountFlat ?? d.price ?? d.discountPercent ?? 0,
@@ -1165,7 +1170,8 @@ export const PrinterFormModal = ({
                     <option value="unknown">Unknown</option>
                   </select>
                   <p className="text-xs text-gray-400 mt-1">
-                    Status hardware printer (berbeda dari status layanan di atas)
+                    Status hardware printer (berbeda dari status layanan di
+                    atas)
                   </p>
                 </div>
               </div>
@@ -1235,7 +1241,9 @@ export const PrinterFormModal = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Latitude{" "}
-                    <span className="text-gray-400 font-normal">(angka pertama dari Google Maps, misal: -8.159936)</span>
+                    <span className="text-gray-400 font-normal">
+                      (angka pertama dari Google Maps, misal: -8.159936)
+                    </span>
                   </label>
                   <input
                     type="number"
@@ -1262,7 +1270,9 @@ export const PrinterFormModal = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Longitude{" "}
-                    <span className="text-gray-400 font-normal">(angka kedua dari Google Maps, misal: 113.732886)</span>
+                    <span className="text-gray-400 font-normal">
+                      (angka kedua dari Google Maps, misal: 113.732886)
+                    </span>
                   </label>
                   <input
                     type="number"
@@ -1308,7 +1318,9 @@ export const PrinterFormModal = ({
                 </div>
               </div>
               <p className="text-xs text-blue-500 mt-2">
-                💡 Google Maps menampilkan koordinat sebagai <strong>Latitude, Longitude</strong> — isi sesuai urutan tersebut.
+                💡 Google Maps menampilkan koordinat sebagai{" "}
+                <strong>Latitude, Longitude</strong> — isi sesuai urutan
+                tersebut.
               </p>
             </div>
 
@@ -1344,9 +1356,13 @@ export const PrinterFormModal = ({
                   <label key={mode} className="flex items-center gap-1">
                     <input
                       type="checkbox"
-                      checked={formData.enabledFeatures.colorModes.includes(mode)}
+                      checked={formData.enabledFeatures.colorModes.includes(
+                        mode,
+                      )}
                       onChange={() => {
-                        const currentModes = [...formData.enabledFeatures.colorModes];
+                        const currentModes = [
+                          ...formData.enabledFeatures.colorModes,
+                        ];
                         const newModes = currentModes.includes(mode)
                           ? currentModes.filter((m) => m !== mode)
                           : [...currentModes, mode];
@@ -1530,7 +1546,8 @@ export const PrinterFormModal = ({
                 📊 Diskon Volume (Flat Rp)
               </h4>
               <p className="text-xs text-gray-500 mb-2">
-                Jumlah potongan harga flat (Rp) per lembar berdasarkan jumlah lembar
+                Jumlah potongan harga flat (Rp) per lembar berdasarkan jumlah
+                lembar
               </p>
               {formData.volumeDiscounts.map((discount, index) => (
                 <div key={index} className="flex gap-2 mb-2 items-center">
@@ -1603,7 +1620,8 @@ export const PrinterFormModal = ({
                 💸 Biaya Tambahan (per lembar)
               </h4>
               <p className="text-xs text-gray-500 mb-3">
-                Biaya tambahan berdasarkan pilihan cetak (Rp, 0 = tidak ada biaya)
+                Biaya tambahan berdasarkan pilihan cetak (Rp, 0 = tidak ada
+                biaya)
               </p>
               <div className="grid grid-cols-3 gap-4">
                 <div>
@@ -1814,7 +1832,9 @@ export const PrinterFormModal = ({
 
             {/* Operating Hours */}
             <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="font-medium text-gray-800 mb-3">🕐 Jam Operasional</h4>
+              <h4 className="font-medium text-gray-800 mb-3">
+                🕐 Jam Operasional
+              </h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="flex items-center gap-2">

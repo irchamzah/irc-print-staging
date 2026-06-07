@@ -330,7 +330,7 @@ export const UserFormModal = ({
                         />
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-800">
-                            {printer.name}
+                            {printer.printerName || printer.name}
                           </p>
                           <p className="text-xs text-gray-500">
                             {printer.location?.city || "Lokasi tidak tersedia"}
