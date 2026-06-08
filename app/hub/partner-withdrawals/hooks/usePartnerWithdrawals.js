@@ -4,7 +4,7 @@ import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
 export const usePartnerWithdrawals = () => {
   const { token } = useHubAuth();
-  const [withdrawals, setWithdrawals] = useState([]);
+  const [allWithdrawals, setAllWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
@@ -25,13 +25,7 @@ export const usePartnerWithdrawals = () => {
 
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filters.status) params.set("status", filters.status);
-      if (filters.startDate) params.set("startDate", filters.startDate);
-      if (filters.endDate) params.set("endDate", filters.endDate);
-
-      const url = `/api/hub/partner-withdrawals${params.toString() ? `?${params.toString()}` : ""}`;
-      const response = await fetch(url, {
+      const response = await fetch("/api/hub/partner-withdrawals", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -39,16 +33,15 @@ export const usePartnerWithdrawals = () => {
 
       const data = await response.json();
       if (data.success) {
-        setWithdrawals(data.data || []);
-        setStats(
-          data.stats || {
-            total: 0,
-            requested: 0,
-            processed: 0,
-            transferred: 0,
-            totalAmount: 0,
-          },
-        );
+        const w = data.data || [];
+        setAllWithdrawals(w);
+        setStats({
+          total: w.length,
+          requested: w.filter((wd) => wd.status === "requested").length,
+          processed: w.filter((wd) => wd.status === "processed").length,
+          transferred: w.filter((wd) => wd.status === "transferred").length,
+          totalAmount: w.reduce((sum, wd) => sum + (wd.totalAmount || 0), 0),
+        });
       }
     } catch (err) {
       console.error("❌ Error fetching withdrawals:", err);
@@ -56,7 +49,7 @@ export const usePartnerWithdrawals = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, filters]);
+  }, [token]);
 
   const createWithdrawal = useCallback(
     async (withdrawalData) => {
@@ -81,6 +74,13 @@ export const usePartnerWithdrawals = () => {
     [token, fetchWithdrawals],
   );
 
+  const withdrawals = allWithdrawals.filter((wd) => {
+    if (filters.status && wd.status !== filters.status) return false;
+    if (filters.startDate && new Date(wd.createdAt) < new Date(filters.startDate)) return false;
+    if (filters.endDate && new Date(wd.createdAt) > new Date(filters.endDate + "T23:59:59")) return false;
+    return true;
+  });
+
   const applyFilters = (newFilters) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
@@ -91,7 +91,7 @@ export const usePartnerWithdrawals = () => {
 
   useEffect(() => {
     if (token) fetchWithdrawals();
-  }, [token, filters]);
+  }, [token]);
 
   const formatRupiah = (amount) => {
     return new Intl.NumberFormat("id-ID", {

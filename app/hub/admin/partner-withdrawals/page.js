@@ -81,9 +81,7 @@ function PartnerWithdrawalsContent() {
     setProcessingId(withdrawalId);
     const result = await processWithdrawal(withdrawalId, status, transferProof);
     setProcessingId(null);
-    if (!result.success) {
-      alert("❌ Gagal: " + result.error);
-    }
+    return result;
   };
 
   if (!isSuperAdmin()) return null;

@@ -53,7 +53,7 @@ export const PrinterFormModal = ({
   const [formData, setFormData] = useState({
     printerId: "",
     printerName: "",
-    modelId: "model_canon_g1010",
+    modelId: "",
     model: "",
     location: {
       address: "",
@@ -311,7 +311,7 @@ export const PrinterFormModal = ({
       setFormData({
         printerId: printer.printerId || "",
         printerName: printer.printerName || printer.name || "",
-        modelId: printer.modelId || "model_canon_g1010",
+        modelId: printer.modelId || "",
         model: printer.model || "",
         location: {
           address: printer.location?.address || "",
@@ -399,7 +399,7 @@ export const PrinterFormModal = ({
       setFormData({
         printerId: "",
         printerName: "",
-        modelId: "model_canon_g1010",
+        modelId: "",
         model: "",
         location: {
           address: "",

@@ -318,7 +318,7 @@ function PartnerHubContent() {
         <PaperStatusCard
           paperCount={printer.paperStatus?.paperCount || 0}
           lastRefill={printer.paperStatus?.lastRefill}
-          onRefill={handleRefillPaper}
+          onRefill={handleRefillWithAmount}
           loading={refillLoading}
           showSuccess={showRefillSuccess}
           formatDate={formatDate}

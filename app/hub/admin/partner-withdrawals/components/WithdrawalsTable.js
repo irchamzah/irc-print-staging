@@ -13,7 +13,7 @@ export const WithdrawalsTable = ({
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showProofModal, setShowProofModal] = useState(false);
-  const [actionType, setActionType] = useState(null); // 'process' or 'transfer'
+
 
   const getStatusBadge = (status) => {
     const statusMap = {
@@ -43,38 +43,49 @@ export const WithdrawalsTable = ({
     setShowDetailModal(true);
   };
 
-  const handleProcessClick = (withdrawal, type) => {
-    setSelectedWithdrawal(withdrawal);
-    setActionType(type);
-    setShowProofModal(true);
+  const handleProcessClick = async (withdrawal, type) => {
+    if (type === "process") {
+      if (
+        !confirm(
+          `Proses withdrawal milik ${withdrawal.partnerName} sebesar ${formatRupiah(withdrawal.totalAmount)}?\n\nStatus akan berubah menjadi "Diproses".`,
+        )
+      )
+        return;
+      const result = await onProcess(
+        withdrawal.partnerWithdrawalId,
+        "processed",
+        null,
+      );
+      if (result && result.success) {
+        alert("✅ Withdrawal berhasil diproses!");
+      } else {
+        alert("❌ Gagal: " + (result?.error || "Terjadi kesalahan"));
+      }
+    } else {
+      setSelectedWithdrawal(withdrawal);
+      setShowProofModal(true);
+    }
   };
 
   const handleConfirmPayment = async (formData) => {
     if (!selectedWithdrawal) return;
 
-    const newStatus = actionType === "process" ? "processed" : "transferred";
-
     const result = await onProcess(
       selectedWithdrawal.partnerWithdrawalId,
-      newStatus,
+      "transferred",
       formData,
     );
 
-    // ✅ CEK APAKAH result ADA
     if (result && result.success) {
-      const message =
-        newStatus === "processed"
-          ? "✅ Withdrawal berhasil diproses!"
-          : "✅ Withdrawal berhasil ditandai transfer! Status refills telah diperbarui menjadi PAID.";
-      alert(message);
+      alert(
+        "✅ Withdrawal berhasil ditandai transfer! Status refills telah diperbarui menjadi PAID.",
+      );
     } else {
-      const errorMsg = result?.error || "Terjadi kesalahan";
-      alert("❌ Gagal: " + errorMsg);
+      alert("❌ Gagal: " + (result?.error || "Terjadi kesalahan"));
     }
 
     setShowProofModal(false);
     setSelectedWithdrawal(null);
-    setActionType(null);
   };
 
   if (withdrawals.length === 0) {

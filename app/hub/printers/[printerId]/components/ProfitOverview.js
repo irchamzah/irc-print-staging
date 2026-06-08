@@ -1,3 +1,4 @@
+import CustomLink from "@/app/components/CustomLink";
 import { useHubAuth } from "@/app/hub/auth/hooks/useHubAuth";
 
 // ProfitOverview - UPDATED dengan struktur baru

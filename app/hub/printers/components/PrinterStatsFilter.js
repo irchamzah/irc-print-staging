@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useHubAuth } from "../../auth/hooks/useHubAuth";
+import CustomLink from "@/app/components/CustomLink";
 
 export const PrinterStatsFilter = ({
   profitStats,
@@ -27,10 +28,6 @@ export const PrinterStatsFilter = ({
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     onFilterChange({ ...filters, search: localSearch });
-  };
-
-  const handleViewHistory = () => {
-    router.push("/hub/partner-withdrawals");
   };
 
   return (
@@ -68,34 +65,36 @@ export const PrinterStatsFilter = ({
         </div>
 
         {/* Total Profit Partner (Sudah Dicairkan) */}
-        <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-green-600 mb-1">
-                Total Profit Partner
-              </p>
-              <p className="text-2xl font-bold text-green-700">
-                {formatRupiah(profitStats.totalPaidProfit)}
-              </p>
-              <p className="text-xs text-green-500 mt-1">Sudah dicairkan</p>
-            </div>
-            <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+        <CustomLink href="/hub/partner-withdrawals">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-green-600 mb-1">
+                  Total Profit Partner
+                </p>
+                <p className="text-2xl font-bold text-green-700">
+                  {formatRupiah(profitStats.totalPaidProfit)}
+                </p>
+                <p className="text-xs text-green-500 mt-1">Sudah dicairkan</p>
+              </div>
+              <div className="w-10 h-10 bg-green-200 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
+        </CustomLink>
 
         {/* Total Pendapatan */}
         {isAdmin && (
@@ -165,7 +164,7 @@ export const PrinterStatsFilter = ({
             onChange={(e) =>
               onFilterChange({ ...filters, status: e.target.value })
             }
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm cursor-pointer"
           >
             <option value="">Semua Status</option>
             <option value="online">Online</option>
@@ -176,7 +175,7 @@ export const PrinterStatsFilter = ({
           {/* Refresh Button */}
           <button
             onClick={onRefresh}
-            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
           >
             <svg
               className="w-4 h-4"
@@ -200,7 +199,7 @@ export const PrinterStatsFilter = ({
                 disabled={profitStats.totalPendingPayout <= 0}
                 className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                   profitStats.totalPendingPayout > 0
-                    ? "bg-green-600 text-white hover:bg-green-700"
+                    ? "bg-green-600 text-white hover:bg-green-700 cursor-pointer"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
@@ -221,8 +220,8 @@ export const PrinterStatsFilter = ({
               </button>
 
               {/* ✅ Tombol Lihat Riwayat Penarikan */}
-              <button
-                onClick={handleViewHistory}
+              <CustomLink
+                href="/hub/partner-withdrawals"
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
               >
                 <svg
@@ -239,7 +238,7 @@ export const PrinterStatsFilter = ({
                   />
                 </svg>
                 Lihat Riwayat Penarikan
-              </button>
+              </CustomLink>
             </>
           )}
         </div>

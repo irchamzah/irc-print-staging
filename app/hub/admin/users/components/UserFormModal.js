@@ -11,6 +11,7 @@ export const UserFormModal = ({
   error,
   processing,
 }) => {
+  const [printerSearch, setPrinterSearch] = useState("");
   const [formData, setFormData] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
@@ -74,6 +75,17 @@ export const UserFormModal = ({
   // ✅ Cek apakah role memiliki akses ke printer
   const hasPrinterAccess = (role) => {
     return role === "partner" || role === "admin";
+  };
+
+  const getFilteredPrinters = () => {
+    if (!printers) return [];
+    if (!printerSearch.trim()) return printers.slice(0, 5);
+    const q = printerSearch.toLowerCase();
+    return printers.filter(
+      (p) =>
+        (p.printerName || p.name || "").toLowerCase().includes(q) ||
+        p.printerId?.toLowerCase().includes(q),
+    );
   };
 
   // ✅ Cek apakah role memiliki informasi bank
@@ -310,40 +322,89 @@ export const UserFormModal = ({
             {/* Akses Printer - ✅ Untuk partner dan admin */}
             {hasPrinterAccess(formData.role) && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Akses ke Printer
-                </label>
-                <div className="border border-gray-200 rounded-lg p-3 max-h-48 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Akses ke Printer
+                  </label>
+                  {formData.accessPrinterIds.length > 0 && (
+                    <span className="text-xs text-purple-600 font-medium">
+                      {formData.accessPrinterIds.length} terpilih
+                    </span>
+                  )}
+                </div>
+
+                {/* Search */}
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    value={printerSearch}
+                    onChange={(e) => setPrinterSearch(e.target.value)}
+                    placeholder="Cari nama atau ID printer..."
+                    className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  />
+                  <svg
+                    className="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+
+                <div className="border border-gray-200 rounded-lg max-h-48 overflow-y-auto">
                   {printers && printers.length > 0 ? (
-                    printers.map((printer) => (
-                      <label
-                        key={printer.printerId}
-                        className="flex items-center gap-3 py-2 hover:bg-gray-50 px-2 rounded"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={formData.accessPrinterIds.includes(
-                            printer.printerId,
-                          )}
-                          onChange={() => togglePrinter(printer.printerId)}
-                          className="rounded text-purple-600 focus:ring-purple-500"
-                        />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-800">
-                            {printer.printerName || printer.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {printer.location?.city || "Lokasi tidak tersedia"}
-                          </p>
-                        </div>
-                      </label>
-                    ))
+                    <>
+                      {getFilteredPrinters().length > 0 ? (
+                        getFilteredPrinters().map((printer) => (
+                          <label
+                            key={printer.printerId}
+                            className="flex items-center gap-3 py-2 hover:bg-gray-50 px-3 border-b border-gray-100 last:border-0 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={formData.accessPrinterIds.includes(
+                                printer.printerId,
+                              )}
+                              onChange={() => togglePrinter(printer.printerId)}
+                              className="rounded text-purple-600 focus:ring-purple-500"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-800 truncate">
+                                {printer.printerName || printer.name}
+                              </p>
+                              <p className="text-xs text-gray-400 font-mono">
+                                {printer.printerId}
+                              </p>
+                            </div>
+                            <span className="text-xs text-gray-400 shrink-0">
+                              {printer.location?.city || "—"}
+                            </span>
+                          </label>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center py-4">
+                          Printer tidak ditemukan
+                        </p>
+                      )}
+                    </>
                   ) : (
                     <p className="text-sm text-gray-500 text-center py-4">
                       Tidak ada printer tersedia
                     </p>
                   )}
                 </div>
+                {!printerSearch.trim() && printers && printers.length > 5 && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Menampilkan 5 printer terbaru. Ketik untuk mencari semua{" "}
+                    {printers.length} printer.
+                  </p>
+                )}
                 <p className="text-xs text-gray-400 mt-2">
                   * Hanya user dengan role Partner atau Admin yang perlu memilih
                   akses printer

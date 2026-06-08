@@ -94,12 +94,12 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
             if (matched) setSelectedUsbDevice(matched);
           }
 
-          // Jika printer sudah memiliki printerName (dari DB), coba auto-select di daftar CUPS
-          if (printer.printerName && data.data.cupsPrinters) {
+          // Jika printer sudah memiliki cupsPrinterName (dari DB), coba auto-select di daftar CUPS
+          if (printer.cupsPrinterName && data.data.cupsPrinters) {
             const matchedCup = data.data.cupsPrinters.find((c) =>
               (c.cupsName || c.name || "")
                 .toLowerCase()
-                .includes((printer.printerName || "").toLowerCase()),
+                .includes((printer.cupsPrinterName || "").toLowerCase()),
             );
             if (matchedCup) setSelectedCupsPrinter(matchedCup);
           }
@@ -140,11 +140,11 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
           },
           body: JSON.stringify({
             usbDeviceId: selectedUsbDevice?.usbId || printer.usbDeviceId,
-            printerName:
+            cupsPrinterName:
               selectedCupsPrinter?.cupsName ||
               selectedCupsPrinter?.name ||
               selectedUsbDevice?.description ||
-              printer.printerName,
+              printer.cupsPrinterName,
             connectionType: "usb",
             printerStatus: "active",
             lastSyncAt: new Date().toISOString(),
@@ -157,11 +157,11 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
       if (result.success) {
         const syncData = {
           usbDeviceId: selectedUsbDevice?.usbId || printer.usbDeviceId,
-          printerName:
+          cupsPrinterName:
             selectedCupsPrinter?.cupsName ||
             selectedCupsPrinter?.name ||
             selectedUsbDevice?.description ||
-            printer.printerName,
+            printer.cupsPrinterName,
         };
 
         setSyncResult({
@@ -233,7 +233,7 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
               <div className="space-y-1">
                 <p className="text-sm">
                   <span className="text-gray-500">Nama:</span>{" "}
-                  <span className="font-medium">{printer?.name}</span>
+                  <span className="font-medium">{printer?.printerName || printer?.name}</span>
                 </p>
                 <p className="text-sm">
                   <span className="text-gray-500">ID:</span>{" "}
@@ -400,7 +400,7 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
                 {syncResult.data && (
                   <div className="mt-2 text-xs text-green-500">
                     <p>USB ID: {syncResult.data.usbDeviceId}</p>
-                    <p>Printer Name: {syncResult.data.printerName}</p>
+                    <p>CUPS Printer Name: {syncResult.data.cupsPrinterName}</p>
                   </div>
                 )}
               </div>
@@ -424,7 +424,8 @@ export const PrinterSyncModal = ({ isOpen, onClose, printer }) => {
                     {selectedCupsPrinter?.cupsName ||
                       selectedCupsPrinter?.name ||
                       (selectedUsbDevice?.description || "")?.split(" ")[0] ||
-                      printer?.printerName}
+                      printer?.cupsPrinterName ||
+                      "Belum dipilih"}
                   </span>
                 </div>
                 <div className="flex justify-between">

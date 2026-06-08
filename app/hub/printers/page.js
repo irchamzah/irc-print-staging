@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
 import { usePartnerPrinters } from "./hooks/usePartnerPrinters";
 import { PrinterGrid } from "./components/PrinterGrid";
@@ -10,6 +11,7 @@ import CustomLink from "@/app/components/CustomLink";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
 
 export default function PrintersPage() {
+  const router = useRouter();
   const { user, token, isAuthenticated } = useHubAuth();
   const {
     printers,
@@ -43,9 +45,8 @@ export default function PrintersPage() {
       });
       const result = await response.json();
       if (result.success) {
-        alert("✅ Permintaan withdrawal berhasil dikirim");
         setShowWithdrawalModal(false);
-        refresh();
+        router.push("/hub/partner-withdrawals");
       } else {
         alert("❌ Gagal: " + result.error);
       }
