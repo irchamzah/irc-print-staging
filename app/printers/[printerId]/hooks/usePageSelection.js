@@ -24,32 +24,17 @@ export const usePageSelection = (
   );
 
   // ============================================
-  // Helper: Hitung harga BW berdasarkan volume discounts
+  // Helper: Ambil discountFlat yang berlaku berdasarkan total lembar
   // ============================================
-  const calculateBwPriceFromDiscounts = (totalSheets, discounts, basePrice) => {
-    if (!discounts || discounts.length === 0) return null;
-
-    // Urutkan dari minSheets terbesar ke terkecil
-    const sortedTiers = [...discounts].sort(
-      (a, b) => b.minSheets - a.minSheets,
-    );
-
+  const getDiscountFlat = (totalSheets, discounts) => {
+    if (!discounts || discounts.length === 0) return 0;
+    const sortedTiers = [...discounts].sort((a, b) => b.minSheets - a.minSheets);
     for (const tier of sortedTiers) {
       if (totalSheets >= tier.minSheets) {
-        // Jika admin menyediakan `price` gunakan itu, otherwise gunakan discountPercent
-        if (typeof tier.price === "number") return tier.price;
-        if (
-          typeof tier.discountPercent === "number" &&
-          typeof basePrice === "number"
-        ) {
-          const pct = Math.max(0, Math.min(100, tier.discountPercent));
-          return Math.round((basePrice * (100 - pct)) / 100);
-        }
-        return null;
+        return tier.discountFlat || 0;
       }
     }
-
-    return null;
+    return 0;
   };
 
   // ============================================
@@ -65,36 +50,22 @@ export const usePageSelection = (
     if (!finalPrices) return 0;
 
     const selectedSelections = selections.filter((sel) => sel.selected);
-    const colorPages = selectedSelections.filter(
-      (s) => s.type === "color",
-    ).length;
+    const colorPages = selectedSelections.filter((s) => s.type === "color").length;
     const bwPages = selectedSelections.filter((s) => s.type === "bw").length;
 
     const paperSize = settings.paperSize || "A4";
-    const quality = settings.quality || "NORMAL";
-
-    // Total lembar yang akan dicetak
     const totalSheets = (colorPages + bwPages) * copies;
 
-    // Ambil harga dari finalPrices
     const colorPricePerSheet = finalPrices?.color?.[paperSize] || 1500;
-    let bwPricePerSheet = finalPrices?.monochrome?.[paperSize] || 500;
+    const bwPricePerSheet = finalPrices?.monochrome?.[paperSize] || 500;
 
-    // ✅ Terapkan volume discounts jika ada
-    const discountedPrice = calculateBwPriceFromDiscounts(
-      totalSheets,
-      discounts,
-      bwPricePerSheet,
-    );
-    if (typeof discountedPrice === "number") {
-      bwPricePerSheet = discountedPrice;
-    }
+    // Kurangi discountFlat dari harga tiap lembar (berlaku untuk semua jenis)
+    const flat = getDiscountFlat(totalSheets, discounts);
+    const effectiveColorPrice = Math.max(0, colorPricePerSheet - flat);
+    const effectiveBwPrice = Math.max(0, bwPricePerSheet - flat);
 
-    // ✅ Quality surcharge (jika ada)
-    const qualitySurcharge = 0; // Bisa ditambahkan nanti dari extraFees
-
-    const totalColorCost = colorPages * (colorPricePerSheet + qualitySurcharge);
-    const totalBwCost = bwPages * (bwPricePerSheet + qualitySurcharge);
+    const totalColorCost = colorPages * effectiveColorPrice;
+    const totalBwCost = bwPages * effectiveBwPrice;
 
     return (totalColorCost + totalBwCost) * copies;
   };
@@ -121,6 +92,7 @@ export const usePageSelection = (
       selectedPages: selectedPagesList,
       paperSize: settings.paperSize,
       quality: settings.quality,
+      volumeDiscounts,
     });
   };
 

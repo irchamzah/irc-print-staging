@@ -20,25 +20,27 @@ export const TotalCostSection = ({
   const colorPrice = finalPrices?.color?.[paperSize] || 1500;
   const bwPrice = finalPrices?.monochrome?.[paperSize] || 500;
 
-  // ✅ UPDATE: Volume discounts dari printer (jika ada)
+  // ✅ UPDATE: Volume discounts dari printer (discountFlat berlaku untuk semua jenis halaman)
   const volumeDiscounts = advancedSettings.volumeDiscounts || [];
-  let effectiveBwPrice = bwPrice;
+  let discountFlat = 0;
   let nextTier = null;
 
   if (volumeDiscounts.length > 0) {
-    const sortedTiers = [...volumeDiscounts].sort(
-      (a, b) => a.minSheets - b.minSheets,
-    );
-
+    const sortedTiers = [...volumeDiscounts].sort((a, b) => a.minSheets - b.minSheets);
     for (let i = 0; i < sortedTiers.length; i++) {
       if (totalSheets >= sortedTiers[i].minSheets) {
-        effectiveBwPrice = sortedTiers[i].price;
-        nextTier = sortedTiers[i + 1];
+        discountFlat = sortedTiers[i].discountFlat || 0;
+        nextTier = sortedTiers[i + 1] || null;
       }
     }
   }
 
+  const effectiveBwPrice = Math.max(0, bwPrice - discountFlat);
+  const effectiveColorPrice = Math.max(0, colorPrice - discountFlat);
   const sheetsNeeded = nextTier ? nextTier.minSheets - totalSheets : 0;
+  const nextFlat = nextTier ? nextTier.discountFlat || 0 : 0;
+  const nextTierBwPrice = Math.max(0, bwPrice - nextFlat);
+  const nextTierColorPrice = Math.max(0, colorPrice - nextFlat);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -57,9 +59,16 @@ export const TotalCostSection = ({
 
       {/* Harga per lembar */}
       <div className="space-y-2 text-sm mb-3">
-        <div className="flex justify-between">
+        <div className="flex justify-between items-start">
           <span>🟡 Warna ({paperSize})</span>
-          <span>Rp {colorPrice.toLocaleString()}/lbr</span>
+          <div className="text-right">
+            <span>Rp {effectiveColorPrice.toLocaleString()}/lbr</span>
+            {nextTier && (
+              <p className="text-xs text-blue-600">
+                +{sheetsNeeded} lbr lagi → Rp {nextTierColorPrice.toLocaleString()}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="flex justify-between items-start">
@@ -70,7 +79,7 @@ export const TotalCostSection = ({
             </span>
             {nextTier && (
               <p className="text-xs text-blue-600">
-                +{sheetsNeeded} lbr lagi → Rp {nextTier.price}
+                +{sheetsNeeded} lbr lagi → Rp {nextTierBwPrice.toLocaleString()}
               </p>
             )}
           </div>
