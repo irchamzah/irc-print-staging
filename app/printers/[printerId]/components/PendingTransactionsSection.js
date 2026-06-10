@@ -11,6 +11,7 @@ export const PendingTransactionsSection = ({
   onRefresh,
   onContinue,
   onCancel,
+  onDelete,
   isLoading,
   isPrinterOffline = false,
   isPaperInsufficient = false,
@@ -184,6 +185,7 @@ export const PendingTransactionsSection = ({
               transaction={transaction}
               onContinue={onContinue}
               onCancel={onCancel}
+              onDelete={onDelete}
               isLoading={isLoading}
               cooldownTimers={cooldownTimers}
               isPrinterOffline={isPrinterOffline}

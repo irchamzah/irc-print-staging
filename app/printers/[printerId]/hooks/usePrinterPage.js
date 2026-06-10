@@ -307,6 +307,16 @@ export const usePrinterPage = () => {
   };
 
   // ============================================
+  // handleDeleteFailedTransaction
+  // ============================================
+  const handleDeleteFailedTransaction = (transaction) => {
+    if (!window.confirm("Hapus transaksi yang gagal ini?")) return;
+    paymentManagement.setPendingTransactions((prev) =>
+      prev.filter((t) => t.orderId !== transaction.orderId),
+    );
+  };
+
+  // ============================================
   // handleCancelPendingTransaction
   // ============================================
   const handleCancelPendingTransaction = async (transaction) => {
@@ -428,6 +438,7 @@ export const usePrinterPage = () => {
     handlePaymentCancelled,
     handleContinuePendingTransaction,
     handleCancelPendingTransaction,
+    handleDeleteFailedTransaction,
     refreshPendingTransactions: refreshData.refreshPendingTransactions,
 
     // Refresh all

@@ -3,6 +3,7 @@ export const TransactionItem = ({
   transaction,
   onContinue,
   onCancel,
+  onDelete,
   isLoading,
   cooldownTimers,
   isPrinterOffline = false,
@@ -23,6 +24,8 @@ export const TransactionItem = ({
         return { class: "bg-green-100 text-green-700", text: "✅ Lunas" };
       case "expired":
         return { class: "bg-red-100 text-red-700", text: "❌ Kadaluarsa" };
+      case "failed":
+        return { class: "bg-red-100 text-red-800", text: "❌ Gagal" };
       case "pending":
         return {
           class: "bg-yellow-100 text-yellow-700",
@@ -122,6 +125,12 @@ export const TransactionItem = ({
             <div className="text-center text-gray-500 text-sm py-2">
               ✅ Selesai
             </div>
+          ) : currentStatus === "failed" ? (
+            <DeleteButton
+              onDelete={onDelete}
+              transaction={transaction}
+              isLoading={isLoading}
+            />
           ) : currentStatus === "settlement" ? (
             <SettlementButton
               transaction={transaction}
@@ -361,6 +370,21 @@ const PendingButtons = ({
     </div>
   );
 };
+
+// DeleteButton — untuk status "failed"
+const DeleteButton = ({ onDelete, transaction, isLoading }) => (
+  <button
+    onClick={() => onDelete && onDelete(transaction)}
+    disabled={isLoading}
+    type="button"
+    className="w-full sm:flex-1 px-4 py-2.5 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 hover:bg-red-700"
+  >
+    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+    <span className="whitespace-nowrap">Hapus</span>
+  </button>
+);
 
 // CancelButton (tidak berubah)
 const CancelButton = ({ onCancel, transaction, currentStatus, isLoading }) => {

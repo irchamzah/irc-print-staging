@@ -67,6 +67,7 @@ export default function PrinterPage() {
     refreshPendingTransactions,
     handleContinuePendingTransaction,
     handleCancelPendingTransaction,
+    handleDeleteFailedTransaction,
     handlePhoneNumberChange,
   } = usePrinterPage();
 
@@ -139,6 +140,7 @@ export default function PrinterPage() {
                   onRefresh={refreshPendingTransactions}
                   onContinue={handleContinuePendingTransaction}
                   onCancel={handleCancelPendingTransaction}
+                  onDelete={handleDeleteFailedTransaction}
                   isLoading={isLoading}
                   isPrinterOffline={isPrinterOffline}
                   isPaperInsufficient={isPaperInsufficient}
