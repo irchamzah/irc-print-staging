@@ -15,9 +15,10 @@ export const usePartnerPrinters = () => {
 
   // Statistik profit untuk semua printer partner
   const [profitStats, setProfitStats] = useState({
-    totalPendingPayout: 0, // Profit Partner Tertunda (active + completed)
-    totalPaidProfit: 0, // Total Profit Partner (paid)
+    totalPendingPayout: 0,
+    totalPaidProfit: 0,
     totalRevenue: 0,
+    totalPlatformProfit: 0,
     printerCount: 0,
   });
 
@@ -67,9 +68,9 @@ export const usePartnerPrinters = () => {
         let totalPending = 0;
         let totalPaid = 0;
         let totalRev = 0;
+        let totalPlatform = 0;
 
         for (const printer of data.data) {
-          // Fetch profit data untuk setiap printer
           const profitRes = await fetch(
             `/api/hub/printers/${printer.printerId}/profit-stats`,
             {
@@ -79,9 +80,13 @@ export const usePartnerPrinters = () => {
           if (profitRes.ok) {
             const profitData = await profitRes.json();
             if (profitData.success) {
-              totalPending += profitData.pendingPayout || 0;
-              totalPaid += profitData.paidProfit || 0;
-              totalRev += profitData.totalRevenue || 0;
+              const pending = profitData.pendingPayout || 0;
+              const paid = profitData.paidProfit || 0;
+              const rev = profitData.totalRevenue || 0;
+              totalPending += pending;
+              totalPaid += paid;
+              totalRev += rev;
+              totalPlatform += profitData.platformProfit ?? (rev - pending - paid);
             }
           }
         }
@@ -90,6 +95,7 @@ export const usePartnerPrinters = () => {
           totalPendingPayout: totalPending,
           totalPaidProfit: totalPaid,
           totalRevenue: totalRev,
+          totalPlatformProfit: totalPlatform,
           printerCount: data.data.length,
         });
       }

@@ -96,14 +96,14 @@ export const PrinterStatsFilter = ({
           </div>
         </CustomLink>
 
-        {/* Total Pendapatan */}
+        {/* Total Platform Profit */}
         {isAdmin && (
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-600 mb-1">Total Pendapatan</p>
+                <p className="text-xs text-blue-600 mb-1">Total Platform Profit</p>
                 <p className="text-2xl font-bold text-blue-700">
-                  {formatRupiah(profitStats.totalRevenue)}
+                  {formatRupiah(profitStats.totalPlatformProfit)}
                 </p>
                 <p className="text-xs text-blue-500 mt-1">
                   {profitStats.printerCount} Printer

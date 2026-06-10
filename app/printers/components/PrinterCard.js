@@ -218,7 +218,7 @@ export default function PrinterCard({ printer, userLocation }) {
         {/* Printer Content (sama seperti sebelumnya) */}
         <div className="p-5 sm:p-6">
           <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
-            {normalizedPrinter.name || "Printer"}
+            {normalizedPrinter.printerName || normalizedPrinter.name || "unknown printer"}
           </h3>
 
           <div className="space-y-3 mb-4">

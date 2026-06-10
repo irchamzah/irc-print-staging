@@ -2,11 +2,16 @@
 import { useState, useEffect } from "react";
 import CustomLink from "@/app/components/CustomLink";
 import { PrinterImages } from "./PrinterImages";
+import { useHubAuth } from "../../auth/hooks/useHubAuth";
 
 export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
+  const { isSuperAdmin } = useHubAuth();
+  const isAdmin = isSuperAdmin();
   const [profitStats, setProfitStats] = useState({
     pendingPayout: 0,
     paidProfit: 0,
+    totalRevenue: 0,
+    platformProfit: 0,
   });
   const [loadingProfit, setLoadingProfit] = useState(true);
 
@@ -23,12 +28,25 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
         );
         if (response.ok) {
           const data = await response.json();
+          console.log(
+            `[PrinterCard] printerId=${printer.printerId} raw response:`,
+            JSON.stringify(data),
+          );
           if (data.success) {
-            setProfitStats({
-              pendingPayout: data.pendingPayout || 0,
-              paidProfit: data.paidProfit || 0,
-            });
+            const pendingPayout = data.pendingPayout || 0;
+            const paidProfit = data.paidProfit || 0;
+            const totalRevenue = data.totalRevenue || 0;
+            const stats = {
+              pendingPayout,
+              paidProfit,
+              totalRevenue,
+              platformProfit: data.platformProfit ?? (totalRevenue - pendingPayout - paidProfit),
+            };
+            console.log(`[PrinterCard] setProfitStats:`, JSON.stringify(stats));
+            setProfitStats(stats);
           }
+        } else {
+          console.error(`[PrinterCard] response not ok: ${response.status}`);
         }
       } catch (error) {
         console.error("Error fetching profit stats:", error);
@@ -88,7 +106,9 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
 
       {/* Profit Stats */}
       <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <div className="grid grid-cols-2 gap-2">
+        <div
+          className={`grid gap-2 ${isAdmin ? "grid-cols-3" : "grid-cols-2"}`}
+        >
           <div className="text-center">
             <p className="text-xs text-orange-600">Profit Tertunda</p>
             <p className="text-sm font-bold text-orange-700">
@@ -101,6 +121,16 @@ export const PrinterCard = ({ printer, formatDate, formatNumber }) => {
               {loadingProfit ? "..." : formatRupiah(profitStats.paidProfit)}
             </p>
           </div>
+          {isAdmin && (
+            <div className="text-center">
+              <p className="text-xs text-blue-600">Platform Profit</p>
+              <p className="text-sm font-bold text-blue-700">
+                {loadingProfit
+                  ? "..."
+                  : formatRupiah(profitStats.platformProfit)}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
