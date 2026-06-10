@@ -392,7 +392,6 @@ export const SettingsForm = ({ settings, onSubmit, saving }) => {
               A4 → F4
             </label>
             <input
-              type="url"
               value={formData.videoGuides.A4_to_F4}
               onChange={(e) =>
                 setFormData({
@@ -412,7 +411,6 @@ export const SettingsForm = ({ settings, onSubmit, saving }) => {
               F4 → A4
             </label>
             <input
-              type="url"
               value={formData.videoGuides.F4_to_A4}
               onChange={(e) =>
                 setFormData({
@@ -432,7 +430,6 @@ export const SettingsForm = ({ settings, onSubmit, saving }) => {
               Default (Umum)
             </label>
             <input
-              type="url"
               value={formData.videoGuides.default}
               onChange={(e) =>
                 setFormData({

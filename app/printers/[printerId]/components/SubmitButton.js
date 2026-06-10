@@ -92,8 +92,10 @@ export const SubmitButton = ({
           </p>
           <p className="text-red-600 text-xs mt-1">
             Printer terpasang kertas{" "}
-            <span className="font-semibold">{printerActivePaperSize}</span>, sedangkan file PDF berukuran{" "}
-            <span className="font-semibold">{detectedPDFSize}</span>. Ganti kertas atau upload file PDF yang sesuai.
+            <span className="font-semibold">{printerActivePaperSize}</span>,
+            sedangkan file PDF berukuran{" "}
+            <span className="font-semibold">{detectedPDFSize}</span>. Ganti
+            kertas atau upload file PDF yang sesuai.
           </p>
         </div>
       )}

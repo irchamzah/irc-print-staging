@@ -37,6 +37,7 @@ const PageSelector = ({
   enabledFeatures,
   volumeDiscounts,
   printerName,
+  detectedPDFSize = null,
 }) => {
   const {
     pagesToShow,
@@ -203,6 +204,7 @@ const PageSelector = ({
         onCopiesChange={handleCopiesChange}
         availablePaperSizes={availablePaperSizes}
         printerName={printerName}
+        detectedPDFSize={detectedPDFSize}
       />
     </div>
   );
@@ -427,8 +429,9 @@ const AdvancedSettings = ({
   copies,
   onPrintSettingsChange,
   onCopiesChange,
-  availablePaperSizes = [], // ✅ Tambah prop ini
+  availablePaperSizes = [],
   printerName,
+  detectedPDFSize = null,
 }) => {
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
@@ -443,6 +446,7 @@ const AdvancedSettings = ({
           onChange={(value) => onPrintSettingsChange({ paperSize: value })}
           availablePaperSizes={availablePaperSizes}
           printerName={printerName}
+          detectedPDFSize={detectedPDFSize}
         />
         <CopiesSetting value={copies} onChange={onCopiesChange} />
       </div>
@@ -476,31 +480,29 @@ const SettingsIcon = () => {
   );
 };
 
-// PaperSizeSetting - UPDATED dengan tutorial modal
-const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [] }) => {
+// PaperSizeSetting - UPDATED dengan tutorial modal dan lock ke detectedPDFSize
+const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [], printerName, detectedPDFSize = null }) => {
   const [showTutorial, setShowTutorial] = useState(false);
   const [previousValue, setPreviousValue] = useState(value);
   const [selectedPaperSize, setSelectedPaperSize] = useState(value);
-  const [printerName, setPrinterName] = useState(""); // Dapatkan dari context/props
+
+  const isLocked = detectedPDFSize !== null;
 
   const handlePaperSizeChange = (newValue) => {
+    if (isLocked) return; // tidak bisa diubah jika ukuran PDF terdeteksi
     if (newValue !== value) {
-      // Simpan ukuran kertas yang dipilih
       setSelectedPaperSize(newValue);
-      // Tampilkan modal tutorial
       setShowTutorial(true);
     }
   };
 
   const handleConfirmChange = () => {
-    // User mengkonfirmasi setelah melihat tutorial
     onChange(selectedPaperSize);
     setPreviousValue(selectedPaperSize);
     setShowTutorial(false);
   };
 
   const handleCancelChange = () => {
-    // User membatalkan perubahan
     setSelectedPaperSize(previousValue);
     setShowTutorial(false);
   };
@@ -514,24 +516,41 @@ const PaperSizeSetting = ({ value, onChange, availablePaperSizes = [] }) => {
         <select
           value={value}
           onChange={(e) => handlePaperSizeChange(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white text-gray-700"
+          disabled={isLocked}
+          className={`w-full p-3 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+            isLocked
+              ? "bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-white border-gray-300 text-gray-700"
+          }`}
         >
           {availablePaperSizes.map((paper) => (
-            <option key={paper.key} value={paper.key}>
+            <option
+              key={paper.key}
+              value={paper.key}
+              disabled={isLocked && paper.key !== detectedPDFSize}
+            >
               {paper.description}
+              {isLocked && paper.key === detectedPDFSize ? " ✓" : ""}
             </option>
           ))}
         </select>
+        {isLocked && (
+          <p className="text-xs text-blue-600">
+            🔒 Terkunci sesuai ukuran PDF ({detectedPDFSize})
+          </p>
+        )}
       </div>
 
-      {/* Modal Tutorial */}
-      <PaperSizeTutorialModal
-        isOpen={showTutorial}
-        onClose={handleCancelChange}
-        paperSize={selectedPaperSize}
-        printerName={printerName}
-        onConfirm={handleConfirmChange}
-      />
+      {/* Modal Tutorial — hanya tampil jika tidak terkunci */}
+      {!isLocked && (
+        <PaperSizeTutorialModal
+          isOpen={showTutorial}
+          onClose={handleCancelChange}
+          paperSize={selectedPaperSize}
+          printerName={printerName}
+          onConfirm={handleConfirmChange}
+        />
+      )}
     </>
   );
 };

@@ -1,17 +1,29 @@
 // components/PaperSizeTutorialModal.js
 "use client";
 
-const getYouTubeEmbedUrl = (url) => {
-  if (!url) return null;
+const getYouTubeEmbedUrl = (input) => {
+  if (!input) return null;
+
+  // Jika hanya video ID (11 karakter: huruf, angka, -, _)
+  if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+    return `https://www.youtube.com/embed/${input}?fs=1&modestbranding=1&rel=0&controls=1&playsinline=1`;
+  }
+
+  // Jika URL lengkap YouTube
   const regExp =
     /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
+  const match = input.match(regExp);
   const videoId = match && match[2].length === 11 ? match[2] : null;
   if (!videoId) return null;
   return `https://www.youtube.com/embed/${videoId}?fs=1&modestbranding=1&rel=0&controls=1&playsinline=1`;
 };
 
-const PaperSizeTutorialModal = ({ isOpen, onConfirm, detectedSize, videoGuides }) => {
+const PaperSizeTutorialModal = ({
+  isOpen,
+  onConfirm,
+  detectedSize,
+  videoGuides,
+}) => {
   if (!isOpen) return null;
 
   const sizeLabel = detectedSize || "Tidak Diketahui";
@@ -36,13 +48,27 @@ const PaperSizeTutorialModal = ({ isOpen, onConfirm, detectedSize, videoGuides }
           {/* Header */}
           <div className="flex items-center gap-3 p-4 sm:p-5 border-b border-gray-200">
             <div className="w-9 h-9 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <svg
+                className="w-5 h-5 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-900">Konfirmasi Ukuran Kertas</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Pastikan kertas yang terpasang sesuai</p>
+              <h3 className="text-base font-semibold text-gray-900">
+                Konfirmasi Ukuran Kertas
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Pastikan kertas yang terpasang sesuai
+              </p>
             </div>
           </div>
 
@@ -53,7 +79,8 @@ const PaperSizeTutorialModal = ({ isOpen, onConfirm, detectedSize, videoGuides }
               <p className="text-gray-700 text-sm leading-relaxed">
                 File PDF anda berukuran{" "}
                 <span className="font-bold text-blue-700">{sizeLabel}</span>
-                {", "}pastikan bahwa kertas yang terpasang di printer adalah kertas{" "}
+                {", "}pastikan bahwa kertas yang terpasang di printer adalah
+                kertas{" "}
                 <span className="font-bold text-blue-700">{sizeLabel}</span>.
               </p>
             </div>
@@ -61,8 +88,13 @@ const PaperSizeTutorialModal = ({ isOpen, onConfirm, detectedSize, videoGuides }
             {/* Video tutorial */}
             {embedUrl && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-2">Video Tutorial:</p>
-                <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ minHeight: "220px" }}>
+                <p className="text-xs font-medium text-gray-500 mb-2">
+                  Video Tutorial:
+                </p>
+                <div
+                  className="relative w-full bg-black rounded-lg overflow-hidden"
+                  style={{ minHeight: "220px" }}
+                >
                   <iframe
                     src={embedUrl}
                     title={`Tutorial kertas ${sizeLabel}`}

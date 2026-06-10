@@ -119,6 +119,7 @@ export default function PrinterPage() {
                       finalPrices={finalPrices}
                       enabledFeatures={enabledFeatures}
                       volumeDiscounts={volumeDiscounts}
+                      detectedPDFSize={detectedPDFSize}
                     />
                   </div>
                 )}

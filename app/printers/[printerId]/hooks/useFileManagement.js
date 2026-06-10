@@ -62,6 +62,7 @@ export const useFileManagement = () => {
           duplex: false,
         },
         cost: 0,
+        _uploadKey: Date.now(),
       };
 
       setAdvancedSettings(initialSettings);

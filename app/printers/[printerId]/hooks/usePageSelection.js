@@ -17,11 +17,12 @@ export const usePageSelection = (
     initialSettings.printSettings || {
       paperSize: "A4",
       orientation: "PORTRAIT",
-      quality: "normal", // ✅ Lowercase
+      quality: "normal",
       margins: "normal",
       duplex: false,
     },
   );
+
 
   // ============================================
   // Helper: Ambil discountFlat yang berlaku berdasarkan total lembar
@@ -104,6 +105,18 @@ export const usePageSelection = (
       return;
     }
 
+    // Gunakan printSettings dari initialSettings langsung (fresh, bukan state stale)
+    const freshPrintSettings = initialSettings.printSettings || {
+      paperSize: "A4",
+      orientation: "PORTRAIT",
+      quality: "normal",
+      margins: "normal",
+      duplex: false,
+    };
+
+    // Sync state juga agar komponen lain yang baca printSettings dari hook ini ikut update
+    setPrintSettings(freshPrintSettings);
+
     const initialSelections = Array.from({ length: totalPages }, (_, i) => ({
       page: i + 1,
       type: initialSettings?.colorPages?.includes(i + 1)
@@ -120,18 +133,18 @@ export const usePageSelection = (
       const initialCost = calculateCostWithSettings(
         initialSelections,
         initialSettings.copies || 1,
-        printSettings,
+        freshPrintSettings,
         finalPrices,
         volumeDiscounts,
       );
       notifyParent(
         initialSelections,
         initialSettings.copies || 1,
-        printSettings,
+        freshPrintSettings,
         initialCost,
       );
     }
-  }, [totalPages, finalPrices, volumeDiscounts]);
+  }, [totalPages, finalPrices, volumeDiscounts, initialSettings.printSettings?.paperSize, initialSettings._uploadKey]);
 
   // ============================================
   // handlePageSelection
