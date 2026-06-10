@@ -101,7 +101,9 @@ export const PrinterStatsFilter = ({
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-blue-600 mb-1">Total Platform Profit</p>
+                <p className="text-xs text-blue-600 mb-1">
+                  Total Platform Profit
+                </p>
                 <p className="text-2xl font-bold text-blue-700">
                   {formatRupiah(profitStats.totalPlatformProfit)}
                 </p>

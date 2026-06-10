@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useHubAuth } from "../auth/hooks/useHubAuth";
 import { usePartnerPrinters } from "./hooks/usePartnerPrinters";
@@ -27,6 +27,23 @@ export default function PrintersPage() {
   } = usePartnerPrinters();
   const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
   const [withdrawProcessing, setWithdrawProcessing] = useState(false);
+  const [minWithdrawalAmount, setMinWithdrawalAmount] = useState(100000);
+
+  useEffect(() => {
+    if (!token) return;
+    fetch("/api/hub/admin/platform-settings", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) {
+          setMinWithdrawalAmount(
+            data.data.withdrawalConfig?.minWithdrawalAmount ?? 100000,
+          );
+        }
+      })
+      .catch(() => {});
+  }, [token]);
 
   const handleWithdraw = async (withdrawalData) => {
     setWithdrawProcessing(true);
@@ -186,6 +203,7 @@ export default function PrintersPage() {
         onSubmit={handleWithdraw}
         totalAmount={profitStats.totalPendingPayout}
         processing={withdrawProcessing}
+        minWithdrawalAmount={minWithdrawalAmount}
       />
     </HubLayout>
   );

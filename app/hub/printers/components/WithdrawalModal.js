@@ -7,6 +7,7 @@ export const WithdrawalModal = ({
   onSubmit,
   totalAmount,
   processing,
+  minWithdrawalAmount = 100000,
 }) => {
   const [notes, setNotes] = useState("");
   const [bankAccount, setBankAccount] = useState({
@@ -89,8 +90,11 @@ export const WithdrawalModal = ({
 
   if (!isOpen) return null;
 
+  const isBelowMinimum = totalAmount < minWithdrawalAmount;
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (isBelowMinimum) return;
     onSubmit({ notes, bankAccount });
   };
 
@@ -122,11 +126,19 @@ export const WithdrawalModal = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <div className="bg-green-50 rounded-lg p-3 border border-green-200">
-            <p className="text-sm text-green-700">Total yang dapat ditarik:</p>
-            <p className="text-2xl font-bold text-green-700">
+          <div className={`rounded-lg p-3 border ${isBelowMinimum ? "bg-red-50 border-red-200" : "bg-green-50 border-green-200"}`}>
+            <p className={`text-sm ${isBelowMinimum ? "text-red-700" : "text-green-700"}`}>Total yang dapat ditarik:</p>
+            <p className={`text-2xl font-bold ${isBelowMinimum ? "text-red-700" : "text-green-700"}`}>
               {formatRupiah(totalAmount)}
             </p>
+            <p className={`text-xs mt-1 ${isBelowMinimum ? "text-red-600" : "text-green-600"}`}>
+              Minimum withdrawal: {formatRupiah(minWithdrawalAmount)}
+            </p>
+            {isBelowMinimum && (
+              <p className="text-xs text-red-600 font-medium mt-1">
+                Profit belum mencapai minimum withdrawal
+              </p>
+            )}
           </div>
 
           {/* Informasi Bank yang Terisi Otomatis */}
@@ -260,8 +272,8 @@ export const WithdrawalModal = ({
             </button>
             <button
               type="submit"
-              disabled={processing}
-              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 cursor-pointer"
+              disabled={processing || isBelowMinimum}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {processing ? "Memproses..." : "Ajukan Withdrawal"}
             </button>

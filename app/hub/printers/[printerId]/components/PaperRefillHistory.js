@@ -1,6 +1,7 @@
 "use client";
 
 import { Pagination } from "./Pagination";
+import { useHubAuth } from "../../../auth/hooks/useHubAuth";
 
 // PaperRefillHistory - UPDATED dengan struktur baru (tanpa upload proof)
 export const PaperRefillHistory = ({
@@ -19,6 +20,9 @@ export const PaperRefillHistory = ({
   endDate,
   loading,
 }) => {
+  const { role } = useHubAuth();
+  const isAdmin = role === "admin" || role === "super_admin";
+
   // Fungsi untuk mendapatkan badge role
   const getRoleBadge = (role) => {
     if (role === "super_admin") {
@@ -215,12 +219,14 @@ export const PaperRefillHistory = ({
                     {formatRupiah(refill.partnerProfit)}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">Profit Platform</p>
-                  <p className="text-sm font-medium text-blue-600">
-                    {formatRupiah(refill.platformProfit)}
-                  </p>
-                </div>
+                {isAdmin && (
+                  <div className="text-right">
+                    <p className="text-xs text-gray-500">Profit Platform</p>
+                    <p className="text-sm font-medium text-blue-600">
+                      {formatRupiah(refill.platformProfit)}
+                    </p>
+                  </div>
+                )}
                 <div className="w-20">
                   {getStatusBadge(refill.status)}
                   <br />
@@ -278,7 +284,7 @@ export const PaperRefillHistory = ({
                   {refill.filledByName} • {refill.sheetsAdded} lembar
                 </p>
 
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className={`grid ${isAdmin ? "grid-cols-3" : "grid-cols-2"} gap-2 text-center text-xs`}>
                   <div className="bg-gray-50 p-2 rounded-lg">
                     <p className="text-gray-500">Jobs</p>
                     <p className="font-medium text-gray-800">
@@ -293,14 +299,16 @@ export const PaperRefillHistory = ({
                         .trim()}
                     </p>
                   </div>
-                  <div className="bg-gray-50 p-2 rounded-lg">
-                    <p className="text-gray-500">Profit Platform</p>
-                    <p className="font-medium text-blue-600">
-                      {formatRupiah(refill.platformProfit)
-                        .replace("Rp", "")
-                        .trim()}
-                    </p>
-                  </div>
+                  {isAdmin && (
+                    <div className="bg-gray-50 p-2 rounded-lg">
+                      <p className="text-gray-500">Profit Platform</p>
+                      <p className="font-medium text-blue-600">
+                        {formatRupiah(refill.platformProfit)
+                          .replace("Rp", "")
+                          .trim()}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-between items-center text-xs pt-1 border-t border-gray-100">

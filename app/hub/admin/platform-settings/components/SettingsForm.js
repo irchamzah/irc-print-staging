@@ -17,6 +17,9 @@ export const SettingsForm = ({ settings, onSubmit, saving }) => {
       F4_to_A4: "",
       default: "",
     },
+    withdrawalConfig: {
+      minWithdrawalAmount: 100000,
+    },
   });
 
   useEffect(() => {
@@ -35,6 +38,9 @@ export const SettingsForm = ({ settings, onSubmit, saving }) => {
           A4_to_F4: "",
           F4_to_A4: "",
           default: "",
+        },
+        withdrawalConfig: settings.withdrawalConfig || {
+          minWithdrawalAmount: 100000,
         },
       });
     }
@@ -440,6 +446,58 @@ export const SettingsForm = ({ settings, onSubmit, saving }) => {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
               placeholder="https://youtu.be/..."
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Withdrawal Config Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-yellow-50">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-orange-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            Konfigurasi Penarikan (Withdrawal)
+          </h3>
+          <p className="text-sm text-gray-500 mt-1">
+            Pengaturan batas minimum permintaan penarikan profit partner
+          </p>
+        </div>
+
+        <div className="p-4">
+          <div className="max-w-xs">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              💰 Minimum Withdrawal (Rp)
+            </label>
+            <input
+              type="number"
+              value={formData.withdrawalConfig.minWithdrawalAmount}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  withdrawalConfig: {
+                    ...formData.withdrawalConfig,
+                    minWithdrawalAmount: parseInt(e.target.value) || 0,
+                  },
+                })
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+              min="0"
+              step="1000"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Partner tidak dapat mengajukan withdrawal di bawah jumlah ini
+            </p>
           </div>
         </div>
       </div>

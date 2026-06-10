@@ -62,13 +62,18 @@ export const RefillDetailModal = ({
 
   // Helper untuk mendapatkan total halaman
   const getTotalPages = (job) => {
-    return job.totalPages || job.pages?.length || 0;
+    const pages =
+      job.totalPages || job.settings?.totalPages || job.pages?.length || 0;
+    const copies = job.settings?.copies || 1;
+    return pages;
   };
 
   // Helper untuk mendapatkan printJobId
   const getPrintJobId = (job) => {
     return job.printJobId || job.jobId || job.id;
   };
+
+  const isAdmin = userRole === "admin" || userRole === "super_admin";
 
   if (!isOpen || !refill) return null;
 
@@ -143,12 +148,14 @@ export const RefillDetailModal = ({
                 {formatRupiah(refill.partnerProfit)}
               </span>
             </div>
-            <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-gray-600">Profit Platform:</span>
-              <span className="text-lg font-bold text-blue-600">
-                {formatRupiah(refill.platformProfit)}
-              </span>
-            </div>
+            {isAdmin && (
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-gray-600">Profit Platform:</span>
+                <span className="text-lg font-bold text-blue-600">
+                  {formatRupiah(refill.platformProfit)}
+                </span>
+              </div>
+            )}
             <div className="mt-3 pt-3 border-t border-blue-200 flex justify-between items-center">
               <div>
                 {getStatusBadge(refill.status)}
