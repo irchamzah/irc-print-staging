@@ -52,16 +52,21 @@ export const usePaymentManagement = (
         .toString(36)
         .substr(2, 9)}`;
 
-      // Convert file to base64
-      const fileBase64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64 = reader.result.split(",")[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
+      // Upload file ke VPS terlebih dahulu (binary FormData, bukan base64 JSON)
+      const uploadFormData = new FormData();
+      uploadFormData.append("pdfFile", file);
+      uploadFormData.append("orderId", orderId);
+
+      const uploadResponse = await fetch("/api/transactions/upload-file", {
+        method: "POST",
+        body: uploadFormData,
       });
+      const uploadResult = await uploadResponse.json();
+      const uploadedFilePath = uploadResult.success ? uploadResult.filePath : null;
+
+      if (!uploadResult.success) {
+        console.warn("⚠️ File pre-upload failed, will continue without stored file:", uploadResult.error);
+      }
 
       // Create payment
       const paymentResponse = await fetch("/api/payment", {
@@ -94,7 +99,8 @@ export const usePaymentManagement = (
             pages: totalPages,
             type: file.type,
           },
-          fileContent: fileBase64,
+          filePath: uploadedFilePath,
+          // fileContent dihapus — file sudah di-upload via FormData terpisah
           settings: {
             ...advancedSettings,
             printSettings: {

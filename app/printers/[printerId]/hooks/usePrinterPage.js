@@ -79,10 +79,10 @@ export const usePrinterPage = () => {
   // ============================================
   const fetchVideoGuides = async () => {
     try {
-      const res = await fetch("/api/hub/admin/platform-settings");
+      const res = await fetch("/api/public/platform-config");
       const data = await res.json();
-      if (data.success && data.settings?.videoGuides) {
-        setVideoGuides(data.settings.videoGuides);
+      if (data.success && data.data?.videoGuides) {
+        setVideoGuides(data.data.videoGuides);
       }
     } catch {
       // Silent fail — video guide hanya opsional
