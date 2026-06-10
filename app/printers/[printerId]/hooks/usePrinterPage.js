@@ -19,6 +19,8 @@ export const usePrinterPage = () => {
   const [totalPagesNeeded, setTotalPagesNeeded] = useState(0);
   const [pointDivider, setPointDivider] = useState(0);
   const [enabledFeatures, setEnabledFeatures] = useState(null); // ✅ Tambah untuk fitur yang di-enable
+  const [videoGuides, setVideoGuides] = useState({});
+  const [showPaperSizeModal, setShowPaperSizeModal] = useState(false);
 
   // Initialize all custom hooks
   const userManagement = useUserManagement();
@@ -41,6 +43,7 @@ export const usePrinterPage = () => {
 
   useEffect(() => {
     fetchPrinterDetails();
+    fetchVideoGuides();
   }, [printerId]);
 
   useEffect(() => {
@@ -70,6 +73,21 @@ export const usePrinterPage = () => {
     fileManagement.totalPages,
     paymentManagement.pendingTransactions,
   ]);
+
+  // ============================================
+  // fetchVideoGuides - Ambil video tutorial dari platform settings
+  // ============================================
+  const fetchVideoGuides = async () => {
+    try {
+      const res = await fetch("/api/hub/admin/platform-settings");
+      const data = await res.json();
+      if (data.success && data.settings?.videoGuides) {
+        setVideoGuides(data.settings.videoGuides);
+      }
+    } catch {
+      // Silent fail — video guide hanya opsional
+    }
+  };
 
   // ============================================
   // fetchPrinterDetails - UPDATED dengan struktur baru
@@ -188,10 +206,14 @@ export const usePrinterPage = () => {
   // handleFileUpload
   // ============================================
   const handleFileUpload = async (selectedFile) => {
-    return fileManagement.handleFileUpload(
+    const success = await fileManagement.handleFileUpload(
       selectedFile,
       paymentManagement.setIsLoading,
     );
+    if (success && printer?.paperMode === "unlimited") {
+      setShowPaperSizeModal(true);
+    }
+    return success;
   };
 
   // ============================================
@@ -377,6 +399,13 @@ export const usePrinterPage = () => {
     );
   };
 
+  // isPaperSizeMismatch: untuk limited mode — PDF size ≠ activePaperSize
+  const isPaperSizeMismatch =
+    printer?.paperMode === "limited" &&
+    !!printer?.paperStatus?.activePaperSize &&
+    !!fileManagement.detectedPDFSize &&
+    printer.paperStatus.activePaperSize !== fileManagement.detectedPDFSize;
+
   return {
     // Printer states
     printer,
@@ -390,6 +419,13 @@ export const usePrinterPage = () => {
     availablePaper,
     totalPagesNeeded,
     pointDivider,
+
+    // Paper size modal (unlimited mode)
+    showPaperSizeModal,
+    setShowPaperSizeModal,
+    videoGuides,
+    detectedPDFSize: fileManagement.detectedPDFSize,
+    isPaperSizeMismatch,
 
     // ✅ Payment states (ambil manual dari paymentManagement)
     pendingTransactions: paymentManagement.pendingTransactions,

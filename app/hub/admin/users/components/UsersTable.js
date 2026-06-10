@@ -92,7 +92,7 @@ export const UsersTable = ({
 
   // ✅ Render points dan total spent
   const renderPointsInfo = (user) => {
-    if (user.role === "customer" || user.role === "partner") {
+    if (user) {
       return (
         <div>
           <div className="text-sm font-medium text-green-600">

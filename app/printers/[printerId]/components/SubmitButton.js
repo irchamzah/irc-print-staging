@@ -7,7 +7,10 @@ export const SubmitButton = ({
   isPaperInsufficient = false,
   availablePaper = 0,
   totalPagesNeeded = 0,
-  paperMode = "limited", // ✅ Tambah: "limited" atau "unlimited"
+  paperMode = "limited",
+  isPaperSizeMismatch = false,
+  printerActivePaperSize = null,
+  detectedPDFSize = null,
 }) => {
   if (!advancedSettings) return null;
 
@@ -26,6 +29,7 @@ export const SubmitButton = ({
     isPrinterOffline ||
     isUserNotLoggedIn ||
     (!isUnlimitedMode && isPaperInsufficient) ||
+    (!isUnlimitedMode && isPaperSizeMismatch) ||
     totalPagesNeeded <= 0;
 
   // Fungsi handle click dengan confirmation
@@ -76,6 +80,20 @@ export const SubmitButton = ({
           </p>
           <p className="text-orange-600 text-xs mt-1">
             Butuh {totalPagesNeeded} halaman, tersedia {availablePaper} halaman
+          </p>
+        </div>
+      )}
+
+      {/* Warning untuk ukuran kertas tidak sesuai (limited mode) */}
+      {!isUnlimitedMode && isPaperSizeMismatch && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+          <p className="text-red-700 text-sm font-medium">
+            ❌ Ukuran kertas tidak sesuai
+          </p>
+          <p className="text-red-600 text-xs mt-1">
+            Printer terpasang kertas{" "}
+            <span className="font-semibold">{printerActivePaperSize}</span>, sedangkan file PDF berukuran{" "}
+            <span className="font-semibold">{detectedPDFSize}</span>. Ganti kertas atau upload file PDF yang sesuai.
           </p>
         </div>
       )}

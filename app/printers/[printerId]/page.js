@@ -9,6 +9,7 @@ import { TotalCostSection } from "./components/TotalCostSection";
 import { SubmitButton } from "./components/SubmitButton";
 import dynamic from "next/dynamic";
 import PaymentModal from "@/app/printers/[printerId]/components/PaymentModal";
+import PaperSizeTutorialModal from "@/app/printers/[printerId]/components/PaperSizeTutorialModal";
 import BottomBar from "@/app/components/BottomBar";
 import TopBar from "@/app/components/TopBar";
 import LoadingAnimation from "@/app/components/LoadingAnimation";
@@ -54,6 +55,11 @@ export default function PrinterPage() {
     enabledFeatures,
     volumeDiscounts,
     currentPrintJobId,
+    showPaperSizeModal,
+    setShowPaperSizeModal,
+    videoGuides,
+    detectedPDFSize,
+    isPaperSizeMismatch,
 
     // Functions
     handleFileUpload,
@@ -163,6 +169,9 @@ export default function PrinterPage() {
                   availablePaper={availablePaper}
                   totalPagesNeeded={totalPagesNeeded}
                   paperMode={printer?.paperMode || "limited"}
+                  isPaperSizeMismatch={isPaperSizeMismatch}
+                  printerActivePaperSize={printer?.paperStatus?.activePaperSize}
+                  detectedPDFSize={detectedPDFSize}
                 />
               </form>
             </div>
@@ -180,6 +189,13 @@ export default function PrinterPage() {
           userSession={userSession}
           isRestoredTransaction={paymentData?.isRestored || false}
           currentPrintJobId={currentPrintJobId}
+        />
+
+        <PaperSizeTutorialModal
+          isOpen={showPaperSizeModal}
+          onConfirm={() => setShowPaperSizeModal(false)}
+          detectedSize={detectedPDFSize}
+          videoGuides={videoGuides}
         />
       </div>
       <BottomBar />
